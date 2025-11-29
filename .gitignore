@@ -46,6 +46,9 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# build
+build/
+
 # CMake
 *CMakeCache.txt
 *CMakeFiles/
@@ -97,6 +100,19 @@ proj.ios_mac/*.xcodeproj/xcuserdata/
 # proj.win32
 *.suo
 .vs/
+# -------------------- VS 用户级设置 (必须忽略) --------------------
+# 存储用户本地配置，绝不能提交
+*.vcxproj.user 
+
+# -------------------- Vcxproj 依赖/缓存 (通常忽略) --------------------
+# Vcxproj 文件本身通常会被提交，但如果你发现 VS 不断修改它们，
+# 且这些修改是自动生成的、不重要的，也可以考虑暂时忽略 Vcxproj。
+# 但对于初始提交，建议先提交干净的 Vcxproj 文件。
+
+# -------------------- 其它常见的 VS 垃圾 --------------------
+*.suo
+*.user
+
 .vscode/
 cocos2d/cocos/2d/Debug.*/
 cocos2d/cocos/editor-support/spine/proj.win32/Debug.*/
