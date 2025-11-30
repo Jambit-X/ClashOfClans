@@ -1,4 +1,7 @@
 #include "VillageLayer.h"
+#include "../Model/Building.h"
+#include "../View/BuildingSprite.h"
+#include "../System/GridMap.h"
 
 USING_NS_CC;
 
@@ -6,6 +9,15 @@ bool VillageLayer::init() {
   if (!Layer::init()) {
     return false;
   }
+  // 初始化缩放比例
+  _currentScale = 1.0f;
+  this->setScale(_currentScale);
+
+  // 启用触摸和平移事件 (保持不变)
+  setupTouchHandling();
+
+  // 新增：启用鼠标滚轮事件
+  setupMouseHandling();
 
   auto visibleSize = Director::getInstance()->getVisibleSize();
 
@@ -19,19 +31,31 @@ bool VillageLayer::init() {
     mapSprite->setColor(Color3B(50, 50, 50)); // 深灰色
   }
 
-  mapSprite->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
-  mapSprite->setPosition(Vec2::ZERO);
+  mapSprite->setAnchorPoint(Vec2::ANCHOR_MIDDLE); // 中心锚点
+  mapSprite->setPosition(this->getContentSize() / 2);
   this->addChild(mapSprite);
 
   // 设置 GameLayer 的内容大小等于地图大小
   this->setContentSize(mapSprite->getContentSize());
-
+  this->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
+  this->setPosition(visibleSize / 2);
   // 2. 启用触摸事件
   setupTouchHandling();
 
   // 3. 将地图中心移动到屏幕中心附近 (初始位置)
   this->setPosition(visibleSize.width / 2 - mapSprite->getContentSize().width / 2,
                     visibleSize.height / 2 - mapSprite->getContentSize().height / 2);
+
+  // --- [测试代码] ---
+    // 1. 创建一个数据模型：ID=1, 类型=大本营, 坐标=(5,5), 大小=3x3格
+  Building* townHallData = new Building(1, Building::Type::TOWN_HALL, 5, 5, 3, 3);
+
+  // 2. 创建视图并绑定数据
+  BuildingSprite* townHallSprite = BuildingSprite::createWithBuilding(townHallData);
+
+  // 3. 添加到地图层
+  this->addChild(townHallSprite);
+  // -----------------
 
   return true;
 }
@@ -81,4 +105,58 @@ void VillageLayer::onTouchMoved(Touch* touch, Event* event) {
 
 void VillageLayer::onTouchEnded(Touch* touch, Event* event) {
   // 触摸结束，如果只是轻点，可以在这里处理点击事件，但本阶段只关注平移
+}
+
+// -------------------------------------------------------------
+// 鼠标事件监听设置
+void VillageLayer::setupMouseHandling() {
+  auto mouseListener = EventListenerMouse::create();
+  // 绑定滚轮事件回调
+  mouseListener->onMouseScroll = CC_CALLBACK_1(VillageLayer::onMouseScroll, this);
+  _eventDispatcher->addEventListenerWithSceneGraphPriority(mouseListener, this);
+}
+
+
+// 鼠标滚轮缩放回调函数 (核心逻辑)
+void VillageLayer::onMouseScroll(Event* event) {
+  EventMouse* mouseEvent = static_cast<EventMouse*>(event);
+  float scrollY = mouseEvent->getScrollY();
+
+  float newScale = _currentScale + scrollY * ZOOM_SPEED;
+  newScale = clampf(newScale, MIN_SCALE, MAX_SCALE);
+
+  if (newScale == _currentScale) return;
+
+  // 1. 鼠标在屏幕坐标
+  Vec2 mousePosInView = mouseEvent->getLocationInView();
+  // Cocos2d-x 的 getLocationInView 原点在左上角，需转为左下角
+  auto winSize = Director::getInstance()->getWinSize();
+  mousePosInView.y = winSize.height - mousePosInView.y;
+
+  // 2. 鼠标在当前 layer 的局部坐标（以锚点为中心）
+  Vec2 nodeSpaceBefore = this->convertToNodeSpaceAR(mousePosInView);
+
+  // 3. 设置缩放
+  this->setScale(newScale);
+
+  // 4. 缩放后，鼠标指向的地图点应该保持在屏幕同一位置
+  Vec2 nodeSpaceAfter = nodeSpaceBefore * (newScale / _currentScale);
+  Vec2 worldDelta = nodeSpaceAfter - nodeSpaceBefore;
+  Vec2 newPos = this->getPosition() - worldDelta;
+
+  // 5. 限制缩放后的位置，防止地图超出边界
+  auto visibleSize = Director::getInstance()->getVisibleSize();
+  auto mapSize = this->getContentSize() * newScale;
+
+  float minX = visibleSize.width - mapSize.width;
+  float maxX = 0;
+  float minY = visibleSize.height - mapSize.height;
+  float maxY = 0;
+
+  newPos.x = clampf(newPos.x, minX, maxX);
+  newPos.y = clampf(newPos.y, minY, maxY);
+
+  this->setPosition(newPos);
+
+  _currentScale = newScale;
 }

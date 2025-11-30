@@ -53,6 +53,12 @@ list(APPEND GAME_SOURCE
      Classes/Scene/VillageScene.cpp
      Classes/Layer/VillageLayer.cpp
      Classes/Layer/HUDLayer.cpp
+     Classes/Model/PlayerData.cpp
+     Classes/Controller/ResourceController.cpp
+     Classes/Controller/UpgradeController.cpp
+     Classes/System/GridMap.cpp
+     Classes/Model/Building.cpp
+     Classes/View/BuildingSprite.cpp
      )
 list(APPEND GAME_HEADER
      Classes/AppDelegate/AppDelegate.h
@@ -60,6 +66,12 @@ list(APPEND GAME_HEADER
      Classes/Scene/VillageScene.h
      Classes/Layer/VillageLayer.h
      Classes/Layer/HUDLayer.h
+     Classes/Model/PlayerData.h
+     Classes/Controller/ResourceController.h
+     Classes/Controller/UpgradeController.h
+     Classes/System/GridMap.h
+     Classes/Model/Building.h
+     Classes/View/BuildingSprite.h
      )
 
 if(ANDROID)
