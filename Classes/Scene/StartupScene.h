@@ -1,5 +1,5 @@
 /*******************
- * åˆå§‹ç­‰å¾…é¡µé¢
+ * StartupScene: Æô¶¯µÈ´ı¶¯»­
  *******************/
 
 #pragma once
@@ -10,18 +10,18 @@
 
 /*
  * Class Name : StartupScene
- * Class Function : å¯åŠ¨ç­‰å¾…é¡µé¢
+ * Class Function : Æô¶¯µÈ´ı¶¯»­
 */ 
 
 class StartupScene : public cocos2d::Scene {
 public:
-    // åˆ›å»ºåœºæ™¯
+    // ´´½¨
     static cocos2d::Scene* createScene();
 
-    // åˆå§‹åŒ–åœºæ™¯
+    // ³õÊ¼»¯
     virtual bool init();
 
-    // å®ç° StartupScene ç±»çš„ create æ–¹æ³•
+    // 
     CREATE_FUNC(StartupScene);
 };
 

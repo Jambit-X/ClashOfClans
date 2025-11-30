@@ -1,36 +1,27 @@
-ï»¿#include "VillageScene.h"
+#include "VillageScene.h"
 
 USING_NS_CC;
 
-// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 Scene* VillageScene::createScene() {
-  auto scene = Scene::create();
-  auto layer = VillageScene::create();
-  scene->addChild(layer);
-  return scene;
+  // Ê¹ÓÃ Scene::create() ¶ø²»ÊÇ GameScene::create()£¬ÒòÎª GameScene ¼Ì³Ğ×Ô Scene
+  return VillageScene::create();
 }
 
-// ï¿½ï¿½Ê¼ï¿½ï¿½
 bool VillageScene::init() {
-  if (!Scene::init()) return false;
+  if (!Scene::init()) {
+    return false;
+  }
 
-  auto screenSize = Director::getInstance()->getVisibleSize();
+  auto visibleSize = Director::getInstance()->getVisibleSize();
+  Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
-  // ï¿½ï¿½×¯ï¿½ï¿½ï¿½ï¿½
-  auto bg = Sprite::create("Scene/VillageScene.png");
-  bg->setPosition(screenSize / 2);
-  bg->Sprite::setScale(0.5);
-  this->addChild(bg);
+  // 1. ´´½¨ GameLayer (¸ºÔğµØÍ¼ºÍ½¨Öş)
+  _villageLayer = VillageLayer::create();
+  this->addChild(_villageLayer, 1); // Z-Order 1
 
-  //// ï¿½òµ¥½ï¿½ï¿½ï¿½
-  //auto townHall = Sprite::create("townhall.png");
-  //townHall->setPosition(screenSize.width / 2, screenSize.height / 2);
-  //this->addChild(townHall);
-
-
-  auto label = Label::createWithSystemFont("man! what can i say!", "Arial", 36);
-  label->setPosition(Vec2(screenSize.width / 2, screenSize.height - 80));
-  this->addChild(label);
+  // 2. ´´½¨ HUDLayer (¸ºÔğ UI)
+  _hudLayer = HUDLayer::create();
+  this->addChild(_hudLayer, 2); // Z-Order 2 (ÔÚµØÍ¼ÉÏ·½)
 
   return true;
 }

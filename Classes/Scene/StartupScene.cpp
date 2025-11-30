@@ -4,7 +4,7 @@
 
 USING_NS_CC;
 
-// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+// ´´½¨³¡¾°
 Scene* StartupScene::createScene() {
   auto scene = Scene::create();
   auto layer = StartupScene::create();
@@ -12,26 +12,26 @@ Scene* StartupScene::createScene() {
   return scene;
 }
 
-// ï¿½ï¿½Ê¼ï¿½ï¿½
+// ³õÊ¼»¯
 bool StartupScene::init() {
   if (!Scene::init()) return false;
 
   auto screenSize = Director::getInstance()->getVisibleSize();
 
-  // ï¿½ï¿½ï¿½ï¿½
+  // ±³¾°
   auto bg = Sprite::create("Scene/StartupScene.png");
   bg->setPosition(screenSize / 2);
   bg->setScaleX(screenSize.width / bg->getContentSize().width);
   bg->setScaleY(screenSize.height / bg->getContentSize().height);
   this->addChild(bg);
 
-  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+  // ½ø¶ÈÌõ
   auto progressBar = ui::LoadingBar::create("ImageElements/loading_bar.png");
   progressBar->setPosition(Vec2(screenSize.width / 2, screenSize.height / 5));
   progressBar->setPercent(0);
   this->addChild(progressBar);
 
-  // ï¿½ï¿½ï¿½È¶ï¿½ï¿½ï¿½
+  // ½ø¶È¶¯»­
   float duration = 2.0f;
   for (int i = 0; i <= 100; ++i) {
     this->scheduleOnce([progressBar, i](float) {
@@ -39,7 +39,7 @@ bool StartupScene::init() {
     }, duration * i / 100.0f, "loading" + std::to_string(i));
   }
 
-  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Éºï¿½ï¿½Ð»ï¿½ï¿½ï¿½ï¿½ï¿½×¯ï¿½ï¿½ï¿½ï¿½
+  // ¼ÓÔØÍê³ÉºóÇÐ»»µ½´å×¯½çÃæ
   this->scheduleOnce([](float) {
     auto scene = VillageScene::createScene();
     Director::getInstance()->replaceScene(TransitionFade::create(1.0f, scene));
