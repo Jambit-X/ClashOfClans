@@ -6,7 +6,7 @@
 class VillageLayer : public cocos2d::Layer {
 private:
   // 缩放常量
-   float _minScale;
+  float _minScale;
   static const float MAX_SCALE;
   static const float ZOOM_SPEED;
 
@@ -33,7 +33,7 @@ private:
   // ========== 辅助方法 ==========
   cocos2d::Sprite* createMapSprite();
   cocos2d::Vec2 calculateCenterPosition();
-  void focusOnRect(const cocos2d::Vec2& leftBottom, const cocos2d::Vec2& rightTop);
+
   // ========== 触摸事件（拖动） ==========
   void setupTouchHandling();
   bool onTouchBegan(cocos2d::Touch* touch, cocos2d::Event* event);
@@ -47,11 +47,10 @@ private:
   // ========== 鼠标事件（缩放） ==========
   void setupMouseHandling();
   void onMouseScroll(cocos2d::Event* event);
-  float calculateNewScale(float scrollDelta);
-  void applyZoomAtAnchor(float newScale);
 
-  // 调试：绘制锚点活动范围
-  void drawAnchorMovementRange();
+  float calculateNewScale(float scrollDelta);
+  cocos2d::Vec2 getAdjustedMousePosition(cocos2d::EventMouse* mouseEvent);
+  void applyZoomAroundPoint(const cocos2d::Vec2& zoomPoint, float newScale);
 };
 
 #endif
