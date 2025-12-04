@@ -1,64 +1,55 @@
-#ifndef __VILLAGELAYER_H__
-#define __VILLAGELAYER_H__
+#ifndef __VILLAGE_LAYER_H__
+#define __VILLAGE_LAYER_H__
 
 #include "cocos2d.h"
 
-// Ç°ÏòÉùÃ÷
-class BuildingSprite;
-class BuildingController;
-class Building;
-
 class VillageLayer : public cocos2d::Layer {
+private:
+  // ç¼©æ”¾å¸¸é‡
+  static const float MIN_SCALE;
+  static const float MAX_SCALE;
+  static const float ZOOM_SPEED;
+
+  // åœ°å›¾ç²¾çµ
+  cocos2d::Sprite* _mapSprite;
+
+  // ç¼©æ”¾çŠ¶æ€
+  float _currentScale;
+
+  // æ‹–åŠ¨çŠ¶æ€
+  cocos2d::Vec2 _touchStartPos;
+  cocos2d::Vec2 _layerStartPos;
+
 public:
-    virtual bool init();
-    virtual ~VillageLayer(); // Ìí¼ÓÎö¹¹º¯Êı
-    CREATE_FUNC(VillageLayer);
+  virtual bool init() override;
+  CREATE_FUNC(VillageLayer);
 
 private:
-    // ³£Á¿¶¨Òå
-    static const int MAP_DEFAULT_WIDTH = 2000;
-    static const int MAP_DEFAULT_HEIGHT = 2000;
-    static const float MIN_SCALE;
-    static const float MAX_SCALE;
-    static const float ZOOM_SPEED;
+  // ========== åˆå§‹åŒ–æ–¹æ³• ==========
+  void initializeBasicProperties();
+  void setupEventHandling();
 
-    // ³ÉÔ±±äÁ¿
-    BuildingController* _buildingController;
-    cocos2d::Vec2 _touchStartPos;
-    cocos2d::Vec2 _layerStartPos;
-    float _currentScale;
-    bool _mapDragActive; // ±ê¼Çµ±Ç°ÊÇ·ñÔÚÍÏ×§µØÍ¼Ä£Ê½
+  // ========== è¾…åŠ©æ–¹æ³• ==========
+  cocos2d::Sprite* createMapSprite();
+  cocos2d::Vec2 calculateCenterPosition();
 
-    // ³õÊ¼»¯·½·¨
-    void initializeBasicProperties();
-    void createBuildingController();
-    void setupEventHandling();
-    void createMapBackground();
-    void setupInitialLayout();
-    void createTestBuildings();
+  // ========== è§¦æ‘¸äº‹ä»¶ï¼ˆæ‹–åŠ¨ï¼‰ ==========
+  void setupTouchHandling();
+  bool onTouchBegan(cocos2d::Touch* touch, cocos2d::Event* event);
+  void onTouchMoved(cocos2d::Touch* touch, cocos2d::Event* event);
+  void onTouchEnded(cocos2d::Touch* touch, cocos2d::Event* event);
 
-    // °ïÖú·½·¨
-    cocos2d::Sprite* createMapSprite();
-    Building* createBuildingByType(int buildingType, int id, int gridX, int gridY);
+  void storeTouchStartState(cocos2d::Touch* touch);
+  void handleMapDragging(cocos2d::Touch* touch);
+  cocos2d::Vec2 clampMapPosition(const cocos2d::Vec2& position);
 
-    // ´¥ÃşÊÂ¼ş´¦Àí
-    void setupTouchHandling();
-    virtual bool onTouchBegan(cocos2d::Touch* touch, cocos2d::Event* event);
-    virtual void onTouchMoved(cocos2d::Touch* touch, cocos2d::Event* event);
-    virtual void onTouchEnded(cocos2d::Touch* touch, cocos2d::Event* event);
-    
-    void storeTouchStartState(cocos2d::Touch* touch);
-    void handleMapDragging(cocos2d::Touch* touch);
-    cocos2d::Vec2 clampMapPosition(const cocos2d::Vec2& position);
+  // ========== é¼ æ ‡äº‹ä»¶ï¼ˆç¼©æ”¾ï¼‰ ==========
+  void setupMouseHandling();
+  void onMouseScroll(cocos2d::Event* event);
 
-    // Êó±êÊÂ¼ş´¦Àí
-    void setupMouseHandling();
-    void onMouseScroll(cocos2d::Event* event);
-    
-    float calculateNewScale(float scrollDelta);
-    cocos2d::Vec2 getAdjustedMousePosition(cocos2d::EventMouse* mouseEvent);
-    void applyZoomAroundPoint(const cocos2d::Vec2& zoomPoint, float newScale);
-    cocos2d::Vec2 clampMapPositionForScale(const cocos2d::Vec2& position, float scale);
+  float calculateNewScale(float scrollDelta);
+  cocos2d::Vec2 getAdjustedMousePosition(cocos2d::EventMouse* mouseEvent);
+  void applyZoomAroundPoint(const cocos2d::Vec2& screenPoint, float newScale);
 };
 
-#endif // __VILLAGELAYER_H__
+#endif
