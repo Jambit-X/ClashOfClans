@@ -1,4 +1,5 @@
 #include "VillageScene.h"
+#include "Layer/HUDLayer.h" 
 
 USING_NS_CC;
 
@@ -11,9 +12,13 @@ bool VillageScene::init() {
     return false;
   }
 
-  // 只创建游戏层，包含基础的拖动功能
+  // 1. 添加游戏层（村庄地图）
   _gameLayer = VillageLayer::create();
   this->addChild(_gameLayer, 1);
+
+  // 2. 添加 HUD 层（UI 界面，包含商店按钮）
+  auto hudLayer = HUDLayer::create();
+  this->addChild(hudLayer, 10);  // zOrder 设高一点
 
   return true;
 }

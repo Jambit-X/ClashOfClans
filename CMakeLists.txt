@@ -52,6 +52,7 @@ list(APPEND GAME_SOURCE
      Classes/Scene/StartupScene.cpp
      Classes/Scene/VillageScene.cpp
      Classes/Layer/VillageLayer.cpp
+     Classes/Layer/ShopLayer.cpp
      Classes/Layer/HUDLayer.cpp
      Classes/Manager/ResourceManager.cpp
      Classes/Manager/SaveManager.cpp
@@ -68,6 +69,7 @@ list(APPEND GAME_HEADER
      Classes/AppDelegate/AppDelegate.h
      Classes/Scene/StartupScene.h
      Classes/Scene/VillageScene.h
+     Classes/Layer/ShopLayer.h
      Classes/Layer/VillageLayer.h
      Classes/Layer/HUDLayer.h
      Classes/Manager/ResourceManager.h

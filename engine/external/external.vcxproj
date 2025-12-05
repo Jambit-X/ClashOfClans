@@ -1,0 +1,228 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|win32">
+      <Configuration>Debug</Configuration>
+      <Platform>win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|win32">
+      <Configuration>Release</Configuration>
+      <Platform>win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{67D9D87C-4BA6-3322-910A-4BA0CCEF9940}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
+    <Platform>win32</Platform>
+    <ProjectName>external</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|win32'">D:\ClashOfClans\lib\Debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|win32'">external.dir\Debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|win32'">external</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|win32'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|win32'">D:\ClashOfClans\lib\Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|win32'">external.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|win32'">external</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|win32'">.lib</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\ClashOfClans\cocos2d\cocos\editor-support;D:\ClashOfClans\cocos2d\external\recast\..;D:\ClashOfClans\cocos2d\external\tinyxml2\.;D:\ClashOfClans\cocos2d\external\xxhash\.;D:\ClashOfClans\cocos2d\external\xxtea\.;D:\ClashOfClans\cocos2d\external\clipper\.;D:\ClashOfClans\cocos2d\external\edtaa3func\.;D:\ClashOfClans\cocos2d\external\ConvertUTF\.;D:\ClashOfClans\cocos2d\external\poly2tri\..;D:\ClashOfClans\cocos2d\external\md5\..;D:\ClashOfClans\cocos2d\external\unzip\.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /external:I "D:/ClashOfClans/cocos2d/external/Box2D/include" /external:I "D:/ClashOfClans/cocos2d/external/chipmunk/include" /external:I "D:/ClashOfClans/cocos2d/external/freetype2/include/win32/freetype2" /external:I "D:/ClashOfClans/cocos2d/external/jpeg/include/win32" /external:I "D:/ClashOfClans/cocos2d/external/uv/include" /external:I "D:/ClashOfClans/cocos2d/external/webp/include/win32" /external:I "D:/ClashOfClans/cocos2d/external/bullet/include" /external:I "D:/ClashOfClans/cocos2d/external/bullet/include/bullet" /external:I "D:/ClashOfClans/cocos2d/external/openssl/include/win32" /external:I "D:/ClashOfClans/cocos2d/external/tiff/include/win32" /external:I "D:/ClashOfClans/cocos2d/external/websockets/include/win32" /external:I "D:/ClashOfClans/cocos2d/external/curl/include/win32" /external:I "D:/ClashOfClans/cocos2d/external/png/include/win32" /external:I "D:/ClashOfClans/cocos2d/external/sqlite3/include" /external:I "D:/ClashOfClans/cocos2d/external/win32-specific/gles/include/OGLES" /external:I "D:/ClashOfClans/cocos2d/external/win32-specific/icon/include" /external:I "D:/ClashOfClans/cocos2d/external/win32-specific/MP3Decoder/include" /external:I "D:/ClashOfClans/cocos2d/external/win32-specific/OggDecoder/include" /external:I "D:/ClashOfClans/cocos2d/external/win32-specific/OpenalSoft/include" /external:I "D:/ClashOfClans/cocos2d/external/glfw3/include/win32" /external:I "D:/ClashOfClans/cocos2d/external/zlib/../win32-specific/zlib/include"</AdditionalOptions>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <BufferSecurityCheck></BufferSecurityCheck>
+      <CallingConvention></CallingConvention>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <FloatingPointModel></FloatingPointModel>
+      <ForceConformanceInForLoopScope></ForceConformanceInForLoopScope>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <MinimalRebuild></MinimalRebuild>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RemoveUnreferencedCodeData></RemoveUnreferencedCodeData>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <SupportJustMyCode></SupportJustMyCode>
+      <TreatWChar_tAsBuiltInType></TreatWChar_tAsBuiltInType>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;LWS_WITH_LIBUV;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;LWS_WITH_LIBUV;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\ClashOfClans\cocos2d\cocos\editor-support;D:\ClashOfClans\cocos2d\external\recast\..;D:\ClashOfClans\cocos2d\external\tinyxml2\.;D:\ClashOfClans\cocos2d\external\xxhash\.;D:\ClashOfClans\cocos2d\external\xxtea\.;D:\ClashOfClans\cocos2d\external\clipper\.;D:\ClashOfClans\cocos2d\external\edtaa3func\.;D:\ClashOfClans\cocos2d\external\ConvertUTF\.;D:\ClashOfClans\cocos2d\external\poly2tri\..;D:\ClashOfClans\cocos2d\external\md5\..;D:\ClashOfClans\cocos2d\external\unzip\.;D:\ClashOfClans\cocos2d\external\Box2D\include;D:\ClashOfClans\cocos2d\external\chipmunk\include;D:\ClashOfClans\cocos2d\external\freetype2\include\win32\freetype2;D:\ClashOfClans\cocos2d\external\jpeg\include\win32;D:\ClashOfClans\cocos2d\external\uv\include;D:\ClashOfClans\cocos2d\external\webp\include\win32;D:\ClashOfClans\cocos2d\external\bullet\include;D:\ClashOfClans\cocos2d\external\bullet\include\bullet;D:\ClashOfClans\cocos2d\external\openssl\include\win32;D:\ClashOfClans\cocos2d\external\tiff\include\win32;D:\ClashOfClans\cocos2d\external\websockets\include\win32;D:\ClashOfClans\cocos2d\external\curl\include\win32;D:\ClashOfClans\cocos2d\external\png\include\win32;D:\ClashOfClans\cocos2d\external\sqlite3\include;D:\ClashOfClans\cocos2d\external\win32-specific\gles\include\OGLES;D:\ClashOfClans\cocos2d\external\win32-specific\icon\include;D:\ClashOfClans\cocos2d\external\win32-specific\MP3Decoder\include;D:\ClashOfClans\cocos2d\external\win32-specific\OggDecoder\include;D:\ClashOfClans\cocos2d\external\win32-specific\OpenalSoft\include;D:\ClashOfClans\cocos2d\external\glfw3\include\win32;D:\ClashOfClans\cocos2d\external\zlib\..\win32-specific\zlib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\ClashOfClans\cocos2d\cocos\editor-support;D:\ClashOfClans\cocos2d\external\recast\..;D:\ClashOfClans\cocos2d\external\tinyxml2\.;D:\ClashOfClans\cocos2d\external\xxhash\.;D:\ClashOfClans\cocos2d\external\xxtea\.;D:\ClashOfClans\cocos2d\external\clipper\.;D:\ClashOfClans\cocos2d\external\edtaa3func\.;D:\ClashOfClans\cocos2d\external\ConvertUTF\.;D:\ClashOfClans\cocos2d\external\poly2tri\..;D:\ClashOfClans\cocos2d\external\md5\..;D:\ClashOfClans\cocos2d\external\unzip\.;D:\ClashOfClans\cocos2d\external\Box2D\include;D:\ClashOfClans\cocos2d\external\chipmunk\include;D:\ClashOfClans\cocos2d\external\freetype2\include\win32\freetype2;D:\ClashOfClans\cocos2d\external\jpeg\include\win32;D:\ClashOfClans\cocos2d\external\uv\include;D:\ClashOfClans\cocos2d\external\webp\include\win32;D:\ClashOfClans\cocos2d\external\bullet\include;D:\ClashOfClans\cocos2d\external\bullet\include\bullet;D:\ClashOfClans\cocos2d\external\openssl\include\win32;D:\ClashOfClans\cocos2d\external\tiff\include\win32;D:\ClashOfClans\cocos2d\external\websockets\include\win32;D:\ClashOfClans\cocos2d\external\curl\include\win32;D:\ClashOfClans\cocos2d\external\png\include\win32;D:\ClashOfClans\cocos2d\external\sqlite3\include;D:\ClashOfClans\cocos2d\external\win32-specific\gles\include\OGLES;D:\ClashOfClans\cocos2d\external\win32-specific\icon\include;D:\ClashOfClans\cocos2d\external\win32-specific\MP3Decoder\include;D:\ClashOfClans\cocos2d\external\win32-specific\OggDecoder\include;D:\ClashOfClans\cocos2d\external\win32-specific\OpenalSoft\include;D:\ClashOfClans\cocos2d\external\glfw3\include\win32;D:\ClashOfClans\cocos2d\external\zlib\..\win32-specific\zlib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:X86</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\ClashOfClans\cocos2d\cocos\editor-support;D:\ClashOfClans\cocos2d\external\recast\..;D:\ClashOfClans\cocos2d\external\tinyxml2\.;D:\ClashOfClans\cocos2d\external\xxhash\.;D:\ClashOfClans\cocos2d\external\xxtea\.;D:\ClashOfClans\cocos2d\external\clipper\.;D:\ClashOfClans\cocos2d\external\edtaa3func\.;D:\ClashOfClans\cocos2d\external\ConvertUTF\.;D:\ClashOfClans\cocos2d\external\poly2tri\..;D:\ClashOfClans\cocos2d\external\md5\..;D:\ClashOfClans\cocos2d\external\unzip\.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /external:I "D:/ClashOfClans/cocos2d/external/Box2D/include" /external:I "D:/ClashOfClans/cocos2d/external/chipmunk/include" /external:I "D:/ClashOfClans/cocos2d/external/freetype2/include/win32/freetype2" /external:I "D:/ClashOfClans/cocos2d/external/jpeg/include/win32" /external:I "D:/ClashOfClans/cocos2d/external/uv/include" /external:I "D:/ClashOfClans/cocos2d/external/webp/include/win32" /external:I "D:/ClashOfClans/cocos2d/external/bullet/include" /external:I "D:/ClashOfClans/cocos2d/external/bullet/include/bullet" /external:I "D:/ClashOfClans/cocos2d/external/openssl/include/win32" /external:I "D:/ClashOfClans/cocos2d/external/tiff/include/win32" /external:I "D:/ClashOfClans/cocos2d/external/websockets/include/win32" /external:I "D:/ClashOfClans/cocos2d/external/curl/include/win32" /external:I "D:/ClashOfClans/cocos2d/external/png/include/win32" /external:I "D:/ClashOfClans/cocos2d/external/sqlite3/include" /external:I "D:/ClashOfClans/cocos2d/external/win32-specific/gles/include/OGLES" /external:I "D:/ClashOfClans/cocos2d/external/win32-specific/icon/include" /external:I "D:/ClashOfClans/cocos2d/external/win32-specific/MP3Decoder/include" /external:I "D:/ClashOfClans/cocos2d/external/win32-specific/OggDecoder/include" /external:I "D:/ClashOfClans/cocos2d/external/win32-specific/OpenalSoft/include" /external:I "D:/ClashOfClans/cocos2d/external/glfw3/include/win32" /external:I "D:/ClashOfClans/cocos2d/external/zlib/../win32-specific/zlib/include"</AdditionalOptions>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <BufferSecurityCheck></BufferSecurityCheck>
+      <CallingConvention></CallingConvention>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <FloatingPointModel></FloatingPointModel>
+      <ForceConformanceInForLoopScope></ForceConformanceInForLoopScope>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <MinimalRebuild></MinimalRebuild>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RemoveUnreferencedCodeData></RemoveUnreferencedCodeData>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <SupportJustMyCode></SupportJustMyCode>
+      <TreatWChar_tAsBuiltInType></TreatWChar_tAsBuiltInType>
+      <UseFullPaths>false</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;LWS_WITH_LIBUV;CMAKE_INTDIR="Release"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;LWS_WITH_LIBUV;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\ClashOfClans\cocos2d\cocos\editor-support;D:\ClashOfClans\cocos2d\external\recast\..;D:\ClashOfClans\cocos2d\external\tinyxml2\.;D:\ClashOfClans\cocos2d\external\xxhash\.;D:\ClashOfClans\cocos2d\external\xxtea\.;D:\ClashOfClans\cocos2d\external\clipper\.;D:\ClashOfClans\cocos2d\external\edtaa3func\.;D:\ClashOfClans\cocos2d\external\ConvertUTF\.;D:\ClashOfClans\cocos2d\external\poly2tri\..;D:\ClashOfClans\cocos2d\external\md5\..;D:\ClashOfClans\cocos2d\external\unzip\.;D:\ClashOfClans\cocos2d\external\Box2D\include;D:\ClashOfClans\cocos2d\external\chipmunk\include;D:\ClashOfClans\cocos2d\external\freetype2\include\win32\freetype2;D:\ClashOfClans\cocos2d\external\jpeg\include\win32;D:\ClashOfClans\cocos2d\external\uv\include;D:\ClashOfClans\cocos2d\external\webp\include\win32;D:\ClashOfClans\cocos2d\external\bullet\include;D:\ClashOfClans\cocos2d\external\bullet\include\bullet;D:\ClashOfClans\cocos2d\external\openssl\include\win32;D:\ClashOfClans\cocos2d\external\tiff\include\win32;D:\ClashOfClans\cocos2d\external\websockets\include\win32;D:\ClashOfClans\cocos2d\external\curl\include\win32;D:\ClashOfClans\cocos2d\external\png\include\win32;D:\ClashOfClans\cocos2d\external\sqlite3\include;D:\ClashOfClans\cocos2d\external\win32-specific\gles\include\OGLES;D:\ClashOfClans\cocos2d\external\win32-specific\icon\include;D:\ClashOfClans\cocos2d\external\win32-specific\MP3Decoder\include;D:\ClashOfClans\cocos2d\external\win32-specific\OggDecoder\include;D:\ClashOfClans\cocos2d\external\win32-specific\OpenalSoft\include;D:\ClashOfClans\cocos2d\external\glfw3\include\win32;D:\ClashOfClans\cocos2d\external\zlib\..\win32-specific\zlib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\ClashOfClans\cocos2d\cocos\editor-support;D:\ClashOfClans\cocos2d\external\recast\..;D:\ClashOfClans\cocos2d\external\tinyxml2\.;D:\ClashOfClans\cocos2d\external\xxhash\.;D:\ClashOfClans\cocos2d\external\xxtea\.;D:\ClashOfClans\cocos2d\external\clipper\.;D:\ClashOfClans\cocos2d\external\edtaa3func\.;D:\ClashOfClans\cocos2d\external\ConvertUTF\.;D:\ClashOfClans\cocos2d\external\poly2tri\..;D:\ClashOfClans\cocos2d\external\md5\..;D:\ClashOfClans\cocos2d\external\unzip\.;D:\ClashOfClans\cocos2d\external\Box2D\include;D:\ClashOfClans\cocos2d\external\chipmunk\include;D:\ClashOfClans\cocos2d\external\freetype2\include\win32\freetype2;D:\ClashOfClans\cocos2d\external\jpeg\include\win32;D:\ClashOfClans\cocos2d\external\uv\include;D:\ClashOfClans\cocos2d\external\webp\include\win32;D:\ClashOfClans\cocos2d\external\bullet\include;D:\ClashOfClans\cocos2d\external\bullet\include\bullet;D:\ClashOfClans\cocos2d\external\openssl\include\win32;D:\ClashOfClans\cocos2d\external\tiff\include\win32;D:\ClashOfClans\cocos2d\external\websockets\include\win32;D:\ClashOfClans\cocos2d\external\curl\include\win32;D:\ClashOfClans\cocos2d\external\png\include\win32;D:\ClashOfClans\cocos2d\external\sqlite3\include;D:\ClashOfClans\cocos2d\external\win32-specific\gles\include\OGLES;D:\ClashOfClans\cocos2d\external\win32-specific\icon\include;D:\ClashOfClans\cocos2d\external\win32-specific\MP3Decoder\include;D:\ClashOfClans\cocos2d\external\win32-specific\OggDecoder\include;D:\ClashOfClans\cocos2d\external\win32-specific\OpenalSoft\include;D:\ClashOfClans\cocos2d\external\glfw3\include\win32;D:\ClashOfClans\cocos2d\external\zlib\..\win32-specific\zlib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:X86</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\ClashOfClans\cocos2d\external\CMakeLists.txt">
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|win32'">Building Custom Rule D:/ClashOfClans/cocos2d/external/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|win32'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SD:/ClashOfClans -BD:/ClashOfClans --check-stamp-file D:/ClashOfClans/engine/external/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|win32'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|win32'">D:\ClashOfClans\engine\external\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|win32'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|win32'">Building Custom Rule D:/ClashOfClans/cocos2d/external/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|win32'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SD:/ClashOfClans -BD:/ClashOfClans --check-stamp-file D:/ClashOfClans/engine/external/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|win32'">%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|win32'">D:\ClashOfClans\engine\external\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|win32'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="D:\ClashOfClans\cocos2d\external\empty.cpp" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="D:\ClashOfClans\ZERO_CHECK.vcxproj">
+      <Project>{75803D89-6D1B-3B33-84C6-BB0C928CA351}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="D:\ClashOfClans\engine\external\clipper\ext_clipper.vcxproj">
+      <Project>{ED366C5C-B8EF-33AD-99BF-7637C7E8A7D9}</Project>
+      <Name>ext_clipper</Name>
+    </ProjectReference>
+    <ProjectReference Include="D:\ClashOfClans\engine\external\ConvertUTF\ext_convertUTF.vcxproj">
+      <Project>{C0735288-DE6C-3148-95CC-982D751D238C}</Project>
+      <Name>ext_convertUTF</Name>
+    </ProjectReference>
+    <ProjectReference Include="D:\ClashOfClans\engine\external\edtaa3func\ext_edtaa3func.vcxproj">
+      <Project>{B59A14AB-00F8-3DA8-94BD-A903778B568A}</Project>
+      <Name>ext_edtaa3func</Name>
+    </ProjectReference>
+    <ProjectReference Include="D:\ClashOfClans\engine\external\md5\ext_md5.vcxproj">
+      <Project>{2C8397EC-7FE4-3421-9DFF-A363CD791D9A}</Project>
+      <Name>ext_md5</Name>
+    </ProjectReference>
+    <ProjectReference Include="D:\ClashOfClans\engine\external\poly2tri\ext_poly2tri.vcxproj">
+      <Project>{3B3876F1-5AB5-3755-BABD-606F6E75B765}</Project>
+      <Name>ext_poly2tri</Name>
+    </ProjectReference>
+    <ProjectReference Include="D:\ClashOfClans\engine\external\recast\ext_recast.vcxproj">
+      <Project>{0D7B50A3-CC54-3E8F-A53C-BBBB1FB7E0A5}</Project>
+      <Name>ext_recast</Name>
+    </ProjectReference>
+    <ProjectReference Include="D:\ClashOfClans\engine\external\tinyxml2\ext_tinyxml2.vcxproj">
+      <Project>{53755588-1B8E-3750-BF88-920C36667188}</Project>
+      <Name>ext_tinyxml2</Name>
+    </ProjectReference>
+    <ProjectReference Include="D:\ClashOfClans\engine\external\unzip\ext_unzip.vcxproj">
+      <Project>{28E4C888-CF64-3DE9-A57A-186098ED6449}</Project>
+      <Name>ext_unzip</Name>
+    </ProjectReference>
+    <ProjectReference Include="D:\ClashOfClans\engine\external\xxhash\ext_xxhash.vcxproj">
+      <Project>{FC71CFC1-7B45-37F8-8E72-F6D1254E7337}</Project>
+      <Name>ext_xxhash</Name>
+    </ProjectReference>
+    <ProjectReference Include="D:\ClashOfClans\engine\external\xxtea\ext_xxtea.vcxproj">
+      <Project>{9E356AFD-33C1-3EE6-B37E-A8532CBB630D}</Project>
+      <Name>ext_xxtea</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
