@@ -87,7 +87,7 @@ void StartupScene::showSplashPhase() {
     _splashLayer->addChild(_legalTextLabel);
 
     // 4. 定时调度
-    this->scheduleOnce(CC_SCHEDULE_SELECTOR(StartupScene::showLoadingPhase), 3.0f);
+    this->scheduleOnce(CC_SCHEDULE_SELECTOR(StartupScene::showLoadingPhase), 0.3f);
 }
 
 void StartupScene::showLoadingPhase(float dt) {
@@ -115,18 +115,18 @@ void StartupScene::showLoadingPhase(float dt) {
     // 延迟0.5秒后开始进度条更新，等待淡入完成
     this->scheduleOnce([this](float) {
         this->schedule(CC_SCHEDULE_SELECTOR(StartupScene::updateLoadingBar), 0.05f);
-    }, 0.5f, "start_progress");
+    }, 0.05f, "start_progress");
 }
 
 void StartupScene::updateLoadingBar(float dt) {
     float currentPercent = _progressBar->getPercent();
-    float speed = (currentPercent < 50) ? 1.0f : 2.5f;
+    float speed = (currentPercent < 50) ? 3.0f : 5.0f;
     float newPercent = currentPercent + speed;
 
     if (newPercent >= 100) {
         _progressBar->setPercent(100);
         this->unschedule(CC_SCHEDULE_SELECTOR(StartupScene::updateLoadingBar));
-        this->scheduleOnce(CC_SCHEDULE_SELECTOR(StartupScene::goToVillageScene), 0.5f);
+        this->scheduleOnce(CC_SCHEDULE_SELECTOR(StartupScene::goToVillageScene), 0.05f);
     }
     else {
         _progressBar->setPercent(newPercent);
@@ -135,5 +135,5 @@ void StartupScene::updateLoadingBar(float dt) {
 
 void StartupScene::goToVillageScene(float dt) {
     auto scene = VillageScene::createScene();
-    Director::getInstance()->replaceScene(TransitionFade::create(1.0f, scene));
+    Director::getInstance()->replaceScene(TransitionFade::create(0.5f, scene));
 }

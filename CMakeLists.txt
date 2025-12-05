@@ -53,29 +53,33 @@ list(APPEND GAME_SOURCE
      Classes/Scene/VillageScene.cpp
      Classes/Layer/VillageLayer.cpp
      Classes/Layer/HUDLayer.cpp
-     Classes/Model/PlayerData.cpp
-     Classes/Controller/ResourceController.cpp
-     Classes/Controller/UpgradeController.cpp
-     Classes/Controller/BuildingController.cpp
-     Classes/System/GridMap.cpp
-     Classes/System/ResourceConfig.cpp
-     Classes/Model/Building.cpp
-     Classes/View/BuildingSprite.cpp
+     Classes/Controller/InputController.cpp
+     Classes/Manager/ResourceManager.cpp
+     Classes/Manager/SaveManager.cpp
+     Classes/Manager/BuildingDataManager.cpp
+     Classes/Model/GameSaveData.cpp
+     Classes/Model/ResourceProducer.cpp
+     Classes/Util/GridMapUtils.cpp
+     Classes/Util/JsonUtils.cpp
+     Classes/Util/TimeUtils.cpp
      )
 list(APPEND GAME_HEADER
+     ../proj.win32/Constants.h
      Classes/AppDelegate/AppDelegate.h
      Classes/Scene/StartupScene.h
      Classes/Scene/VillageScene.h
      Classes/Layer/VillageLayer.h
      Classes/Layer/HUDLayer.h
-     Classes/Model/PlayerData.h
-     Classes/Controller/ResourceController.h
-     Classes/Controller/UpgradeController.h
-     Classes/Controller/BuildingController.h
-     Classes/System/GridMap.h
-     Classes/System/ResourceConfig.h
+     Classes/Controller/InputController.h
+     Classes/Manager/ResourceManager.h
+     Classes/Manager/SaveManager.h
+     Classes/Manager/BuildingDataManager.h
+     Classes/Model/GameSaveData.h
+     Classes/Model/ResourceProducer.h
      Classes/Model/Building.h
-     Classes/View/BuildingSprite.h
+     Classes/Util/GridMapUtils.h
+     Classes/Util/JsonUtils.h
+     Classes/Util/TimeUtils.h
      )
 
 if(ANDROID)
@@ -90,11 +94,10 @@ elseif(LINUX)
          )
 elseif(WINDOWS)
     list(APPEND GAME_HEADER
-         proj.win32/main.h
          proj.win32/resource.h
          )
     list(APPEND GAME_SOURCE
-         proj.win32/main.cpp
+         proj.win32/GameMain.cpp
          proj.win32/game.rc
          ${common_res_files}
          )
