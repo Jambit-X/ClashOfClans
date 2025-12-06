@@ -1,5 +1,4 @@
 #include "ResourceManager.h"
-#include "SaveManager.h"
 
 ResourceManager* ResourceManager::_instance = nullptr;
 
@@ -54,10 +53,6 @@ void ResourceManager::setGold(int amount) {
 void ResourceManager::setElixir(int amount) {
   _elixir = amount;
   notifyResourceChanged();
-}
-
-void ResourceManager::saveResources() {
-  SaveManager::getInstance()->saveGame();
 }
 
 void ResourceManager::loadResources() {

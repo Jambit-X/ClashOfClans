@@ -41,8 +41,8 @@ private:
     // --- 回调函数 ---
     void onCloseClicked(cocos2d::Ref* sender);
     void onTabClicked(cocos2d::Ref* sender, int index);
+		void onPurchaseBuilding(const ShopItemData& data); // 购买建筑回调
 
-private:
     cocos2d::ui::ScrollView* _scrollView;
     std::vector<cocos2d::ui::Button*> _tabButtons; // 保存标签按钮引用，用于变色
 

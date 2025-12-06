@@ -1,5 +1,6 @@
 #include "VillageScene.h"
 #include "Layer/HUDLayer.h" 
+#include "Manager/VillageDataManager.h"
 
 USING_NS_CC;
 
@@ -11,6 +12,9 @@ bool VillageScene::init() {
   if (!Scene::init()) {
     return false;
   }
+
+  // 直接获取单例，无需创建
+  auto dataManager = VillageDataManager::getInstance();
 
   // 1. 添加游戏层（村庄地图）
   _gameLayer = VillageLayer::create();

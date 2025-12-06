@@ -25,9 +25,7 @@ bool HUDLayer::init() {
   updateResourceDisplay(500, 500);
  
   // --- 商店入口按钮开始 ---
-
-// 1. 创建按钮
-
+  // 1. 创建按钮
   auto shopBtn = ui::Button::create("UI/Shop/Shop-button.png");
 
   // 2. 设置位置 (左下角)

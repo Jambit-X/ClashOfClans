@@ -55,9 +55,7 @@ list(APPEND GAME_SOURCE
      Classes/Layer/ShopLayer.cpp
      Classes/Layer/HUDLayer.cpp
      Classes/Controller/InputController.cpp
-     Classes/Manager/ResourceManager.cpp
      Classes/Manager/VillageDataManager.cpp
-     Classes/Model/VillageData.cpp
      Classes/Util/GridMapUtils.cpp
      )
 list(APPEND GAME_HEADER

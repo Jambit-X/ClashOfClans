@@ -1,6 +1,7 @@
 ﻿// 【必须加在第一行】强制使用 UTF-8 编码，解决中文乱码
 #pragma execution_character_set("utf-8")
 
+#include "Manager/VillageDataManager.h"
 #include "ShopLayer.h"
 
 USING_NS_CC;
@@ -20,7 +21,6 @@ bool ShopLayer::init() {
     if (!Layer::init()) {
         return false;
     }
-
     auto visibleSize = Director::getInstance()->getVisibleSize();
 
     // 1. 黑色半透明遮罩
@@ -135,8 +135,17 @@ void ShopLayer::initBottomBar() {
     bar->setPosition(Vec2(0, 0));
     this->addChild(bar, 5);
 
+    // 从单例获取真实资源数据
+    auto dataManager = VillageDataManager::getInstance();
+    int gold = dataManager->getGold();
+    int elixir = dataManager->getElixir();
+
     // 资源文字
-    auto label = Label::createWithTTF("金币: 5000   圣水: 5000   宝石: 100", FONT_PATH, 28);
+    std::string resourceText = "金币: " + std::to_string(gold) +
+      "   圣水: " + std::to_string(elixir) +
+      "   宝石: 100"; // 宝石暂时硬编码
+
+    auto label = Label::createWithTTF(resourceText, FONT_PATH, 28);
     label->setPosition(Vec2(visibleSize.width / 2, 40));
     label->enableOutline(Color4B::BLACK, 2);
     bar->addChild(label);
@@ -260,6 +269,7 @@ void ShopLayer::addShopItem(const ShopItemData& data, int index) {
     touchBtn->setOpacity(0);
     touchBtn->addClickEventListener([=](Ref*) {
         CCLOG("购买了 %s", data.name.c_str());
+        this->onPurchaseBuilding(data);
         });
     bg->addChild(touchBtn);
 }
@@ -305,6 +315,59 @@ std::vector<ShopItemData> ShopLayer::getDummyData(int categoryIndex) {
     }
 
     return list;
+}
+
+// 购买调用函数
+void ShopLayer::onPurchaseBuilding(const ShopItemData& data) {
+  auto dataManager = VillageDataManager::getInstance();
+
+  bool success = false;
+
+  // 根据货币类型扣除资源
+  if (data.costType == "金币") {
+    success = dataManager->spendGold(data.cost);
+  } else if (data.costType == "圣水") {
+    success = dataManager->spendElixir(data.cost);
+  } else if (data.costType == "宝石") {
+    // 宝石逻辑暂未实现
+    CCLOG("宝石购买尚未实现");
+    return;
+  }
+
+  if (success) {
+    // 购买成功
+    CCLOG("购买成功: %s", data.name.c_str());
+
+    // 添加建筑到村庄（初始位置设为 -1, -1 表示未放置）
+    dataManager->addBuilding(
+      data.id,                          // 建筑类型ID
+      1,                                // 初始等级
+      -1, -1,                           // 未放置的坐标
+      BuildingInstance::State::PLACING, // 待放置状态
+      0                                 // 无完成时间
+    );
+
+    // 刷新底部资源显示
+    initBottomBar();
+
+    // 关闭商店，回到村庄放置建筑
+    this->onCloseClicked(nullptr);
+  } else {
+    // 资源不足
+    CCLOG("资源不足，无法购买 %s", data.name.c_str());
+
+    // 可以添加提示框
+    auto label = Label::createWithTTF("资源不足！", FONT_PATH, 30);
+    label->setPosition(Director::getInstance()->getVisibleSize() / 2);
+    label->setColor(Color3B::RED);
+    this->addChild(label, 100);
+
+    label->runAction(Sequence::create(
+      FadeOut::create(1.5f),
+      RemoveSelf::create(),
+      nullptr
+    ));
+  }
 }
 
 void ShopLayer::onCloseClicked(Ref* sender) {
