@@ -4,14 +4,17 @@
 #include "cocos2d.h"
 
 class InputController;  // 前向声明
+class BuildingManager;  // 前置声明
 
 class VillageLayer : public cocos2d::Layer {
 private:
   // 地图精灵
   cocos2d::Sprite* _mapSprite;
-
   // 输入控制器
   InputController* _inputController;
+  // 建筑管理
+  BuildingManager* _buildingManager;  
+
 
 public:
   virtual bool init() override;
@@ -19,6 +22,10 @@ public:
 
   // 获取输入控制器
   InputController* getInputController() const { return _inputController; }
+  // 获取建筑管理器
+  BuildingManager* getBuildingManager() const { return _buildingManager; }
+  // 商店购买建筑后的回调
+  void onBuildingPurchased(int buildingId);
 
   // 清理
   virtual void cleanup() override;

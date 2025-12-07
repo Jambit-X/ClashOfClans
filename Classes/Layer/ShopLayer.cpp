@@ -2,7 +2,9 @@
 #pragma execution_character_set("utf-8")
 
 #include "Manager/VillageDataManager.h"
+#include "Layer/VillageLayer.h"
 #include "ShopLayer.h"
+#include "Manager/BuildingManager.h" 
 
 USING_NS_CC;
 using namespace ui;
@@ -338,20 +340,32 @@ void ShopLayer::onPurchaseBuilding(const ShopItemData& data) {
     // 购买成功
     CCLOG("购买成功: %s", data.name.c_str());
 
-    // 添加建筑到村庄（初始位置设为 -1, -1 表示未放置）
-    dataManager->addBuilding(
+    // 添加建筑数据（状态为 PLACING）
+    int buildingId = dataManager->addBuilding(
       data.id,                          // 建筑类型ID
       1,                                // 初始等级
-      -1, -1,                           // 未放置的坐标
+      -1, -1,                           // 坐标未定（-1表示未放置）
       BuildingInstance::State::PLACING, // 待放置状态
       0                                 // 无完成时间
     );
 
     // 刷新底部资源显示
-    initBottomBar();
+    // initBottomBar();  // 如果需要刷新资源显示
 
-    // 关闭商店，回到村庄放置建筑
+    // 关闭商店
     this->onCloseClicked(nullptr);
+
+    // 通知 VillageLayer 开始放置建筑
+    auto scene = this->getScene();
+    if (scene) {
+      // 假设 VillageLayer 的 Tag 是 1（需要在创建时设置）
+      auto villageLayer = dynamic_cast<VillageLayer*>(scene->getChildByTag(1));
+      if (villageLayer) {
+        villageLayer->onBuildingPurchased(buildingId);
+      } else {
+        CCLOG("警告：未找到 VillageLayer，无法放置建筑");
+      }
+    }
   } else {
     // 资源不足
     CCLOG("资源不足，无法购买 %s", data.name.c_str());

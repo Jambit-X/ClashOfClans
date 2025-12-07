@@ -56,7 +56,10 @@ list(APPEND GAME_SOURCE
      Classes/Layer/HUDLayer.cpp
      Classes/Controller/InputController.cpp
      Classes/Manager/VillageDataManager.cpp
+     Classes/Manager/BuildingManager.cpp
+     Classes/Model/BuildingConfig.cpp
      Classes/Util/GridMapUtils.cpp
+     Classes/Sprite/BuildingSprite.cpp
      )
 list(APPEND GAME_HEADER
      ../proj.win32/Constants.h
@@ -68,8 +71,11 @@ list(APPEND GAME_HEADER
      Classes/Layer/HUDLayer.h
      Classes/Controller/InputController.h
      Classes/Manager/VillageDataManager.h
+     Classes/Manager/BuildingManager.h
      Classes/Model/VillageData.h
+     Classes/Model/BuildingConfig.h
      Classes/Util/GridMapUtils.h
+     Classes/Sprite/BuildingSprite.h
      )
 
 if(ANDROID)
