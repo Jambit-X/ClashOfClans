@@ -1,5 +1,5 @@
-#ifndef __INPUT_CONTROLLER_H__
-#define __INPUT_CONTROLLER_H__
+#ifndef __MOVE_MAP_CONTROLLER_H__
+#define __MOVE_MAP_CONTROLLER_H__
 
 #include "cocos2d.h"
 #include <functional>
@@ -18,11 +18,11 @@ enum class TapTarget {
   SHOP       // 商店图标
 };
 
-class InputController {
+class MoveMapController {
 public:
-  // 构造函数：传入需要控制的 VillageLayer
-  InputController(cocos2d::Layer* villageLayer);
-  ~InputController();
+  // 构造函数，需要传入 VillageLayer
+  MoveMapController(cocos2d::Layer* villageLayer);
+  ~MoveMapController();
 
   // 初始化输入监听
   void setupInputListeners();
@@ -53,8 +53,13 @@ public:
     _onShopOpened = callback;
   }
 
+  // 设置建筑点击回调（用于触发移动）
+  void setOnBuildingClickedCallback(std::function<void(int)> callback) {
+    _onBuildingClicked = callback;
+  }
+
 private:
-  // ========== 基本属性 ==========
+  // ========== 核心属性 ========= =
   cocos2d::Layer* _villageLayer;  // 村庄地图层
   InputState _currentState;       // 当前输入状态
 
@@ -66,7 +71,7 @@ private:
 
   // 拖动状态
   cocos2d::Vec2 _touchStartPos;   // 触摸开始位置
-  cocos2d::Vec2 _layerStartPos;   // Layer 开始位置
+  cocos2d::Vec2 _layerStartPos;   // Layer 起始位置
   bool _isDragging;               // 是否正在拖动
 
   // 事件监听器
@@ -78,15 +83,16 @@ private:
   std::function<TapTarget(const cocos2d::Vec2&)> _onTapDetection;  // 点击检测回调
   std::function<void(const cocos2d::Vec2&)> _onBuildingSelected;   // 建筑选中回调
   std::function<void(const cocos2d::Vec2&)> _onShopOpened;         // 商店打开回调
+  std::function<void(int)> _onBuildingClicked;                     // 建筑点击回调（传入建筑ID）
 
-  // ========== 状态管理 ==========
+  // ========== 状态管理 ========= =
   void changeState(InputState newState);
 
-  // ========== 初始化相关 ==========
+  // ========== 初始化方法 ========= =
   void calculateMinScale();
   void initializeMapTransform();
 
-  // ========== 触摸事件处理 ==========
+  // ========== 触摸事件处理 ========= =
   void setupTouchHandling();
   bool onTouchBegan(cocos2d::Touch* touch, cocos2d::Event* event);
   void onTouchMoved(cocos2d::Touch* touch, cocos2d::Event* event);
@@ -96,7 +102,7 @@ private:
   void handleMapDragging(cocos2d::Touch* touch);
   void handleTap(const cocos2d::Vec2& tapPosition);
 
-  // ========== 鼠标事件处理（缩放） ==========
+  // ========== 鼠标事件处理（缩放）==========
   void setupMouseHandling();
   void onMouseScroll(cocos2d::Event* event);
 
@@ -104,7 +110,7 @@ private:
   cocos2d::Vec2 getAdjustedMousePosition(cocos2d::EventMouse* mouseEvent);
   void applyZoomAroundPoint(const cocos2d::Vec2& zoomPoint, float newScale);
 
-  // ========== 辅助方法 ==========
+  // ========== 辅助方法 ========= =
   cocos2d::Vec2 clampMapPosition(const cocos2d::Vec2& position);
   bool isTapGesture(const cocos2d::Vec2& startPos, const cocos2d::Vec2& endPos);
 };

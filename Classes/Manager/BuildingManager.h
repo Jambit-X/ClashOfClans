@@ -32,25 +32,22 @@ public:
   // 根据网格坐标获取建筑
   BuildingSprite* getBuildingAtGrid(int gridX, int gridY) const;
 
+  // 根据世界坐标获取建筑（用于点击检测）
+  BuildingSprite* getBuildingAtWorldPos(const cocos2d::Vec2& worldPos) const;
+
   // 更新所有建筑（用于定时检查建造完成）
   void update(float dt);
 
-  // 网格坐标转世界坐标
+  // 网格坐标转世界坐标（使用 GridMapUtils）
   Vec2 gridToWorld(int gridX, int gridY) const;
   Vec2 gridToWorld(const Vec2& gridPos) const;
 
-  // 世界坐标转网格坐标
+  // 世界坐标转网格坐标（使用 GridMapUtils）
   Vec2 worldToGrid(const Vec2& worldPos) const;
 
 private:
   Layer* _parentLayer;                                      // 父层
   std::unordered_map<int, BuildingSprite*> _buildings;    // 建筑映射表 <buildingId, sprite>
-
-  // 网格参数
-  static const int GRID_WIDTH = 40;      // 网格宽度
-  static const int GRID_HEIGHT = 40;     // 网格高度
-  static const int MAP_GRID_COLS = 50;   // 地图网格列数
-  static const int MAP_GRID_ROWS = 50;   // 地图网格行数
 };
 
 #endif // __BUILDING_MANAGER_H__

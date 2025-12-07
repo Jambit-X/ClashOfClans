@@ -1,9 +1,11 @@
-#include "VillageLayer.h"
-#include "../Controller/InputController.h"
+ï»¿#include "VillageLayer.h"
+#include "../Controller/MoveMapController.h"
+#include "../Controller/MoveBuildingController.h"
 #include "../Util/GridMapUtils.h"
 #include "../proj.win32/Constants.h"
 #include "Manager/BuildingManager.h"
 #include "Manager/VillageDataManager.h"
+#include "ui/CocosGUI.h"
 #include <iostream>
 
 USING_NS_CC;
@@ -13,35 +15,50 @@ bool VillageLayer::init() {
     return false;
   }
 
-  // 1. ´´½¨µØÍ¼¾«Áé
+  // 1. åˆ›å»ºåœ°å›¾ç²¾çµ
   _mapSprite = createMapSprite();
   if (!_mapSprite) {
     return false;
   }
   this->addChild(_mapSprite);
 
-  // 2. ³õÊ¼»¯»ù±¾ÊôÐÔ
+  // 2. åˆå§‹åŒ–åŸºæœ¬å±žæ€§
   initializeBasicProperties();
 
-  // 3. ´´½¨ÊäÈë¿ØÖÆÆ÷£¨¿ØÖÆÆ÷»á¸ºÔð³õÊ¼»¯Ëõ·ÅºÍÎ»ÖÃ£©
-  _inputController = new InputController(this);
-  _inputController->setupInputListeners();
-
-  // 3. ³õÊ¼»¯½¨Öþ¹ÜÀíÆ÷£¨ÐÂÔö£©
+  // 3. åˆå§‹åŒ–å»ºç­‘ç®¡ç†å™¨
   _buildingManager = new BuildingManager(this);
 
-  // 4. Æô¶¯½¨Öþ¸üÐÂ£¨¼ì²é½¨ÔìÍê³É£©
+  // âœ… 4. å…ˆåˆå§‹åŒ–å»ºç­‘ç§»åŠ¨æŽ§åˆ¶å™¨ï¼ˆä¼˜å…ˆçº§æ›´é«˜ï¼‰
+  _moveBuildingController = new MoveBuildingController(this, _buildingManager);
+  _moveBuildingController->setupTouchListener();
+
+  // âœ… 5. åŽåˆå§‹åŒ–åœ°å›¾ç§»åŠ¨æŽ§åˆ¶å™¨ï¼ˆä¼˜å…ˆçº§æ›´ä½Žï¼‰
+  _inputController = new MoveMapController(this);
+  _inputController->setupInputListeners();
+
+  // 6. è®¾ç½®ç‚¹å‡»æ£€æµ‹å›žè°ƒ
+  setupInputCallbacks();
+
+  // 7. å¯åŠ¨å»ºç­‘æ›´æ–°
   this->schedule([this](float dt) {
     _buildingManager->update(dt);
-  }, 1.0f, "building_update");  // Ã¿Ãë¼ì²éÒ»´Î
+  }, 1.0f, "building_update");
 
-  CCLOG("VillageLayer initialized with InputController");
+  CCLOG("VillageLayer initialized successfully");
+  CCLOG("  - MoveBuildingController added first (higher priority)");
+  CCLOG("  - MoveMapController added second (lower priority)");
 
   return true;
 }
 
 void VillageLayer::cleanup() {
-  // ÇåÀí½¨Öþ¹ÜÀíÆ÷
+  // æ¸…ç†å»ºç­‘ç§»åŠ¨æŽ§åˆ¶å™¨
+  if (_moveBuildingController) {
+    delete _moveBuildingController;
+    _moveBuildingController = nullptr;
+  }
+
+  // æ¸…ç†å»ºç­‘ç®¡ç†å™¨
   if (_buildingManager) {
     delete _buildingManager;
     _buildingManager = nullptr;
@@ -56,37 +73,36 @@ void VillageLayer::cleanup() {
   Layer::cleanup();
 }
 
-
-// ¹ºÂò½¨Öþ»Øµ÷º¯Êý
+// è´­ä¹°å»ºç­‘å›žè°ƒå‡½æ•°
 void VillageLayer::onBuildingPurchased(int buildingId) {
-  CCLOG("VillageLayer: ½¨ÖþÒÑ¹ºÂò£¬ID=%d£¬×¼±¸·ÅÖÃ", buildingId);
+  CCLOG("VillageLayer: å»ºç­‘å·²è´­ä¹°ï¼ŒID=%dï¼Œå‡†å¤‡æ”¾ç½®", buildingId);
 
-  // TODO: µ÷ÓÃ InputController ¿ªÊ¼½¨Öþ·ÅÖÃÄ£Ê½
+  // TODO: è°ƒç”¨ MoveMapController å¼€å§‹å»ºç­‘æ”¾ç½®æ¨¡å¼
   // _inputController->startBuildingPlacement(buildingId);
 
-  // ÔÝÊ±µÄÁÙÊ±ÊµÏÖ£ºÖ±½Ó·ÅÖÃµ½Ëæ»úÎ»ÖÃ
+  // æš‚æ—¶çš„ä¸´æ—¶å®žçŽ°ï¼šç›´æŽ¥æ”¾ç½®åˆ°éšæœºä½ç½®
   auto dataManager = VillageDataManager::getInstance();
   auto building = dataManager->getBuildingById(buildingId);
 
   if (building) {
-    // ÁÙÊ±£º·ÅÖÃµ½ (10, 10) Î»ÖÃ
-    dataManager->setBuildingPosition(buildingId, 10, 10);
+    // ä¸´æ—¶ï¼šæ”¾ç½®åˆ° (0, 0) ä½ç½®
+    dataManager->setBuildingPosition(buildingId,0,0);
     dataManager->setBuildingState(buildingId,
                                   BuildingInstance::State::CONSTRUCTING,
-                                  time(nullptr) + 60);  // 1·ÖÖÓºóÍê³É
+                                  time(nullptr) + 60);  // 1åˆ†é’ŸåŽå®Œæˆ
 
-    // ÈÃ BuildingManager ´´½¨¾«Áé
+    // è®© BuildingManager åˆ›å»ºç²¾çµ
     _buildingManager->addBuilding(*building);
   }
 }
 
 
-#pragma region ³õÊ¼»¯·½·¨
+//åˆå§‹åŒ–æ–¹æ³•
 void VillageLayer::initializeBasicProperties() {
   auto mapSize = _mapSprite->getContentSize();
   this->setContentSize(mapSize);
 
-  // Ê¹ÓÃ×óÏÂ½ÇÃªµã
+  // ä½¿ç”¨å·¦ä¸‹è§’é”šç‚¹
   this->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
 
   CCLOG("VillageLayer basic properties initialized:");
@@ -94,7 +110,7 @@ void VillageLayer::initializeBasicProperties() {
 }
 #pragma endregion
 
-#pragma region ¸¨Öú·½·¨
+// è¾…åŠ©æ–¹æ³•
 Sprite* VillageLayer::createMapSprite() {
   auto mapSprite = Sprite::create("Scene/LinedVillageScene.jpg");
   if (!mapSprite) {
@@ -102,9 +118,51 @@ Sprite* VillageLayer::createMapSprite() {
     return nullptr;
   }
 
-  // Ê¹ÓÃ×óÏÂ½ÇÃªµã£¬Î»ÖÃÉèÎª(0,0)
+  // ä½¿ç”¨å·¦ä¸‹è§’é”šç‚¹ï¼Œä½ç½®è®¾ä¸º(0,0)
   mapSprite->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
   mapSprite->setPosition(Vec2::ZERO);
   return mapSprite;
 }
+
+BuildingSprite* VillageLayer::getBuildingAtScreenPos(const Vec2& screenPos) {
+  Vec2 worldPos = this->convertToNodeSpace(screenPos);
+  return _buildingManager->getBuildingAtWorldPos(worldPos);
+}
 #pragma endregion
+
+// è®¾ç½®è¾“å…¥å›žè°ƒ
+void VillageLayer::setupInputCallbacks() {
+  CCLOG("VillageLayer: Setting up input callbacks");
+  
+  // ========== å›žè°ƒ 1: ç‚¹å‡»æ£€æµ‹ï¼ˆç”¨äºŽ MoveMapController åˆ¤æ–­ç‚¹å‡»äº†ä»€ä¹ˆï¼‰==========
+  _inputController->setOnTapCallback([this](const Vec2& screenPos) -> TapTarget {
+    auto building = getBuildingAtScreenPos(screenPos);
+    
+    if (building) {
+      CCLOG("VillageLayer: Tap detected on building ID=%d", building->getBuildingId());
+      return TapTarget::BUILDING;
+    }
+    
+    // TODO: æ£€æµ‹æ˜¯å¦ç‚¹å‡»å•†åº—æŒ‰é’®
+    // if (isShopButtonClicked(screenPos)) {
+    //     return TapTarget::SHOP;
+    // }
+    
+    return TapTarget::NONE;
+  });
+  
+  // ========== å›žè°ƒ 2: å»ºç­‘é€‰ä¸­ï¼ˆè‡ªåŠ¨è¿›å…¥ç§»åŠ¨æ¨¡å¼ï¼‰==========
+  _inputController->setOnBuildingSelectedCallback([this](const Vec2& screenPos) {
+    auto building = getBuildingAtScreenPos(screenPos);
+    
+    if (building) {
+      int buildingId = building->getBuildingId();
+      CCLOG("VillageLayer: Auto-starting move mode for building ID=%d", buildingId);
+      _moveBuildingController->startMoving(buildingId);
+    } else {
+      CCLOG("VillageLayer: ERROR - Building selected callback triggered but no building found!");
+    }
+  });
+  
+  CCLOG("VillageLayer: Input callbacks configured");
+}

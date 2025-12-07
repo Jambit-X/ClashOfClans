@@ -54,7 +54,8 @@ list(APPEND GAME_SOURCE
      Classes/Layer/VillageLayer.cpp
      Classes/Layer/ShopLayer.cpp
      Classes/Layer/HUDLayer.cpp
-     Classes/Controller/InputController.cpp
+     Classes/Controller/MoveMapController.cpp
+     Classes/Controller/MoveBuildingController.cpp
      Classes/Manager/VillageDataManager.cpp
      Classes/Manager/BuildingManager.cpp
      Classes/Model/BuildingConfig.cpp
@@ -69,7 +70,8 @@ list(APPEND GAME_HEADER
      Classes/Layer/ShopLayer.h
      Classes/Layer/VillageLayer.h
      Classes/Layer/HUDLayer.h
-     Classes/Controller/InputController.h
+     Classes/Controller/MoveMapController.h
+     Classes/Controller/MoveBuildingController.h
      Classes/Manager/VillageDataManager.h
      Classes/Manager/BuildingManager.h
      Classes/Model/VillageData.h

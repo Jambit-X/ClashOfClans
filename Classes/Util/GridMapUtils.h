@@ -7,67 +7,74 @@
  * 网格地图工具类
  * 
  * 网格系统说明：
- * - 44x44 等距菱形网格（Isometric Grid）
- * - 网格坐标原点 (0,0) 在网格区域左下角
- * - 网格坐标 (43,43) 在网格区域右上角
- * - 像素坐标锚点在背景图左下角
+ * - 44x44 等轴测菱形网格（Isometric Grid）
+ * - 网格坐标原点 (0,0) 对应菱形左顶点
+ * - 网格坐标 (43,43) 对应菱形右顶点
+ * - 世界坐标系：背景图左下角为(0,0)，Y轴向上
  * 
  * 网格区域参数：
- * - 背景图尺寸：3705 x 2545 像素
- * - 网格区域中心：(1893, 1370)
- * - 网格区域顶点：
- *   - 左顶点：(660, 1371)
- *   - 右顶点：(3128, 1370)
- *   - 上顶点：(1893, 2293)
- *   - 下顶点：(1893, 445)
+ * - 中心：(1893, 1370)
+ * - 左顶点：(660, 1365) ← 网格原点 (0, 0)
+ * - 右顶点：(3128, 1365) ← 网格 (44, 44)
+ * - 上顶点：(1893, 2293) ← 网格 (0, 44)
+ * - 下顶点：(1893, 445) ← 网格 (44, 0)
  */
 class GridMapUtils {
 public:
-    // 网格参数常量
+    // 网格尺寸常量
     static const int GRID_WIDTH = 44;   // 网格宽度（格数）
     static const int GRID_HEIGHT = 44;  // 网格高度（格数）
     
-    // 网格区域中心像素坐标
-    static const int CENTER_X = 1893;
-    static const int CENTER_Y = 1370;
+    // 网格坐标系原点和单位向量（像素）
+    static const float GRID_ORIGIN_X;   // 网格(0,0)对应的世界X坐标
+    static const float GRID_ORIGIN_Y;   // 网格(0,0)对应的世界Y坐标
     
-    // 网格区域菱形顶点
-    static const int LEFT_VERTEX_X = 660;
-    static const int LEFT_VERTEX_Y = 1371;
-    static const int RIGHT_VERTEX_X = 3128;
-    static const int RIGHT_VERTEX_Y = 1370;
-    static const int TOP_VERTEX_X = 1893;
-    static const int TOP_VERTEX_Y = 2293;
-    static const int BOTTOM_VERTEX_X = 1893;
-    static const int BOTTOM_VERTEX_Y = 445;
+    static const float GRID_X_UNIT_X;   // 网格X+1方向的世界X偏移
+    static const float GRID_X_UNIT_Y;   // 网格X+1方向的世界Y偏移
+    
+    static const float GRID_Y_UNIT_X;   // 网格Y+1方向的世界X偏移
+    static const float GRID_Y_UNIT_Y;   // 网格Y+1方向的世界Y偏移
+    
+    // ========== 坐标转换 ==========
     
     /**
-     * 像素坐标转网格坐标
-     * @param pixelPos 像素坐标（锚点为背景图左下角）
-     * @return 网格坐标（可能是小数，表示在网格内的精确位置）
+     * 世界坐标转网格坐标（精确）
+     * @param pixelX 世界X坐标（像素）
+     * @param pixelY 世界Y坐标（像素）
+     * @return 网格坐标（可能是小数）
      */
+    static cocos2d::Vec2 pixelToGrid(float pixelX, float pixelY);
     static cocos2d::Vec2 pixelToGrid(const cocos2d::Vec2& pixelPos);
     
     /**
-     * 网格坐标转像素坐标（网格左下角）
-     * @param gridPos 网格坐标
-     * @return 像素坐标（网格单元左下角的像素位置）
+     * 网格坐标转世界坐标（网格左下角）
+     * @param gridX 网格X坐标
+     * @param gridY 网格Y坐标
+     * @return 世界坐标（该网格单元左下角的像素位置）
      */
+    static cocos2d::Vec2 gridToPixel(int gridX, int gridY);
     static cocos2d::Vec2 gridToPixel(const cocos2d::Vec2& gridPos);
     
     /**
-     * 网格坐标转像素坐标（网格中心）
-     * @param gridPos 网格坐标
-     * @return 像素坐标（网格单元中心的像素位置）
+     * 网格坐标转世界坐标（网格中心）
+     * @param gridX 网格X坐标
+     * @param gridY 网格Y坐标
+     * @return 世界坐标（该网格单元中心的像素位置）
      */
+    static cocos2d::Vec2 gridToPixelCenter(int gridX, int gridY);
     static cocos2d::Vec2 gridToPixelCenter(const cocos2d::Vec2& gridPos);
     
     /**
-     * 像素坐标对齐到最近的网格
-     * @param pixelPos 像素坐标
-     * @return 对齐后的网格坐标（整数）
+     * 获取建筑中心的世界坐标
+     * @param gridX 建筑左下角网格X坐标
+     * @param gridY 建筑左下角网格Y坐标
+     * @param width 建筑宽度（格数）
+     * @param height 建筑高度（格数）
+     * @return 建筑中心的世界坐标
      */
-    static cocos2d::Vec2 snapToGrid(const cocos2d::Vec2& pixelPos);
+    static cocos2d::Vec2 getBuildingCenterPixel(int gridX, int gridY, int width, int height);
+    
+    // ========== 边界检测 ==========
     
     /**
      * 检查网格坐标是否在有效范围内
@@ -76,26 +83,38 @@ public:
      * @return 是否在 [0,43] 范围内
      */
     static bool isValidGridPosition(int gridX, int gridY);
+    static bool isValidGridPosition(const cocos2d::Vec2& gridPos);
     
     /**
-     * 检查建筑是否可以放置在指定网格位置
-     * @param gridX 网格X坐标（建筑左下角）
-     * @param gridY 网格Y坐标（建筑左下角）
+     * 检查建筑是否完全在网格范围内
+     * @param gridX 建筑左下角网格X坐标
+     * @param gridY 建筑左下角网格Y坐标
      * @param width 建筑宽度（格数）
      * @param height 建筑高度（格数）
-     * @return 是否所有占用的网格都在有效范围内
+     * @return 建筑所有占用的网格是否都在有效范围内
      */
-    static bool canPlaceBuilding(int gridX, int gridY, int width, int height);
-
-private:
-    // 等距网格的单位向量（像素）
-    // 从网格中心到右顶点的向量 / 22（半个网格宽度）
-    static float GRID_UNIT_X;  // X方向单位向量长度
-    static float GRID_UNIT_Y;  // Y方向单位向量长度
+    static bool isBuildingInBounds(int gridX, int gridY, int width, int height);
     
-    // 初始化网格参数
-    static void initialize();
-    static bool _initialized;
+    /**
+     * @brief 检查两个矩形是否重叠（用于碰撞检测）
+     * @param pos1 第一个矩形的左下角位置（网格坐标）
+     * @param size1 第一个矩形的大小（网格单位）
+     * @param pos2 第二个矩形的左下角位置（网格坐标）
+     * @param size2 第二个矩形的大小（网格单位）
+     * @return 是否重叠
+     */
+    static bool isRectOverlap(
+      const cocos2d::Vec2& pos1, const cocos2d::Size& size1,
+      const cocos2d::Vec2& pos2, const cocos2d::Size& size2);
+    
+    /**
+     * @brief 获取建筑的最终渲染位置（网格坐标 + 视觉偏移）
+     * @param gridX 建筑左下角网格X坐标
+     * @param gridY 建筑左下角网格Y坐标
+     * @param visualOffset 视觉偏移量（从 BuildingSprite::getVisualOffset() 获取）
+     * @return 最终渲染位置（世界坐标）
+     */
+    static cocos2d::Vec2 getVisualPosition(int gridX, int gridY, const cocos2d::Vec2& visualOffset);
 };
 
-#endif
+#endif // __GRID_MAP_UTILS_H__

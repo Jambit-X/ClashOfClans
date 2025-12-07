@@ -1,17 +1,16 @@
-#include "InputController.h"
+#include "MoveMapController.h"
 #include "../proj.win32/Constants.h"
 #include <iostream>
 
 USING_NS_CC;
 
 // 静态常量定义
-const float InputController::MAX_SCALE = 3.0f;
-const float InputController::ZOOM_SPEED = 0.05f;
+const float MoveMapController::MAX_SCALE = 3.0f;
+const float MoveMapController::ZOOM_SPEED = 0.05f;
 
-// Tap 判定阈值（像素）
-const float TAP_THRESHOLD = 10.0f;
+const float TAP_THRESHOLD = 15.0f;
 
-InputController::InputController(Layer* villageLayer)
+MoveMapController::MoveMapController(Layer* villageLayer)
   : _villageLayer(villageLayer)
   , _currentState(InputState::MAP_DRAG)
   , _minScale(1.0f)
@@ -23,17 +22,18 @@ InputController::InputController(Layer* villageLayer)
   , _onTapDetection(nullptr)
   , _onBuildingSelected(nullptr)
   , _onShopOpened(nullptr)
+  , _onBuildingClicked(nullptr)
 {
   calculateMinScale();
   _currentScale = _minScale;
 }
 
-InputController::~InputController() {
+MoveMapController::~MoveMapController() {
   cleanup();
 }
 
 #pragma region 初始化和清理
-void InputController::setupInputListeners() {
+void MoveMapController::setupInputListeners() {
   // 初始化地图的缩放和位置
   initializeMapTransform();
   
@@ -41,12 +41,12 @@ void InputController::setupInputListeners() {
   setupTouchHandling();
   setupMouseHandling();
   
-  CCLOG("InputController: Input listeners initialized");
+  CCLOG("MoveMapController: Input listeners initialized");
   CCLOG("  Initial state: MAP_DRAG");
   CCLOG("  Scale range: %.3f - %.3f", _minScale, MAX_SCALE);
 }
 
-void InputController::cleanup() {
+void MoveMapController::cleanup() {
   if (_touchListener) {
     Director::getInstance()->getEventDispatcher()->removeEventListener(_touchListener);
     _touchListener = nullptr;
@@ -57,10 +57,10 @@ void InputController::cleanup() {
     _mouseListener = nullptr;
   }
   
-  CCLOG("InputController: Cleaned up");
+  CCLOG("MoveMapController: Cleaned up");
 }
 
-void InputController::calculateMinScale() {
+void MoveMapController::calculateMinScale() {
   auto visibleSize = Director::getInstance()->getVisibleSize();
   auto mapSize = _villageLayer->getContentSize();
 
@@ -68,10 +68,10 @@ void InputController::calculateMinScale() {
   float scaleY = visibleSize.height / mapSize.height;
   _minScale = std::max(scaleX, scaleY);
 
-  CCLOG("InputController: Calculated MIN_SCALE: %.3f", _minScale);
+  CCLOG("MoveMapController: Calculated MIN_SCALE: %.3f", _minScale);
 }
 
-void InputController::initializeMapTransform() {
+void MoveMapController::initializeMapTransform() {
   auto mapSize = _villageLayer->getContentSize();
   auto visibleSize = Director::getInstance()->getVisibleSize();
 
@@ -83,20 +83,20 @@ void InputController::initializeMapTransform() {
   float initialY = (visibleSize.height - mapSize.height * _currentScale) / 2;
   _villageLayer->setPosition(initialX, initialY);
 
-  CCLOG("InputController: Map transform initialized");
+  CCLOG("MoveMapController: Map transform initialized");
   CCLOG("  Initial scale: %.3f", _currentScale);
   CCLOG("  Initial position: (%.2f, %.2f)", initialX, initialY);
 }
 #pragma endregion
 
 #pragma region 状态管理
-void InputController::changeState(InputState newState) {
+void MoveMapController::changeState(InputState newState) {
   if (_currentState == newState) return;
 
   InputState oldState = _currentState;
   _currentState = newState;
 
-  CCLOG("InputController: State changed from %d to %d", (int)oldState, (int)newState);
+  CCLOG("MoveMapController: State changed from %d to %d", (int)oldState, (int)newState);
 
   // 触发状态改变回调
   if (_onStateChanged) {
@@ -106,21 +106,24 @@ void InputController::changeState(InputState newState) {
 #pragma endregion
 
 #pragma region 触摸事件处理
-void InputController::setupTouchHandling() {
+void MoveMapController::setupTouchHandling() {
   _touchListener = EventListenerTouchOneByOne::create();
   _touchListener->setSwallowTouches(true);
 
-  _touchListener->onTouchBegan = CC_CALLBACK_2(InputController::onTouchBegan, this);
-  _touchListener->onTouchMoved = CC_CALLBACK_2(InputController::onTouchMoved, this);
-  _touchListener->onTouchEnded = CC_CALLBACK_2(InputController::onTouchEnded, this);
+  _touchListener->onTouchBegan = CC_CALLBACK_2(MoveMapController::onTouchBegan, this);
+  _touchListener->onTouchMoved = CC_CALLBACK_2(MoveMapController::onTouchMoved, this);
+  _touchListener->onTouchEnded = CC_CALLBACK_2(MoveMapController::onTouchEnded, this);
 
   Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(
     _touchListener, _villageLayer);
 }
 
-bool InputController::onTouchBegan(Touch* touch, Event* event) {
+bool MoveMapController::onTouchBegan(Touch* touch, Event* event) {
+  CCLOG("MoveMapController::onTouchBegan - currentState=%d", (int)_currentState);
+  
   // 只在 MAP_DRAG 状态处理输入
   if (_currentState != InputState::MAP_DRAG) {
+    CCLOG("MoveMapController::onTouchBegan - Rejected: not in MAP_DRAG state");
     return false;
   }
 
@@ -129,17 +132,27 @@ bool InputController::onTouchBegan(Touch* touch, Event* event) {
   return true;
 }
 
-void InputController::onTouchMoved(Touch* touch, Event* event) {
+void MoveMapController::onTouchMoved(Touch* touch, Event* event) {
   if (_currentState != InputState::MAP_DRAG) {
     return;
   }
 
-  _isDragging = true;
-  handleMapDragging(touch);
+  // 只有拖动距离超过阈值才算拖动
+  Vec2 currentPos = touch->getLocation();
+  float distance = _touchStartPos.distance(currentPos);
+  
+  if (distance > TAP_THRESHOLD) {
+    _isDragging = true;
+    handleMapDragging(touch);
+  }
 }
 
-void InputController::onTouchEnded(Touch* touch, Event* event) {
+void MoveMapController::onTouchEnded(Touch* touch, Event* event) {
+  CCLOG("MoveMapController::onTouchEnded - currentState=%d, isDragging=%s", 
+        (int)_currentState, _isDragging ? "true" : "false");
+  
   if (_currentState != InputState::MAP_DRAG) {
+    CCLOG("MoveMapController::onTouchEnded - Rejected: not in MAP_DRAG state");
     return;
   }
 
@@ -147,20 +160,24 @@ void InputController::onTouchEnded(Touch* touch, Event* event) {
 
   // 判断是 Tap 还是 Drag
   if (!_isDragging && isTapGesture(_touchStartPos, endPos)) {
+    CCLOG("MoveMapController::onTouchEnded - Detected TAP gesture");
     handleTap(endPos);
+  } else {
+    CCLOG("MoveMapController::onTouchEnded - Not a tap: isDragging=%s, distance=%.2f", 
+          _isDragging ? "true" : "false", _touchStartPos.distance(endPos));
   }
 
   _isDragging = false;
 }
 
-void InputController::storeTouchStartState(Touch* touch) {
+void MoveMapController::storeTouchStartState(Touch* touch) {
   _touchStartPos = touch->getLocation();
   _layerStartPos = _villageLayer->getPosition();
   
   CCLOG("Touch began at (%.2f, %.2f)", _touchStartPos.x, _touchStartPos.y);
 }
 
-void InputController::handleMapDragging(Touch* touch) {
+void MoveMapController::handleMapDragging(Touch* touch) {
   Vec2 currentTouchPos = touch->getLocation();
   Vec2 delta = currentTouchPos - _touchStartPos;
   Vec2 newPos = _layerStartPos + delta;
@@ -169,7 +186,7 @@ void InputController::handleMapDragging(Touch* touch) {
   _villageLayer->setPosition(newPos);
 }
 
-void InputController::handleTap(const Vec2& tapPosition) {
+void MoveMapController::handleTap(const Vec2& tapPosition) {
   CCLOG("Tap detected at (%.2f, %.2f)", tapPosition.x, tapPosition.y);
 
   // 如果有点击检测回调，调用它
@@ -182,7 +199,8 @@ void InputController::handleTap(const Vec2& tapPosition) {
   switch (target) {
     case TapTarget::BUILDING:
       CCLOG("  -> Target: BUILDING");
-      changeState(InputState::BUILDING_SELECTED);
+      
+      // 触发建筑选中回调（不改变状态，保持 MAP_DRAG）
       if (_onBuildingSelected) {
         _onBuildingSelected(tapPosition);
       }
@@ -203,12 +221,12 @@ void InputController::handleTap(const Vec2& tapPosition) {
   }
 }
 
-bool InputController::isTapGesture(const Vec2& startPos, const Vec2& endPos) {
+bool MoveMapController::isTapGesture(const Vec2& startPos, const Vec2& endPos) {
   float distance = startPos.distance(endPos);
   return distance < TAP_THRESHOLD;
 }
 
-Vec2 InputController::clampMapPosition(const Vec2& position) {
+Vec2 MoveMapController::clampMapPosition(const Vec2& position) {
   auto visibleSize = Director::getInstance()->getVisibleSize();
   auto mapSize = _villageLayer->getContentSize() * _villageLayer->getScale();
 
@@ -238,15 +256,15 @@ Vec2 InputController::clampMapPosition(const Vec2& position) {
 #pragma endregion
 
 #pragma region 鼠标事件处理（缩放）
-void InputController::setupMouseHandling() {
+void MoveMapController::setupMouseHandling() {
   _mouseListener = EventListenerMouse::create();
-  _mouseListener->onMouseScroll = CC_CALLBACK_1(InputController::onMouseScroll, this);
+  _mouseListener->onMouseScroll = CC_CALLBACK_1(MoveMapController::onMouseScroll, this);
   
   Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(
     _mouseListener, _villageLayer);
 }
 
-void InputController::onMouseScroll(Event* event) {
+void MoveMapController::onMouseScroll(Event* event) {
   // 只在 MAP_DRAG 状态处理缩放
   if (_currentState != InputState::MAP_DRAG) {
     return;
@@ -262,7 +280,7 @@ void InputController::onMouseScroll(Event* event) {
   applyZoomAroundPoint(mousePos, newScale);
 }
 
-float InputController::calculateNewScale(float scrollDelta) {
+float MoveMapController::calculateNewScale(float scrollDelta) {
   // 反转滚轮方向：向上滚动缩小，向下滚动放大
   float scaleFactor = 1.0f + (-scrollDelta * ZOOM_SPEED);
   float newScale = _currentScale * scaleFactor;
@@ -278,7 +296,7 @@ float InputController::calculateNewScale(float scrollDelta) {
   return newScale;
 }
 
-Vec2 InputController::getAdjustedMousePosition(EventMouse* mouseEvent) {
+Vec2 MoveMapController::getAdjustedMousePosition(EventMouse* mouseEvent) {
   Vec2 mousePosInView = mouseEvent->getLocationInView();
   auto winSize = Director::getInstance()->getWinSize();
 
@@ -287,7 +305,7 @@ Vec2 InputController::getAdjustedMousePosition(EventMouse* mouseEvent) {
   return mousePosInView;
 }
 
-void InputController::applyZoomAroundPoint(const Vec2& zoomPoint, float newScale) {
+void MoveMapController::applyZoomAroundPoint(const Vec2& zoomPoint, float newScale) {
   Vec2 oldPosition = _villageLayer->getPosition();
   float oldScale = _currentScale;
 

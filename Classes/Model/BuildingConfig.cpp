@@ -79,7 +79,7 @@ void BuildingConfig::initConfigs() {
       /*.spritePathTemplate = */"UI/Shop/military_architecture/Laboratory{level}.png",
       /*.gridWidth = */3,
       /*.gridHeight = */3,
-      /*.anchorOffset = */Vec2(0, 0),
+      /*.anchorOffset=*/Vec2(30,-30),
       /*.maxLevel = */10,
       /*.initialCost = */500,
       /*.costType = */"ʥˮ",
