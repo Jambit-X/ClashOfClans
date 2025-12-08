@@ -1,5 +1,6 @@
 #include "BuildingConfig.h"
 #include <cmath>
+#include <../proj.win32/Constants.h>
 
 USING_NS_CC;
 
@@ -29,8 +30,27 @@ void BuildingConfig::destroyInstance() {
 }
 
 void BuildingConfig::initConfigs() {
+  // 1: 大本营 (Town Hall)
+  _configs[1] = {
+    /*.type = */1,
+    /*.name = */"大本营",
+    /*.category = */"核心",
+    /*.spritePathTemplate = */"UI/Shop/core_architecture/Town_Hall{level}.png",
+    /*.gridWidth = */4,
+    /*.gridHeight = */4,
+    /*.anchorOffset = */Vec2(30, -30),  // 4x4建筑需要更大偏移
+    /*.maxLevel = */13,
+    /*.initialCost = */0,  // 大本营不能购买
+    /*.costType = */"金币",
+    /*.buildTimeSeconds = */0,  // 初始已建造 
+    /*.hitPoints = */1500,
+    /*.damagePerSecond = */0,
+    /*.attackRange = */0,
+    /*.resourceCapacity = */0,
+    /*.productionRate = */0
+  };
+  
   // ========== 军队建筑 ==========
-
    // 101: 兵营
   _configs[101] = {
     /* .type = */ 101,
@@ -39,7 +59,7 @@ void BuildingConfig::initConfigs() {
     /* .spritePathTemplate = */ "UI/Shop/military_architecture/Army_Camp{level}.png",
     /* .gridWidth = */ 3,
     /* .gridHeight = */ 3,
-    /* .anchorOffset = */ Vec2(0, 0),
+    /* .anchorOffset = */ Vec2(44, -30),
     /* .maxLevel = */ 10,
     /* .initialCost = */ 250,
     /* .costType = */ "圣水",
@@ -54,12 +74,12 @@ void BuildingConfig::initConfigs() {
   // 102: 训练营
   _configs[102] = {
     /* .type = */ 102,
-    /* .name = */ "训练营",
+    /* .name = */ "训练营", 
     /* .category = */ "军队",
     /* .spritePathTemplate = */ "UI/Shop/military_architecture/Barracks{level}.png",
     /* .gridWidth = */ 3,
     /* .gridHeight = */ 3,
-    /* .anchorOffset = */ Vec2(0, 0),
+    /* .anchorOffset = */ Vec2(36, -30),
     /* .maxLevel = */ 13,
     /* .initialCost = */ 200,
     /* .costType = */ "圣水",
@@ -69,7 +89,7 @@ void BuildingConfig::initConfigs() {
     /* .attackRange = */ 0,
     /* .resourceCapacity = */ 0,
     /* .productionRate = */ 0
-  };
+  }; 
 
   // 103: 实验室
   _configs[103] = {
@@ -79,7 +99,7 @@ void BuildingConfig::initConfigs() {
       /*.spritePathTemplate = */"UI/Shop/military_architecture/Laboratory{level}.png",
       /*.gridWidth = */3,
       /*.gridHeight = */3,
-      /*.anchorOffset=*/Vec2(30,-30),
+      /*.anchorOffset=*/Vec2(33, -30),
       /*.maxLevel = */10,
       /*.initialCost = */500,
       /*.costType = */"圣水",
@@ -101,7 +121,7 @@ void BuildingConfig::initConfigs() {
       /*.spritePathTemplate = */"UI/Shop/resource_architecture/Gold_Mine{level}.png",
       /*.gridWidth = */3,
       /*.gridHeight = */3,
-      /*.anchorOffset = */Vec2(0, 0),
+      /*.anchorOffset = */Vec2(32, -30),
       /*.maxLevel = */14,
       /*.initialCost = */150,
       /*.costType = */"圣水",
@@ -114,14 +134,14 @@ void BuildingConfig::initConfigs() {
   };
 
   // 203: 圣水收集器
-  _configs[203] = {
+  _configs[203] = { 
       /*.type = */203,
       /*.name = */"圣水收集器",
       /*.category = */"资源",
       /*.spritePathTemplate = */"UI/Shop/resource_architecture/Elixir_Collector{level}.png",
       /*.gridWidth = */3,
       /*.gridHeight = */3,
-      /*.anchorOffset = */Vec2(0, 0),
+      /*.anchorOffset = */Vec2(36, -30),
       /*.maxLevel = */14,
       /*.initialCost = */150,
       /*.costType = */"金币",
@@ -143,7 +163,7 @@ void BuildingConfig::initConfigs() {
       /*.spritePathTemplate = */"UI/Shop/defence_architecture/Cannon_lvl{level}.png",
       /*.gridWidth = */3,
       /*.gridHeight = */3,
-      /*.anchorOffset = */Vec2(0, 0),
+      /*.anchorOffset = */Vec2(62, -6),
       /*.maxLevel = */18,
       /*.initialCost = */250,
       /*.costType = */"金币",
@@ -163,7 +183,7 @@ void BuildingConfig::initConfigs() {
       /*.spritePathTemplate = */"UI/Shop/defence_architecture/Archer_Tower{level}.png",
       /*.gridWidth = */3,
       /*.gridHeight = */3,
-      /*.anchorOffset = */Vec2(0, 0),
+      /*.anchorOffset = */Vec2(34, -30),
       /*.maxLevel = */18,
       /*.initialCost = */1000,
       /*.costType = */"金币",
@@ -183,7 +203,7 @@ void BuildingConfig::initConfigs() {
       /*.spritePathTemplate = */"UI/Shop/defence_architecture/Wall{level}.png",
       /*.gridWidth = */1,
       /*.gridHeight = */1,
-      /*.anchorOffset = */Vec2(0, 0),
+      /*.anchorOffset = */Vec2(5, -7),
       /*.maxLevel = */14,
       /*.initialCost = */50,
       /*.costType = */"金币",

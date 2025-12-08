@@ -15,8 +15,9 @@ const cocos2d::Vec2 GRID_BOTTOM_POINT = cocos2d::Vec2(1893.0f, 445.0f); // мЬ╦Яо
 const float VERT_DIAGONAL_LENGTH = (2293.0f - 445.0f) / 44.0f; // аБпнйЗж╠╤т╫гоъ
 const float HORIZ_DIAGONAL_LENGTH = (3128.0f - 660.0f) / 44.0f; // аБпн╨АоР╤т╫гоъ
 
-const cocos2d::Vec2 VEC_X_NORMALIZED = (GRID_BOTTOM_POINT - GRID_LEFT_POINT).getNormalized(); // мЬ╦ЯXжА╥╫оР╣╔н╩оРа©
-const cocos2d::Vec2 VEC_Y_NORMALIZED = (GRID_TOP_POINT - GRID_LEFT_POINT).getNormalized(); // мЬ╦ЯYжА╥╫оР╣╔н╩оРа©
+const cocos2d::Vec2 VEC_1_NORMALIZED = (GRID_TOP_POINT - GRID_LEFT_POINT) / 44.0f; // мЬ╦Ясрио╥╫оРр╩╦ЯоРа©
+const cocos2d::Vec2 VEC_2_NORMALIZED = (GRID_BOTTOM_POINT - GRID_LEFT_POINT) / 44.0f; // мЬ╦Ясроб╥╫оРр╩╦ЯоРа©
 
+const float GRID_LENGTH = VEC_1_NORMALIZED.getLength(); // ╣╔╦ЯмЬ╦Я╠ъЁ╓
 
 #endif // !_CONSTANT_H_
