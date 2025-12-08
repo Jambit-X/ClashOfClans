@@ -19,8 +19,8 @@ VillageDataManager::VillageDataManager()
     }
     
     // 初始化默认资源
-    _data.gold = 1000;
-    _data.elixir = 1000;
+    _data.gold = 100000;
+    _data.elixir = 100000;
     
     CCLOG("VillageDataManager: Initialized with grid occupancy table (44x44)");
 }
