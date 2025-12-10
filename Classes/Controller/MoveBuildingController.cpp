@@ -127,9 +127,11 @@ void MoveBuildingController::onTouchMoved(Touch* touch, Event* event) {
     
     CCLOG("MoveBuildingController::onTouchMoved - distance=%.2f, threshold=5.0", distance);
     
-    const float DRAG_THRESHOLD = 5.0f;  // 5像素阈值
+    // 根据 Layer 缩放调整阈值
+    float scale = _parentLayer->getScale();
+    float adjustedThreshold = 5.0f * scale;  // 缩放时阈值也跟着变
     
-    if (distance > DRAG_THRESHOLD) {
+    if (distance > adjustedThreshold) {
         _isDragging = true;
         CCLOG("MoveBuildingController::onTouchMoved - isDragging set to TRUE");
     }
@@ -192,9 +194,21 @@ void MoveBuildingController::updatePreviewPosition(const Vec2& worldPos) {
     BuildingPositionInfo posInfo = calculatePositionInfo(worldPos, _movingBuildingId);
     
     // 更新精灵位置
-    sprite->setPosition(posInfo.worldPos);
+    // sprite->setPosition(posInfo.worldPos);
+    // 添加平滑移动（可选）
+    Vec2 currentPos = sprite->getPosition();
+    Vec2 targetPos = posInfo.worldPos;
+    float distance = currentPos.distance(targetPos);
+
+    if (distance > 1.0f) {  // 只有距离足够大才插值
+      // 线性插值，让移动更平滑
+      Vec2 smoothPos = currentPos.lerp(targetPos, 0.3f);
+      sprite->setPosition(smoothPos);
+    } else {
+      sprite->setPosition(targetPos);
+    }
     
-    // ? 实时更新网格坐标（用于碰撞检测）
+    // 实时更新网格坐标（用于碰撞检测）
     sprite->setGridPos(posInfo.gridPos);
     
     // 显示视觉反馈
