@@ -228,23 +228,26 @@ bool MoveMapController::isTapGesture(const Vec2& startPos, const Vec2& endPos) {
 
 Vec2 MoveMapController::clampMapPosition(const Vec2& position) {
   auto visibleSize = Director::getInstance()->getVisibleSize();
-  auto mapSize = _villageLayer->getContentSize() * _villageLayer->getScale();
+
+  // 使用 getBoundingBox 获取实际显示大小
+  Rect mapBounds = _villageLayer->getBoundingBox();
 
   float minX, maxX, minY, maxY;
 
-  if (mapSize.width <= visibleSize.width) {
-    float centerX = (visibleSize.width - mapSize.width) / 2;
+  // 如果地图比屏幕小，居中
+  if (mapBounds.size.width <= visibleSize.width) {
+    float centerX = (visibleSize.width - mapBounds.size.width) / 2;
     minX = maxX = centerX;
   } else {
-    minX = visibleSize.width - mapSize.width;
+    minX = visibleSize.width - mapBounds.size.width;
     maxX = 0;
   }
 
-  if (mapSize.height <= visibleSize.height) {
-    float centerY = (visibleSize.height - mapSize.height) / 2;
+  if (mapBounds.size.height <= visibleSize.height) {
+    float centerY = (visibleSize.height - mapBounds.size.height) / 2;
     minY = maxY = centerY;
   } else {
-    minY = visibleSize.height - mapSize.height;
+    minY = visibleSize.height - mapBounds.size.height;
     maxY = 0;
   }
 
@@ -281,9 +284,9 @@ void MoveMapController::onMouseScroll(Event* event) {
 }
 
 float MoveMapController::calculateNewScale(float scrollDelta) {
-  // 反转滚轮方向：向上滚动缩小，向下滚动放大
-  float scaleFactor = 1.0f + (-scrollDelta * ZOOM_SPEED);
-  float newScale = _currentScale * scaleFactor;
+  // 向上滚动缩小，向下滚动放大
+  float zoomFactor = powf(0.9f, scrollDelta);
+  float newScale = _currentScale * zoomFactor;
 
   // 限制缩放范围
   newScale = clampf(newScale, _minScale, MAX_SCALE);
@@ -297,30 +300,26 @@ float MoveMapController::calculateNewScale(float scrollDelta) {
 }
 
 Vec2 MoveMapController::getAdjustedMousePosition(EventMouse* mouseEvent) {
-  Vec2 mousePosInView = mouseEvent->getLocationInView();
-  auto winSize = Director::getInstance()->getWinSize();
-
-  // 从左上角原点转换为左下角原点
-  mousePosInView.y = winSize.height - mousePosInView.y;
-  return mousePosInView;
+  // 直接使用 getLocation()，无需手动转换
+  return mouseEvent->getLocation();
 }
 
 void MoveMapController::applyZoomAroundPoint(const Vec2& zoomPoint, float newScale) {
-  Vec2 oldPosition = _villageLayer->getPosition();
   float oldScale = _currentScale;
 
-  // 计算缩放中心点在 Layer 中的相对位置
-  Vec2 localPoint = zoomPoint - oldPosition;
+  // 1. 将屏幕坐标转换为 Layer 内部坐标
+  Vec2 pointInLayer = _villageLayer->convertToNodeSpace(zoomPoint);
 
-  // 应用新的缩放
+  // 2. 应用新的缩放
   _villageLayer->setScale(newScale);
   _currentScale = newScale;
 
-  // 计算缩放后需要调整的位置
-  float scaleRatio = newScale / oldScale;
-  Vec2 newLocalPoint = localPoint * scaleRatio;
-  Vec2 offset = localPoint - newLocalPoint;
-  Vec2 newPos = oldPosition + offset;
+  // 3. 将同一个 Layer 内部点转回屏幕坐标
+  Vec2 newPointOnScreen = _villageLayer->convertToWorldSpace(pointInLayer);
+
+  // 4. 计算位置偏移
+  Vec2 offset = zoomPoint - newPointOnScreen;
+  Vec2 newPos = _villageLayer->getPosition() + offset;
 
   // 应用边界限制
   newPos = clampMapPosition(newPos);

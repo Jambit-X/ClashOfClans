@@ -24,6 +24,7 @@
 
 #include "AppDelegate.h"
 #include "Scene/StartupScene.h"
+#include "Manager/AnimationManager.h"
 
 // #define USE_AUDIO_ENGINE 1
 // #define USE_SIMPLE_AUDIO_ENGINE 1
@@ -117,6 +118,13 @@ bool AppDelegate::applicationDidFinishLaunching() {
     }
 #endif
     register_all_packages();
+
+    // 初始化动画管理器
+    auto animMgr = AnimationManager::getInstance();
+    animMgr->preloadBattleAnimations();
+    animMgr->initializeDefaultConfigs();
+
+    CCLOG("AppDelegate: Animation system initialized");
 
     // create a scene. it's an autorelease object
     auto scene = StartupScene::createScene();
