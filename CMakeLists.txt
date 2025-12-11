@@ -56,13 +56,19 @@ list(APPEND GAME_SOURCE
      Classes/Layer/HUDLayer.cpp
      Classes/Controller/MoveMapController.cpp
      Classes/Controller/MoveBuildingController.cpp
+     Classes/Manager/Resource/ResourceCollectionSystem.cpp
+     Classes/Manager/Resource/ResourceManager.cpp
+     Classes/Manager/Resource/ResourceProductionSystem.cpp
      Classes/Manager/AnimationManager.cpp
-     Classes/Manager/VillageDataManager.cpp
      Classes/Manager/BuildingManager.cpp
+     Classes/Manager/BuildingUpgradeManager.cpp
+     Classes/Manager/VillageDataManager.cpp
      Classes/Model/BuildingConfig.cpp
-     Classes/Util/GridMapUtils.cpp
      Classes/Sprite/BuildingSprite.cpp
      Classes/Sprite/BattleUnitSprite.cpp
+     Classes/UI/ResourceCollectionUI.cpp
+     Classes/Util/GridMapUtils.cpp
+     Classes/Util/JsonUtils.cpp
      )
 list(APPEND GAME_HEADER
      ../proj.win32/Constants.h
@@ -74,14 +80,20 @@ list(APPEND GAME_HEADER
      Classes/Layer/HUDLayer.h
      Classes/Controller/MoveMapController.h
      Classes/Controller/MoveBuildingController.h
+     Classes/Manager/Resource/ResourceCollectionSystem.h
+     Classes/Manager/Resource/ResourceManager.h
+     Classes/Manager/Resource/ResourceProductionSystem.h
      Classes/Manager/AnimationManager.h
-     Classes/Manager/VillageDataManager.h
+     Classes/Manager/BuildingUpgradeManager.h
      Classes/Manager/BuildingManager.h
+     Classes/Manager/VillageDataManager.h
      Classes/Model/VillageData.h
      Classes/Model/BuildingConfig.h
-     Classes/Util/GridMapUtils.h
      Classes/Sprite/BuildingSprite.h
      Classes/Sprite/BattleUnitSprite.h
+     Classes/UI/ResourceCollectionUI.h
+     Classes/Util/GridMapUtils.h
+     Classes/Util/JsonUtils.h
      )
 
 if(ANDROID)

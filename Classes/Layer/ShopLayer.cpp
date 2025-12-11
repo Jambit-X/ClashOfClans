@@ -349,16 +349,12 @@ void ShopLayer::onPurchaseBuilding(const ShopItemData& data) {
       0                                 // 无完成时间
     );
 
-    // 刷新底部资源显示
-    // initBottomBar();  // 如果需要刷新资源显示
-
     // 关闭商店
     this->onCloseClicked(nullptr);
 
     // 通知 VillageLayer 开始放置建筑
     auto scene = this->getScene();
     if (scene) {
-      // 假设 VillageLayer 的 Tag 是 1（需要在创建时设置）
       auto villageLayer = dynamic_cast<VillageLayer*>(scene->getChildByTag(1));
       if (villageLayer) {
         villageLayer->onBuildingPurchased(buildingId);
@@ -370,7 +366,6 @@ void ShopLayer::onPurchaseBuilding(const ShopItemData& data) {
     // 资源不足
     CCLOG("资源不足，无法购买 %s", data.name.c_str());
 
-    // 可以添加提示框
     auto label = Label::createWithTTF("资源不足！", FONT_PATH, 30);
     label->setPosition(Director::getInstance()->getVisibleSize() / 2);
     label->setColor(Color3B::RED);
@@ -382,6 +377,7 @@ void ShopLayer::onPurchaseBuilding(const ShopItemData& data) {
       nullptr
     ));
   }
+
 }
 
 void ShopLayer::onCloseClicked(Ref* sender) {

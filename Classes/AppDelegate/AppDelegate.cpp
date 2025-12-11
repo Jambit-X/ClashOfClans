@@ -25,6 +25,8 @@
 #include "AppDelegate.h"
 #include "Scene/StartupScene.h"
 #include "Manager/AnimationManager.h"
+#include "Manager/VillageDataManager.h"
+#include "Manager/Resource/ResourceProductionSystem.h" // 添加此行
 
 // #define USE_AUDIO_ENGINE 1
 // #define USE_SIMPLE_AUDIO_ENGINE 1
@@ -125,6 +127,44 @@ bool AppDelegate::applicationDidFinishLaunching() {
     animMgr->initializeDefaultConfigs();
 
     CCLOG("AppDelegate: Animation system initialized");
+
+    // 加载存档村庄数据
+    VillageDataManager::getInstance()->loadFromFile("village.json");
+
+    // 如果是新游戏,初始化默认建筑
+    if (VillageDataManager::getInstance()->getAllBuildings().empty()) {
+        CCLOG("AppDelegate: New game detected, creating initial Town Hall");
+        
+        // 修改：将大本营放在地图中心
+        // 44x44 网格，中心点为 (22, 22)
+        // 大本营是 4x4 建筑，所以左下角应该放在 (20, 20) 才能让中心在 (22, 22)
+        int townHallGridX = 20;  // 中心 (22, 22) - 宽度的一半 (2)
+        int townHallGridY = 20;  // 中心 (22, 22) - 高度的一半 (2)
+        
+        VillageDataManager::getInstance()->addBuilding(
+            1,                              // type: 大本营
+            1,                              // level: 1级
+            townHallGridX,                  // gridX: 20
+            townHallGridY,                  // gridY: 20
+            BuildingInstance::State::BUILT, // state: 已建造完成
+            0                               // finishTime: 无需等待
+        );
+        
+        CCLOG("AppDelegate: Town Hall created at grid position (%d, %d)", 
+              townHallGridX, townHallGridY);
+        CCLOG("AppDelegate: Town Hall center is at grid position (22, 22)");
+        
+        // 保存初始状态
+        VillageDataManager::getInstance()->saveToFile("village.json");
+        CCLOG("AppDelegate: Initial game state saved");
+    } else {
+        CCLOG("AppDelegate: Loaded existing game with %lu buildings",
+              VillageDataManager::getInstance()->getAllBuildings().size());
+    }
+    
+    // 开始资源生产
+    ResourceProductionSystem::getInstance()->startProduction();  // 修改这里：改用 startProduction()
+    CCLOG("AppDelegate: Resource production system started");
 
     // create a scene. it's an autorelease object
     auto scene = StartupScene::createScene();
