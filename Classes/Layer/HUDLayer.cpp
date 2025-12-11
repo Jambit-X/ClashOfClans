@@ -4,7 +4,8 @@
 #include "Manager/VillageDataManager.h"
 #include "Manager/BuildingUpgradeManager.h" 
 #include "Model/BuildingConfig.h"
-#include "UI/ResourceCollectionUI.h"  // 新增
+#include "UI/ResourceCollectionUI.h"  
+#include "Layer/VillageLayer.h"
 
 USING_NS_CC;
 using namespace ui;
@@ -67,7 +68,35 @@ bool HUDLayer::init() {
 
   // 初始化底部建筑操作菜单 
   initActionMenu();
+  // 新增：初始化放置UI
+  _placementUI = PlacementConfirmUI::create();
+  this->addChild(_placementUI, 1000);
 
+  // 设置放置UI的回调
+  _placementUI->setConfirmCallback([this]() {
+    if (_placementController && _placementController->confirmPlacement()) {
+      CCLOG("HUDLayer: Building placement confirmed");
+
+      // 停止拖动监听
+      if (_placementTouchListener) {
+        Director::getInstance()->getEventDispatcher()->removeEventListener(_placementTouchListener);
+        _placementTouchListener = nullptr;
+      }
+    }
+  });
+
+  _placementUI->setCancelCallback([this]() {
+    if (_placementController) {
+      _placementController->cancelPlacement();
+      CCLOG("HUDLayer: Building placement cancelled");
+
+      // 停止拖动监听
+      if (_placementTouchListener) {
+        Director::getInstance()->getEventDispatcher()->removeEventListener(_placementTouchListener);
+        _placementTouchListener = nullptr;
+      }
+    }
+  });
   // 进攻按钮
   auto battleBtn = ui::Button::create("UI/battle/battle-icon/battle-icon.png");
   if (battleBtn) {
@@ -82,11 +111,44 @@ bool HUDLayer::init() {
     CCLOG("错误：无法加载进攻按钮图片，请检查路径");
   }
 
+  // 初始化放置控制器
+  _placementController = new BuildingPlacementController();
+  _placementTouchListener = nullptr;  // 初始化为空
+
+  _placementController->setPlacementCallback([this](bool success, int buildingId) {
+    if (success) {
+      CCLOG("HUDLayer: Building placed successfully, starting construction");
+
+      // 通知 VillageLayer 更新建筑外观
+      auto scene = this->getScene();
+      if (scene) {
+        auto villageLayer = dynamic_cast<VillageLayer*>(scene->getChildByTag(1));
+        if (villageLayer) {
+          // 获取建筑精灵并恢复正常状态
+          auto dataManager = VillageDataManager::getInstance();
+          auto building = dataManager->getBuildingById(buildingId);
+          if (building) {
+            // TODO: 通知 BuildingManager 更新建筑显示
+            CCLOG("HUDLayer: Building construction started");
+          }
+        }
+      }
+    } else {
+      CCLOG("HUDLayer: Building placement cancelled, removing sprite");
+
+      auto scene = this->getScene();
+      if (scene) {
+        auto villageLayer = dynamic_cast<VillageLayer*>(scene->getChildByTag(1));
+        if (villageLayer) {
+          villageLayer->removeBuildingSprite(buildingId);
+        }
+      }
+    }
+    hidePlacementUI();
+  });
+
   return true;
 }
-
-// ========== 恢复缺失的函数 ==========
-
 void HUDLayer::update(float dt) {
   Layer::update(dt);
   BuildingUpgradeManager::getInstance()->update(dt);
@@ -139,11 +201,46 @@ void HUDLayer::initActionMenu() {
     if (_currentSelectedBuildingId == -1) return;
 
     auto dataManager = VillageDataManager::getInstance();
+    auto building = dataManager->getBuildingById(_currentSelectedBuildingId);
+
+    if (building && building->level >= 3) {
+      // 显示已满级提示
+      auto visibleSize = Director::getInstance()->getVisibleSize();
+      auto label = Label::createWithTTF("建筑已达到最大等级！", FONT_PATH, 30);
+      label->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2));
+      label->setColor(Color3B::RED);
+      label->enableOutline(Color4B::BLACK, 2);
+      this->addChild(label, 1000);
+
+      label->runAction(Sequence::create(
+        DelayTime::create(1.5f),
+        FadeOut::create(0.5f),
+        RemoveSelf::create(),
+        nullptr
+      ));
+      return;
+    }
+
     if (dataManager->startUpgradeBuilding(_currentSelectedBuildingId)) {
       CCLOG("升级开始成功!");
       hideBuildingActions();
     } else {
       CCLOG("升级失败:资源不足或已达最高等级");
+
+      // 显示失败提示
+      auto visibleSize = Director::getInstance()->getVisibleSize();
+      auto label = Label::createWithTTF("升级失败：资源不足或已达最高等级", FONT_PATH, 28);
+      label->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2));
+      label->setColor(Color3B::RED);
+      label->enableOutline(Color4B::BLACK, 2);
+      this->addChild(label, 1000);
+
+      label->runAction(Sequence::create(
+        DelayTime::create(1.5f),
+        FadeOut::create(0.5f),
+        RemoveSelf::create(),
+        nullptr
+      ));
     }
   });
   _actionMenuNode->addChild(_btnUpgrade);
@@ -198,14 +295,22 @@ void HUDLayer::updateActionButtons(int buildingId) {
   std::string title = config->name + " (" + std::to_string(buildingInstance->level) + "级)";
   _buildingNameLabel->setString(title);
 
-  if (configMgr->canUpgrade(buildingInstance->type, buildingInstance->level)) {
+  // 检查是否已达到3级上限
+  if (buildingInstance->level >= 3) {
+    _upgradeCostLabel->setString("已满级");
+    _upgradeCostLabel->setColor(Color3B::RED);
+    _btnUpgrade->setTouchEnabled(false);
+    _btnUpgrade->setOpacity(128);
+  } else if (configMgr->canUpgrade(buildingInstance->type, buildingInstance->level)) {
     int cost = configMgr->getUpgradeCost(buildingInstance->type, buildingInstance->level);
     _upgradeCostLabel->setString(std::to_string(cost) + " 圣水");
+    _upgradeCostLabel->setColor(Color3B::MAGENTA);
     _upgradeCostLabel->setVisible(true);
     _btnUpgrade->setTouchEnabled(true);
     _btnUpgrade->setOpacity(255);
   } else {
     _upgradeCostLabel->setString("已满级");
+    _upgradeCostLabel->setColor(Color3B::RED);
     _btnUpgrade->setTouchEnabled(false);
     _btnUpgrade->setOpacity(128);
   }
@@ -224,4 +329,66 @@ void HUDLayer::updateActionButtons(int buildingId) {
     _btnInfo->setPosition(Vec2(-(btnSize / 2 + spacing / 2), 0));
     _btnUpgrade->setPosition(Vec2(btnSize / 2 + spacing / 2, 0));
   }
+}
+
+// =========建筑放置==========
+void HUDLayer::showPlacementUI(int buildingId) {
+  _placementUI->show();
+  updatePlacementUIState(false);  // 初始设为不可放置
+}
+
+void HUDLayer::hidePlacementUI() {
+  _placementUI->hide();
+}
+
+void HUDLayer::updatePlacementUIState(bool canPlace) {
+  _placementUI->updateButtonState(canPlace);
+}
+
+void HUDLayer::startBuildingPlacement(int buildingId) {
+  CCLOG("HUDLayer: Starting placement for building ID=%d", buildingId);
+
+  // 1. 启动放置控制器
+  _placementController->startPlacement(buildingId);
+
+  // 2. 显示确认/取消UI
+  showPlacementUI(buildingId);
+
+  // 3. 设置拖动监听器
+  if (_placementTouchListener) {
+    Director::getInstance()->getEventDispatcher()->removeEventListener(_placementTouchListener);
+  }
+
+  _placementTouchListener = EventListenerTouchOneByOne::create();
+  _placementTouchListener->setSwallowTouches(true);
+
+  _placementTouchListener->onTouchBegan = [this, buildingId](Touch* touch, Event* event) {
+    CCLOG("HUDLayer: Placement touch began");
+    return true;
+  };
+
+  _placementTouchListener->onTouchMoved = [this, buildingId](Touch* touch, Event* event) {
+    Vec2 touchPos = touch->getLocation();
+
+    auto scene = this->getScene();
+    if (!scene) return;
+
+    auto villageLayer = dynamic_cast<VillageLayer*>(scene->getChildByTag(1));
+    if (!villageLayer) return;
+
+    // 转换为村庄坐标
+    Vec2 worldPos = villageLayer->convertToNodeSpace(touchPos);
+
+    // 更新建筑预览位置
+    villageLayer->updateBuildingPreviewPosition(buildingId, worldPos);
+  };
+
+  _placementTouchListener->onTouchEnded = [this](Touch* touch, Event* event) {
+    CCLOG("HUDLayer: Placement touch ended (waiting for confirm/cancel button)");
+  };
+
+  Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(
+    _placementTouchListener, this);
+
+  CCLOG("HUDLayer: Placement touch listener added");
 }

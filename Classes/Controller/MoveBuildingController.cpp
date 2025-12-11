@@ -3,6 +3,7 @@
 #include "Manager/VillageDataManager.h"
 #include "Sprite/BuildingSprite.h"
 #include "Util/GridMapUtils.h"
+#include "Layer/HUDLayer.h" 
 
 USING_NS_CC;
 
@@ -241,6 +242,14 @@ void MoveBuildingController::updatePreviewPosition(const Vec2& worldPos) {
     
     // 显示视觉反馈
     sprite->setPlacementPreview(posInfo.isValid);
+    // 新增：通知 HUDLayer 更新按钮状态
+    auto scene = _parentLayer->getScene();
+    if (scene) {
+      auto hudLayer = dynamic_cast<HUDLayer*>(scene->getChildByTag(100));
+      if (hudLayer) {
+        hudLayer->updatePlacementUIState(posInfo.isValid);
+      }
+    }
     
     CCLOG("MoveBuildingController: Preview at grid(%.0f, %.0f) - %s", 
           posInfo.gridPos.x, posInfo.gridPos.y, posInfo.isValid ? "VALID" : "INVALID");
@@ -388,7 +397,7 @@ _touchListener->onTouchBegan = CC_CALLBACK_2(MoveBuildingController::onTouchBega
     _touchListener->onTouchMoved = CC_CALLBACK_2(MoveBuildingController::onTouchMoved, this);
     _touchListener->onTouchEnded = CC_CALLBACK_2(MoveBuildingController::onTouchEnded, this);
  
-    // ✅ 修复：使用 Scene Graph Priority（遵循渲染树层级）
+    // 修复：使用 Scene Graph Priority（遵循渲染树层级）
     // 绑定到 _parentLayer，让 Cocos 自然决定事件优先级
     // UI 在上层 → 优先接收事件
     // 建筑在下层 → UI 不处理才轮到建筑

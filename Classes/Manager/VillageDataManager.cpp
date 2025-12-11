@@ -172,6 +172,18 @@ bool VillageDataManager::startUpgradeBuilding(int id) {
   }
 
   auto config = BuildingConfig::getInstance();
+  auto configData = config->getConfig(building->type);
+
+  if (!configData) {
+    CCLOG("VillageDataManager: Config not found for building type %d", building->type);
+    return false;
+  }
+
+  // 检查是否已达到最大等级（3级）
+  if (building->level >= 3) {
+    CCLOG("VillageDataManager: Building %d already at max level (3)", id);
+    return false;
+  }
 
   if (!config->canUpgrade(building->type, building->level)) {
     CCLOG("VillageDataManager: Building %d already max level", id);
@@ -179,7 +191,6 @@ bool VillageDataManager::startUpgradeBuilding(int id) {
   }
 
   int cost = config->getUpgradeCost(building->type, building->level);
-  auto configData = config->getConfig(building->type);
 
   bool success = false;
   if (configData->costType == "金币") {
@@ -266,6 +277,21 @@ void VillageDataManager::updateGridOccupancy() {
   }
 
   CCLOG("VillageDataManager: Grid occupancy table updated");
+}
+
+void VillageDataManager::removeBuilding(int buildingId) {
+  auto it = std::find_if(_data.buildings.begin(), _data.buildings.end(),
+                         [buildingId](const BuildingInstance& b) {
+    return b.id == buildingId;
+  });
+
+  if (it != _data.buildings.end()) {
+    CCLOG("VillageDataManager: Removing building ID=%d", buildingId);
+    _data.buildings.erase(it);
+    updateGridOccupancy();  // 更新网格占用
+  } else {
+    CCLOG("VillageDataManager: Building ID=%d not found", buildingId);
+  }
 }
 
 void VillageDataManager::saveToFile(const std::string& filename) {

@@ -61,6 +61,9 @@ public:
 	// 新增：处理离线时间
 	void processOfflineTime();
 
+	// 在 VillageDataManager 类中添加
+	void removeBuilding(int buildingId);
+
 private:
 	VillageDataManager();
 	~VillageDataManager();

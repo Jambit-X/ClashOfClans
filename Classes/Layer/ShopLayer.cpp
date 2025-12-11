@@ -5,6 +5,7 @@
 #include "Layer/VillageLayer.h"
 #include "ShopLayer.h"
 #include "Manager/BuildingManager.h" 
+#include "Layer/HUDLayer.h" 
 
 USING_NS_CC;
 using namespace ui;
@@ -325,48 +326,48 @@ void ShopLayer::onPurchaseBuilding(const ShopItemData& data) {
 
   bool success = false;
 
-  // 根据货币类型扣除资源
   if (data.costType == "金币") {
     success = dataManager->spendGold(data.cost);
   } else if (data.costType == "圣水") {
     success = dataManager->spendElixir(data.cost);
   } else if (data.costType == "宝石") {
-    // 宝石逻辑暂未实现
     CCLOG("宝石购买尚未实现");
     return;
   }
 
   if (success) {
-    // 购买成功
     CCLOG("购买成功: %s", data.name.c_str());
 
     // 添加建筑数据（状态为 PLACING）
     int buildingId = dataManager->addBuilding(
-      data.id,                          // 建筑类型ID
-      1,                                // 初始等级
-      -1, -1,                           // 坐标未定（-1表示未放置）
-      BuildingInstance::State::PLACING, // 待放置状态
-      0                                 // 无完成时间
+      data.id,
+      1,
+      22, 22,  // 默认放在地图中心
+      BuildingInstance::State::PLACING,
+      0
     );
 
     // 关闭商店
     this->onCloseClicked(nullptr);
 
-    // 通知 VillageLayer 开始放置建筑
+    // 通知 VillageLayer 开始放置
     auto scene = this->getScene();
     if (scene) {
       auto villageLayer = dynamic_cast<VillageLayer*>(scene->getChildByTag(1));
       if (villageLayer) {
         villageLayer->onBuildingPurchased(buildingId);
-      } else {
-        CCLOG("警告：未找到 VillageLayer，无法放置建筑");
+      }
+
+      // 显示放置UI
+      auto hudLayer = dynamic_cast<HUDLayer*>(scene->getChildByTag(100));
+      if (hudLayer) {
+        hudLayer->showPlacementUI(buildingId);
       }
     }
   } else {
-    // 资源不足
     CCLOG("资源不足，无法购买 %s", data.name.c_str());
 
-    auto label = Label::createWithTTF("资源不足！", FONT_PATH, 30);
+    auto label = Label::createWithTTF("资源不足！", "fonts/simhei.ttf", 30);
     label->setPosition(Director::getInstance()->getVisibleSize() / 2);
     label->setColor(Color3B::RED);
     this->addChild(label, 100);
@@ -377,7 +378,6 @@ void ShopLayer::onPurchaseBuilding(const ShopItemData& data) {
       nullptr
     ));
   }
-
 }
 
 void ShopLayer::onCloseClicked(Ref* sender) {

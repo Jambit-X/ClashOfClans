@@ -1,287 +1,268 @@
 #include "BuildingSprite.h"
-#include "Model/BuildingConfig.h" // 确保包含头文件
+#include "../Model/BuildingConfig.h"
+#include "../Component/ConstructionAnimation.h"
 
 USING_NS_CC;
 
 BuildingSprite* BuildingSprite::create(const BuildingInstance& building) {
-    BuildingSprite* sprite = new (std::nothrow) BuildingSprite();
+    auto sprite = new BuildingSprite();
     if (sprite && sprite->init(building)) {
         sprite->autorelease();
         return sprite;
     }
-    CC_SAFE_DELETE(sprite);
+    delete sprite;
     return nullptr;
 }
 
 bool BuildingSprite::init(const BuildingInstance& building) {
-    // 获取建筑配置
-    auto config = BuildingConfig::getInstance()->getConfig(building.type);
-    if (!config) {
-        CCLOG("BuildingSprite: Config not found for type %d", building.type);
-        return false;
-    }
-
-    // 获取精灵路径
-    std::string spritePath = BuildingConfig::getInstance()->getSpritePath(
-        building.type, building.level);
-
-    // 初始化 Sprite
-    if (!Sprite::initWithFile(spritePath)) {
-        CCLOG("BuildingSprite: Failed to load sprite: %s", spritePath.c_str());
-        return false;
-    }
-
-    // 设置锚点为左下角，与网格坐标系统一致
-    this->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
-
-    // 缩放建筑大小到原来的 70%
-    _normalScale = 0.7f;
-    this->setScale(_normalScale);
-
-    // 存储数据
     _buildingId = building.id;
     _buildingType = building.type;
-    _level = building.level;
-    _state = building.state;
+    _buildingLevel = building.level;
+    _buildingState = building.state;
+    _visualOffset = Vec2::ZERO;
+    _progressBar = nullptr;
+    _countdownLabel = nullptr;
+    _constructionAnim = nullptr;  // 初始化
     _gridPos = Vec2(building.gridX, building.gridY);
-    _gridSize = Size(config->gridWidth, config->gridHeight);
     
-    // 存储视觉偏移量（用于修正显示位置）
-    _visualOffset = config->anchorOffset;
-
-    // 初始化视觉元素
-    initVisualElements();
-
-    // 根据状态显示进度
-    if (building.state == BuildingInstance::State::CONSTRUCTING) {
-        showConstructionProgress(0.0f);  // 初始进度
+    loadSprite(_buildingType, _buildingLevel);
+    updateVisuals();
+    
+    // 如果是建造中状态，启动建造动画
+    if (_buildingState == BuildingInstance::State::CONSTRUCTING) {
+        startConstruction();
     }
-
-    CCLOG("BuildingSprite: Created type=%d, level=%d, id=%d at grid(%d,%d)",
-        _buildingType, _level, _buildingId, building.gridX, building.gridY);
-
+    
     return true;
 }
 
-void BuildingSprite::initVisualElements() {
-    // 1. 创建阴影
-    createShadow();
-
-    // 2. 创建等级标签
-    createLevelLabel();
-
-    // 3. 创建进度条（默认隐藏）
-    createProgressBar();
-
-    // 4. 创建选中框（默认隐藏）
-    createSelectionBox();
-}
-
-void BuildingSprite::createShadow() {
-    _shadowSprite = Sprite::create("UI/Common/shadow.png");
-    if (_shadowSprite) {
-        _shadowSprite->setPosition(Vec2(this->getContentSize().width / 2, 0));
-        _shadowSprite->setOpacity(128);  // 半透明
-        this->addChild(_shadowSprite, -1);  // 在建筑下层
-    }
-}
-
-void BuildingSprite::createLevelLabel() {
-    _levelLabel = Label::createWithSystemFont(
-        StringUtils::format("Lv.%d", _level),
-        "Arial",
-        18
-    );
-
-    if (_levelLabel) {
-        _levelLabel->setPosition(Vec2(30, this->getContentSize().height - 20));
-        _levelLabel->setColor(Color3B::YELLOW);
-        _levelLabel->enableOutline(Color4B::BLACK, 2);
-        this->addChild(_levelLabel, 10);
-    }
-}
-
-void BuildingSprite::createProgressBar() {
-    // 进度条背景
-    _progressBg = Sprite::create("UI/Common/progress_bg.png");
-    if (_progressBg) {
-        _progressBg->setPosition(Vec2(
-            this->getContentSize().width / 2,
-            this->getContentSize().height + 20
-        ));
-        _progressBg->setVisible(false);
-        this->addChild(_progressBg, 15);
-
-        // 进度条前景
-        auto progressSprite = Sprite::create("UI/Common/progress_fill.png");
-        _progressBar = ProgressTimer::create(progressSprite);
-        _progressBar->setType(ProgressTimer::Type::BAR);
-        _progressBar->setMidpoint(Vec2(0, 0.5f));
-        _progressBar->setBarChangeRate(Vec2(1, 0));
-        _progressBar->setPercentage(0);
-        _progressBar->setPosition(_progressBg->getContentSize() / 2);
-        _progressBg->addChild(_progressBar);
-    }
-}
-
-void BuildingSprite::createSelectionBox() {
-    _selectionBox = Sprite::create("UI/Common/selection_box.png");
-    if (_selectionBox) {
-        _selectionBox->setPosition(this->getContentSize() / 2);
-        _selectionBox->setVisible(false);
-        this->addChild(_selectionBox, 5);
-    }
-}
-
-// ========== 更新方法 ==========
-
 void BuildingSprite::updateBuilding(const BuildingInstance& building) {
-    // 更新等级
-    if (building.level != _level) {
-        updateLevel(building.level);
+    bool levelChanged = (_buildingLevel != building.level);
+    bool stateChanged = (_buildingState != building.state);
+    
+    _buildingLevel = building.level;
+    _buildingState = building.state;
+    
+    if (levelChanged) {
+        loadSprite(_buildingType, _buildingLevel);
     }
-
-    // 更新状态
-    if (building.state != _state) {
-        updateState(building.state);
-    }
-
-    // 更新位置
-    _gridPos = Vec2(building.gridX, building.gridY);
-}
-
-void BuildingSprite::updateLevel(int newLevel) {
-    _level = newLevel;
-
-    // 更新纹理
-    updateSpriteTexture();
-
-    // 更新等级标签
-    if (_levelLabel) {
-        _levelLabel->setString(StringUtils::format("Lv.%d", _level));
-    }
-
-    CCLOG("BuildingSprite: Level updated to %d", _level);
-}
-
-void BuildingSprite::updateState(BuildingInstance::State newState) {
-    _state = newState;
-
-    switch (newState) {
-    case BuildingInstance::State::PLACING:
-        setPlacementPreview(true);
-        break;
-
-    case BuildingInstance::State::CONSTRUCTING:
-        showConstructionProgress(0.0f);
-        break;
-
-    case BuildingInstance::State::BUILT:
-        hideConstructionProgress();
-        setOpacity(255);  // 完全不透明
-        break;
-    }
-}
-
-void BuildingSprite::updateSpriteTexture() {
-    std::string newPath = BuildingConfig::getInstance()->getSpritePath(
-        _buildingType, _level);
-
-    auto texture = Director::getInstance()->getTextureCache()->addImage(newPath);
-    if (texture) {
-        this->setTexture(texture);
-    }
-}
-
-// ========== 显示模式 ==========
-
-void BuildingSprite::setDraggingMode(bool dragging) {
-    if (dragging) {
-        this->setOpacity(180);  // 半透明
-        this->setScale(_normalScale * 1.1f);   // 在原始基础上放大 10%
-    }
-    else {
-        this->setOpacity(255);
-        this->setScale(_normalScale);   // 恢复到原始 scale
-    }
-}
-
-void BuildingSprite::setPlacementPreview(bool valid) {
-    // 绿色表示可放置，红色表示不可放置
-    if (valid) {
-        this->setColor(Color3B(100, 255, 100));  // 浅绿色
-        this->setOpacity(200);
-    }
-    else {
-        this->setColor(Color3B(255, 100, 100));  // 浅红色
-        this->setOpacity(200);
-    }
-}
-
-void BuildingSprite::setSelected(bool selected) {
-    if (_selectionBox) {
-        _selectionBox->setVisible(selected);
-
-        // 添加脉冲动画
-        if (selected) {
-            auto scaleUp = ScaleTo::create(0.5f, 1.1f);
-            auto scaleDown = ScaleTo::create(0.5f, 1.0f);
-            auto seq = Sequence::create(scaleUp, scaleDown, nullptr);
-            _selectionBox->runAction(RepeatForever::create(seq));
-        }
-        else {
-            _selectionBox->stopAllActions();
-            _selectionBox->setScale(1.0f);
+    
+    if (stateChanged) {
+        updateVisuals();
+        
+        // 状态切换处理
+        if (_buildingState == BuildingInstance::State::CONSTRUCTING) {
+            startConstruction();
+        } else if (_buildingState == BuildingInstance::State::BUILT) {
+            finishConstruction();
         }
     }
 }
 
-// ========== 进度显示 ==========
+void BuildingSprite::updateState(BuildingInstance::State state) {
+    if (_buildingState == state) return;
+    
+    _buildingState = state;
+    updateVisuals();
+    
+    if (_buildingState == BuildingInstance::State::CONSTRUCTING) {
+        startConstruction();
+    } else if (_buildingState == BuildingInstance::State::BUILT) {
+        finishConstruction();
+    }
+}
+
+void BuildingSprite::updateLevel(int level) {
+  if (_buildingLevel == level) return;
+
+  _buildingLevel = level;
+
+  // 重新加载对应等级的精灵图
+  loadSprite(_buildingType, _buildingLevel);
+
+  CCLOG("BuildingSprite: Updated to level %d", level);
+}
+
+void BuildingSprite::startConstruction() {
+    CCLOG("BuildingSprite: Starting construction animation for building ID=%d", _buildingId);
+    
+    if (!_constructionAnim) {
+        _constructionAnim = new ConstructionAnimation(this);
+    }
+    _constructionAnim->start();
+}
+
+void BuildingSprite::updateConstructionProgress(float progress) {
+    if (_constructionAnim) {
+        _constructionAnim->updateProgress(progress);
+    }
+}
+
+void BuildingSprite::finishConstruction() {
+    CCLOG("BuildingSprite: Finishing construction for building ID=%d", _buildingId);
+    
+    if (_constructionAnim) {
+        _constructionAnim->stop();
+        delete _constructionAnim;
+        _constructionAnim = nullptr;
+    }
+    
+    hideConstructionProgress();
+}
 
 void BuildingSprite::showConstructionProgress(float progress) {
-    if (_progressBg && _progressBar) {
-        _progressBg->setVisible(true);
-        _progressBar->setPercentage(progress * 100.0f);
-    }
+  if (!_progressBar) {
+    // 创建一个 1x1 白色像素精灵作为进度条基础
+    auto whitePixel = Sprite::create();
+    whitePixel->setTextureRect(Rect(0, 0, 100, 12));
+    whitePixel->setColor(Color3B(50, 205, 50)); // 绿色
+
+    _progressBar = ProgressTimer::create(whitePixel);
+    _progressBar->setType(ProgressTimer::Type::BAR);
+    _progressBar->setMidpoint(Vec2(0, 0.5f));
+    _progressBar->setBarChangeRate(Vec2(1, 0));
+
+    auto spriteSize = this->getContentSize();
+    _progressBar->setPosition(Vec2(spriteSize.width / 2, spriteSize.height + 30));
+
+    // 添加背景条（使用 Tag 888 标识）
+    auto bgBar = Sprite::create();
+    bgBar->setTextureRect(Rect(0, 0, 100, 12));
+    bgBar->setColor(Color3B(50, 50, 50));
+    bgBar->setOpacity(200);
+    bgBar->setPosition(Vec2(spriteSize.width / 2, spriteSize.height + 30));
+    bgBar->setTag(888); // 添加 Tag 用于后续删除
+    this->addChild(bgBar, 9);
+
+    this->addChild(_progressBar, 10);
+
+    CCLOG("BuildingSprite: Created simple solid progress bar");
+  }
+
+  _progressBar->setPercentage(progress * 100);
 }
 
 void BuildingSprite::hideConstructionProgress() {
-    if (_progressBg) {
-        _progressBg->setVisible(false);
-    }
+  // 移除进度条
+  if (_progressBar) {
+    _progressBar->removeFromParent();
+    _progressBar = nullptr;
+  }
+
+  // 移除背景条（通过 Tag）
+  this->removeChildByTag(888);
+
+  // 移除倒计时标签
+  if (_countdownLabel) {
+    _countdownLabel->removeFromParent();
+    _countdownLabel = nullptr;
+  }
+
+  CCLOG("BuildingSprite: Progress bar, background and countdown removed");
 }
 
 void BuildingSprite::showCountdown(int seconds) {
     if (!_countdownLabel) {
-        _countdownLabel = Label::createWithSystemFont("", "Arial", 16);
-        _countdownLabel->setPosition(Vec2(
-            this->getContentSize().width / 2,
-            this->getContentSize().height + 40
-        ));
-        this->addChild(_countdownLabel, 20);
+        _countdownLabel = Label::createWithTTF("", "fonts/simhei.ttf", 18);
+        _countdownLabel->setColor(Color3B::WHITE);
+        _countdownLabel->enableOutline(Color4B::BLACK, 2);
+        
+        auto spriteSize = this->getContentSize();
+        _countdownLabel->setPosition(Vec2(spriteSize.width / 2, spriteSize.height + 50));
+        this->addChild(_countdownLabel, 11);
     }
-
+    
+    // 格式化时间显示
     int hours = seconds / 3600;
     int minutes = (seconds % 3600) / 60;
     int secs = seconds % 60;
-
-    std::string timeStr = StringUtils::format("%02d:%02d:%02d", hours, minutes, secs);
+    
+    std::string timeStr;
+    if (hours > 0) {
+        timeStr = StringUtils::format("%02d:%02d:%02d", hours, minutes, secs);
+    } else {
+        timeStr = StringUtils::format("%02d:%02d", minutes, secs);
+    }
+    
     _countdownLabel->setString(timeStr);
-    _countdownLabel->setVisible(true);
 }
 
-// ========== 访问器 ==========
-
-void BuildingSprite::setGridPos(const Vec2& pos) {
-    _gridPos = pos;
+void BuildingSprite::loadSprite(int type, int level) {
+    auto config = BuildingConfig::getInstance();
+    std::string spritePath = config->getSpritePath(type, level);
+    
+    if (spritePath.empty()) {
+        CCLOG("BuildingSprite: ERROR - Empty sprite path for type=%d, level=%d", type, level);
+        return;
+    }
+    
+    auto texture = Director::getInstance()->getTextureCache()->addImage(spritePath);
+    if (texture) {
+        this->setTexture(texture);
+        auto rect = Rect(0, 0, texture->getContentSize().width, texture->getContentSize().height);
+        this->setTextureRect(rect);
+        
+        auto configData = config->getConfig(type);
+        if (configData) {
+            _visualOffset = configData->anchorOffset;
+        }
+        
+        CCLOG("BuildingSprite: Loaded sprite for type=%d, level=%d", type, level);
+    } else {
+        CCLOG("BuildingSprite: ERROR - Failed to load texture: %s", spritePath.c_str());
+    }
 }
 
-// ========== 碰撞检测 ==========
+void BuildingSprite::updateVisuals() {
+    // 根据状态调整透明度
+    switch (_buildingState) {
+        case BuildingInstance::State::PLACING:
+            this->setOpacity(180);  // 半透明
+            break;
+        case BuildingInstance::State::CONSTRUCTING:
+            this->setOpacity(255);
+            // 建造动画会处理变黑效果
+            break;
+        case BuildingInstance::State::BUILT:
+            this->setOpacity(255);
+            this->setColor(Color3B::WHITE);
+            break;
+    }
+}
+// ========== 网格和拖动相关实现 ==========
 
-bool BuildingSprite::containsPoint(const Vec2& point) const {
-    return getBoundingBox().containsPoint(point);
+cocos2d::Size BuildingSprite::getGridSize() const {
+  auto config = BuildingConfig::getInstance()->getConfig(_buildingType);
+  if (config) {
+    return cocos2d::Size(config->gridWidth, config->gridHeight);
+  }
+  CCLOG("BuildingSprite::getGridSize - Config not found for type=%d, using default 3x3", _buildingType);
+  return cocos2d::Size(3, 3);  // 默认大小
 }
 
-Rect BuildingSprite::getBoundingBox() const {
-    return Sprite::getBoundingBox();
+void BuildingSprite::setDraggingMode(bool isDragging) {
+  if (isDragging) {
+    // 拖动时：放大 + 半透明
+    // this->setScale(1.1f);
+    this->setOpacity(220);
+    CCLOG("BuildingSprite: Entering dragging mode");
+  } else {
+    // 恢复正常
+    this->setScale(1.0f);
+    this->setOpacity(255);
+    this->setColor(cocos2d::Color3B::WHITE);
+    CCLOG("BuildingSprite: Exiting dragging mode");
+  }
+}
+
+void BuildingSprite::setPlacementPreview(bool isValid) {
+  if (isValid) {
+    // 可放置：绿色高亮
+    this->setColor(cocos2d::Color3B(100, 255, 100));
+    this->setOpacity(220);
+  } else {
+    // 不可放置：红色高亮
+    this->setColor(cocos2d::Color3B(255, 100, 100));
+    this->setOpacity(220);
+  }
 }

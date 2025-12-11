@@ -54,8 +54,10 @@ list(APPEND GAME_SOURCE
      Classes/Layer/VillageLayer.cpp
      Classes/Layer/ShopLayer.cpp
      Classes/Layer/HUDLayer.cpp
+     Classes/Component/ConstructionAnimation.cpp
      Classes/Controller/MoveMapController.cpp
      Classes/Controller/MoveBuildingController.cpp
+     Classes/Controller/BuildingPlacementController.cpp
      Classes/Manager/Resource/ResourceCollectionSystem.cpp
      Classes/Manager/Resource/ResourceManager.cpp
      Classes/Manager/Resource/ResourceProductionSystem.cpp
@@ -66,6 +68,7 @@ list(APPEND GAME_SOURCE
      Classes/Model/BuildingConfig.cpp
      Classes/Sprite/BuildingSprite.cpp
      Classes/Sprite/BattleUnitSprite.cpp
+     Classes/UI/PlacementConfirmUI.cpp
      Classes/UI/ResourceCollectionUI.cpp
      Classes/Util/GridMapUtils.cpp
      Classes/Util/JsonUtils.cpp
@@ -78,8 +81,10 @@ list(APPEND GAME_HEADER
      Classes/Layer/ShopLayer.h
      Classes/Layer/VillageLayer.h
      Classes/Layer/HUDLayer.h
+     Classes/Component/ConstructionAnimation.h
      Classes/Controller/MoveMapController.h
      Classes/Controller/MoveBuildingController.h
+     Classes/Controller/BuildingPlacementController.h
      Classes/Manager/Resource/ResourceCollectionSystem.h
      Classes/Manager/Resource/ResourceManager.h
      Classes/Manager/Resource/ResourceProductionSystem.h
@@ -91,6 +96,7 @@ list(APPEND GAME_HEADER
      Classes/Model/BuildingConfig.h
      Classes/Sprite/BuildingSprite.h
      Classes/Sprite/BattleUnitSprite.h
+     Classes/UI/PlacementConfirmUI.h
      Classes/UI/ResourceCollectionUI.h
      Classes/Util/GridMapUtils.h
      Classes/Util/JsonUtils.h

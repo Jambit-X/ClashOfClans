@@ -38,7 +38,7 @@ void BuildingConfig::initConfigs() {
   townHall.spritePathTemplate = "buildings/Town_Hall/Town_Hall{level}.png";  // 从 .webp 改为 .png
   townHall.gridWidth = 4;
   townHall.gridHeight = 4;
-  townHall.anchorOffset = Vec2(25, -50);
+  townHall.anchorOffset = Vec2(0,-60);
   townHall.maxLevel = 13;
   townHall.initialCost = 0;
   townHall.costType = "金币";
@@ -59,7 +59,7 @@ void BuildingConfig::initConfigs() {
   armyCamp.spritePathTemplate = "buildings/military_architecture/army_camp/Army_Camp{level}.png";
   armyCamp.gridWidth = 3;
   armyCamp.gridHeight = 3;
-  armyCamp.anchorOffset = Vec2(44, -30);
+  armyCamp.anchorOffset = Vec2(0, -30);
   armyCamp.maxLevel = 10;
   armyCamp.initialCost = 250;
   armyCamp.costType = "圣水";
@@ -79,7 +79,7 @@ void BuildingConfig::initConfigs() {
   barracks.spritePathTemplate = "buildings/military_architecture/barracks/Barracks{level}.png";
   barracks.gridWidth = 3;
   barracks.gridHeight = 3;
-  barracks.anchorOffset = Vec2(36, -30);
+  barracks.anchorOffset = Vec2(0, -50);
   barracks.maxLevel = 13;
   barracks.initialCost = 200;
   barracks.costType = "圣水";
@@ -99,7 +99,7 @@ void BuildingConfig::initConfigs() {
   laboratory.spritePathTemplate = "buildings/military_architecture/laboratory/Laboratory{level}.png";
   laboratory.gridWidth = 3;
   laboratory.gridHeight = 3;
-  laboratory.anchorOffset = Vec2(3, -40);
+  laboratory.anchorOffset = Vec2(0, -35);
   laboratory.maxLevel = 10;
   laboratory.initialCost = 500;
   laboratory.costType = "圣水";
@@ -120,7 +120,7 @@ void BuildingConfig::initConfigs() {
   goldMine.spritePathTemplate = "buildings/resource_architecture/gold_mine/Gold_Mine{level}.png";
   goldMine.gridWidth = 3;
   goldMine.gridHeight = 3;
-  goldMine.anchorOffset = Vec2(32, -50);
+  goldMine.anchorOffset = Vec2(0, -35);
   goldMine.maxLevel = 14;
   goldMine.initialCost = 150;
   goldMine.costType = "圣水";
@@ -140,7 +140,7 @@ void BuildingConfig::initConfigs() {
   elixirCollector.spritePathTemplate = "buildings/resource_architecture/elixir_collector/Elixir_Collector{level}.png";
   elixirCollector.gridWidth = 3;
   elixirCollector.gridHeight = 3;
-  elixirCollector.anchorOffset = Vec2(56*1.5f - 60, -42);
+  elixirCollector.anchorOffset = Vec2(0, -35);
   elixirCollector.maxLevel = 14;
   elixirCollector.initialCost = 150;
   elixirCollector.costType = "金币";
@@ -161,7 +161,7 @@ void BuildingConfig::initConfigs() {
   cannon.spritePathTemplate = "buildings/defence_architecture/cannon/Cannon_lvl{level}.png";
   cannon.gridWidth = 3;
   cannon.gridHeight = 3;
-  cannon.anchorOffset = Vec2(62, -6);
+  cannon.anchorOffset = Vec2(0, 0);
   cannon.maxLevel = 18;
   cannon.initialCost = 250;
   cannon.costType = "金币";
@@ -177,11 +177,11 @@ void BuildingConfig::initConfigs() {
   BuildingConfigData archerTower;
   archerTower.type = 302;
   archerTower.name = "箭塔";
-  archerTower.category = "防御";
+  archerTower.category = "防御"; 
   archerTower.spritePathTemplate = "buildings/defence_architecture/archer_tower/Archer_Tower{level}.png";
   archerTower.gridWidth = 3;
   archerTower.gridHeight = 3;
-  archerTower.anchorOffset = Vec2(34, -30);
+  archerTower.anchorOffset = Vec2(0, 0);
   archerTower.maxLevel = 18;
   archerTower.initialCost = 1000;
   archerTower.costType = "金币";
@@ -201,7 +201,7 @@ void BuildingConfig::initConfigs() {
   wall.spritePathTemplate = "buildings/defence_architecture/wall/Wall{level}.png";
   wall.gridWidth = 1;
   wall.gridHeight = 1;
-  wall.anchorOffset = Vec2(5, -7);
+  wall.anchorOffset = Vec2(0, 0);
   wall.maxLevel = 14;
   wall.initialCost = 50;
   wall.costType = "金币";

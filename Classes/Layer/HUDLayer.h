@@ -1,7 +1,8 @@
-
 #pragma once
 #include "cocos2d.h"
 #include "ui/CocosGUI.h"
+#include "UI/PlacementConfirmUI.h"
+#include "Controller/BuildingPlacementController.h"
 
 class HUDLayer : public cocos2d::Layer {
 public:
@@ -9,8 +10,6 @@ public:
   CREATE_FUNC(HUDLayer);
 
   void updateResourceDisplay(int gold, int elixir);
-  
-  // 新增：更新待收集资源显示
   void updatePendingResourceDisplay(int pendingGold, int pendingElixir);
 
   void showBuildingActions(int buildingId);
@@ -19,25 +18,23 @@ public:
 
   virtual void update(float dt) override;
 
+  // 放置UI相关方法
+  void startBuildingPlacement(int buildingId);  // 新增：开始放置流程
+  void showPlacementUI(int buildingId);
+  void hidePlacementUI();
+  void updatePlacementUIState(bool canPlace);
+
 private:
   void initActionMenu();
-  
-  // 新增：初始化收集按钮
   void initCollectButtons();
 
-  // 资源标签
   cocos2d::Label* _goldLabel;
   cocos2d::Label* _elixirLabel;
-  
-  // 新增：待收集资源标签
   cocos2d::Label* _pendingGoldLabel;
   cocos2d::Label* _pendingElixirLabel;
-  
-  // 新增：收集按钮
   cocos2d::ui::Button* _collectGoldBtn;
   cocos2d::ui::Button* _collectElixirBtn;
 
-  // 建筑操作菜单
   cocos2d::Node* _actionMenuNode;
   cocos2d::Label* _buildingNameLabel;
   cocos2d::Label* _upgradeCostLabel;
@@ -46,4 +43,10 @@ private:
   cocos2d::ui::Button* _btnTrain;
 
   int _currentSelectedBuildingId = -1;
+
+  PlacementConfirmUI* _placementUI;
+  BuildingPlacementController* _placementController;
+
+  // 放置模式的触摸监听器
+  cocos2d::EventListenerTouchOneByOne* _placementTouchListener;
 };
