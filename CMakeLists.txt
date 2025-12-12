@@ -56,6 +56,7 @@ list(APPEND GAME_SOURCE
      Classes/Layer/ShopLayer.cpp
      Classes/Layer/HUDLayer.cpp
      Classes/Component/ConstructionAnimation.cpp
+    Classes/Layer/TrainingLayer.cpp
      Classes/Controller/MoveMapController.cpp
      Classes/Controller/MoveBuildingController.cpp
      Classes/Controller/BuildingPlacementController.cpp
@@ -67,6 +68,8 @@ list(APPEND GAME_SOURCE
      Classes/Manager/BuildingUpgradeManager.cpp
      Classes/Manager/VillageDataManager.cpp
      Classes/Model/BuildingConfig.cpp
+     Classes/Model/TroopConfig.cpp
+     Classes/Util/GridMapUtils.cpp
      Classes/Sprite/BuildingSprite.cpp
      Classes/Sprite/BattleUnitSprite.cpp
      Classes/UI/PlacementConfirmUI.cpp
@@ -85,6 +88,7 @@ list(APPEND GAME_HEADER
      Classes/Layer/VillageLayer.h
      Classes/Layer/HUDLayer.h
      Classes/Component/ConstructionAnimation.h
+     Classes/Layer/TrainingLayer.h
      Classes/Controller/MoveMapController.h
      Classes/Controller/MoveBuildingController.h
      Classes/Controller/BuildingPlacementController.h
@@ -97,6 +101,8 @@ list(APPEND GAME_HEADER
      Classes/Manager/VillageDataManager.h
      Classes/Model/VillageData.h
      Classes/Model/BuildingConfig.h
+     Classes/Model/TroopConfig.h
+     Classes/Util/GridMapUtils.h
      Classes/Sprite/BuildingSprite.h
      Classes/Sprite/BattleUnitSprite.h
      Classes/UI/PlacementConfirmUI.h
