@@ -6,6 +6,8 @@
 #include "Manager/BuildingManager.h"
 #include "Manager/VillageDataManager.h"
 #include "Sprite/BattleUnitSprite.h"
+#include "Sprite/BuildingSprite.h"   
+#include "Model/BuildingConfig.h"      
 #include "ui/CocosGUI.h"
 #include <iostream>
 #include "Layer/HUDLayer.h"
@@ -48,7 +50,7 @@ bool VillageLayer::init() {
       }
   });
 
-  // ✅ 5. 后初始化地图移动控制器（优先级更低）
+  // 5. 后初始化地图移动控制器（优先级更低）
   _inputController = new MoveMapController(this);
   _inputController->setupInputListeners();
 
@@ -64,174 +66,27 @@ bool VillageLayer::init() {
   CCLOG("  - MoveBuildingController added first (higher priority)");
   CCLOG("  - MoveMapController added second (lower priority)");
 
-  // ===== 野蛮人测试序列 =====
-
-  // 创建野蛮人，初始位置 (0, 0)
-  auto barbarian = BattleUnitSprite::create("Barbarian");
-  barbarian->teleportToGrid(0, 0);
-  this->addChild(barbarian);
-
-  CCLOG("=========================================");
-  CCLOG("Barbarian Test Sequence Started");
-  CCLOG("=========================================");
-
-  // 播放待机动画
-  barbarian->playIdleAnimation();
-
-  float timeOffset = 0.0f;
-  const float attackDuration = 1.0f;  // 每次攻击间隔1秒
-
-  // ===== 第一轮攻击：在 (0, 0) 位置 =====
-  CCLOG("Phase 1: Attacking at grid (0, 0)");
-
-  // 1. 向右上攻击 (45度)
-  timeOffset += 1.0f;
-  this->scheduleOnce([barbarian](float dt) {
-    CCLOG("  -> Attack RIGHT-UP");
-    barbarian->attackInDirection(Vec2(1, 1), []() {
-      CCLOG("     Attack completed");
+  // 在 VillageLayer::init() 中添加事件监听:
+  auto upgradeListener = EventListenerCustom::create("EVENT_BUILDING_UPGRADED", 
+    [this](EventCustom* event) {
+        int buildingId = *(int*)event->getUserData();
+        
+        // 更新建筑精灵外观
+        auto dataManager = VillageDataManager::getInstance();
+        auto building = dataManager->getBuildingById(buildingId);
+        if (building) {
+            // 找到对应的 BuildingSprite 并更新
+            for (auto child : this->getChildren()) {
+                auto buildingSprite = dynamic_cast<BuildingSprite*>(child);
+                if (buildingSprite && buildingSprite->getBuildingId() == buildingId) {
+                    buildingSprite->updateLevel(building->level);
+                    buildingSprite->updateState(building->state);
+                    break;
+                }
+            }
+        }
     });
-  }, timeOffset, "attack_right_up_1");
-
-  // 2. 向右攻击 (0度)
-  timeOffset += attackDuration;
-  this->scheduleOnce([barbarian](float dt) {
-    CCLOG("  -> Attack RIGHT");
-    barbarian->attackInDirection(Vec2(1, 0), []() {
-      CCLOG("     Attack completed");
-    });
-  }, timeOffset, "attack_right_1");
-
-  // 3. 向右下攻击 (315度)
-  timeOffset += attackDuration;
-  this->scheduleOnce([barbarian](float dt) {
-    CCLOG("  -> Attack RIGHT-DOWN");
-    barbarian->attackInDirection(Vec2(1, -1), []() {
-      CCLOG("     Attack completed");
-    });
-  }, timeOffset, "attack_right_down_1");
-
-  // 4. 向左上攻击 (135度)
-  timeOffset += attackDuration;
-  this->scheduleOnce([barbarian](float dt) {
-    CCLOG("  -> Attack LEFT-UP");
-    barbarian->attackInDirection(Vec2(-1, 1), []() {
-      CCLOG("     Attack completed");
-    });
-  }, timeOffset, "attack_left_up_1");
-
-  // 5. 向左攻击 (180度)
-  timeOffset += attackDuration;
-  this->scheduleOnce([barbarian](float dt) {
-    CCLOG("  -> Attack LEFT");
-    barbarian->attackInDirection(Vec2(-1, 0), []() {
-      CCLOG("     Attack completed");
-    });
-  }, timeOffset, "attack_left_1");
-
-  // 6. 向左下攻击 (225度)
-  timeOffset += attackDuration;
-  this->scheduleOnce([barbarian](float dt) {
-    CCLOG("  -> Attack LEFT-DOWN");
-    barbarian->attackInDirection(Vec2(-1, -1), []() {
-      CCLOG("     Attack completed");
-    });
-  }, timeOffset, "attack_left_down_1");
-
-  // ===== 移动阶段 =====
-
-  // 移动到 (0, 5)
-  timeOffset += attackDuration + 0.5f;
-  this->scheduleOnce([barbarian](float dt) {
-    CCLOG("Phase 2: Walking to grid (0, 5)");
-    barbarian->walkToGrid(0, 5, 150.0f, []() {
-      CCLOG("  Arrived at grid (0, 5)");
-    });
-  }, timeOffset, "walk_to_0_5");
-
-  // 等待移动完成（根据速度估算时间）
-  timeOffset += 3.0f;
-
-  // 移动到 (5, 5)
-  this->scheduleOnce([barbarian](float dt) {
-    CCLOG("Phase 3: Walking to grid (5, 5)");
-    barbarian->walkToGrid(5, 5, 150.0f, []() {
-      CCLOG("  Arrived at grid (5, 5)");
-    });
-  }, timeOffset, "walk_to_5_5");
-
-  // 等待移动完成
-  timeOffset += 3.0f;
-
-  // ===== 第二轮攻击：在 (5, 5) 位置 =====
-  CCLOG("Phase 4: Attacking at grid (5, 5)");
-
-  // 1. 向右上攻击
-  timeOffset += 1.0f;
-  this->scheduleOnce([barbarian](float dt) {
-    CCLOG("  -> Attack RIGHT-UP");
-    barbarian->attackInDirection(Vec2(1, 1), []() {
-      CCLOG("     Attack completed");
-    });
-  }, timeOffset, "attack_right_up_2");
-
-  // 2. 向右攻击
-  timeOffset += attackDuration;
-  this->scheduleOnce([barbarian](float dt) {
-    CCLOG("  -> Attack RIGHT");
-    barbarian->attackInDirection(Vec2(1, 0), []() {
-      CCLOG("     Attack completed");
-    });
-  }, timeOffset, "attack_right_2");
-
-  // 3. 向右下攻击
-  timeOffset += attackDuration;
-  this->scheduleOnce([barbarian](float dt) {
-    CCLOG("  -> Attack RIGHT-DOWN");
-    barbarian->attackInDirection(Vec2(1, -1), []() {
-      CCLOG("     Attack completed");
-    });
-  }, timeOffset, "attack_right_down_2");
-
-  // 4. 向左上攻击
-  timeOffset += attackDuration;
-  this->scheduleOnce([barbarian](float dt) {
-    CCLOG("  -> Attack LEFT-UP");
-    barbarian->attackInDirection(Vec2(-1, 1), []() {
-      CCLOG("     Attack completed");
-    });
-  }, timeOffset, "attack_left_up_2");
-
-  // 5. 向左攻击
-  timeOffset += attackDuration;
-  this->scheduleOnce([barbarian](float dt) {
-    CCLOG("  -> Attack LEFT");
-    barbarian->attackInDirection(Vec2(-1, 0), []() {
-      CCLOG("     Attack completed");
-    });
-  }, timeOffset, "attack_left_2");
-
-  // 6. 向左下攻击
-  timeOffset += attackDuration;
-  this->scheduleOnce([barbarian](float dt) {
-    CCLOG("  -> Attack LEFT-DOWN");
-    barbarian->attackInDirection(Vec2(-1, -1), []() {
-      CCLOG("     Attack completed");
-    });
-  }, timeOffset, "attack_left_down_2");
-
-  // ===== 测试结束 =====
-  timeOffset += attackDuration + 1.0f;
-  this->scheduleOnce([barbarian](float dt) {
-    CCLOG("=========================================");
-    CCLOG("Test Sequence Completed!");
-    CCLOG("=========================================");
-
-    // 播放死亡动画
-    barbarian->playDeathAnimation([]() {
-      CCLOG("Barbarian died");
-    });
-  }, timeOffset, "test_end");
+  _eventDispatcher->addEventListenerWithSceneGraphPriority(upgradeListener, this);
 
   return true;
 }
@@ -258,28 +113,26 @@ void VillageLayer::cleanup() {
   Layer::cleanup();
 }
 
-// 购买建筑回调函数
 void VillageLayer::onBuildingPurchased(int buildingId) {
-  CCLOG("VillageLayer: 建筑已购买，ID=%d，准备放置", buildingId);
+  CCLOG("VillageLayer: Building purchased ID=%d, entering placement mode", buildingId);
 
   auto dataManager = VillageDataManager::getInstance();
   auto building = dataManager->getBuildingById(buildingId);
 
   if (building) {
-    // ✅ 临时：放置到更明显的位置 (地图中心偏下)
-    dataManager->setBuildingPosition(buildingId, 10, 10);
+    // 只创建建筑精灵，不启动 MoveBuildingController
+    auto sprite = _buildingManager->addBuilding(*building);
     
-    // ✅ 设置为正常状态 (BUILT)，而不是建造中
-    dataManager->setBuildingState(buildingId,
- BuildingInstance::State::BUILT,
-             0);  // 无完成时间
+    // 通知 HUDLayer 开始放置流程
+    auto scene = this->getScene();
+    if (scene) {
+      auto hudLayer = dynamic_cast<HUDLayer*>(scene->getChildByTag(100));
+      if (hudLayer) {
+        hudLayer->startBuildingPlacement(buildingId);
+      }
+    }
 
-    // 让 BuildingManager 创建精灵
-    _buildingManager->addBuilding(*building);
-    
-    CCLOG("建筑已放置: ID=%d, 位置=(10,10), 状态=BUILT", buildingId);
-  } else {
-    CCLOG("错误: 无法获取建筑数据，ID=%d", buildingId);
+    CCLOG("VillageLayer: Building sprite created, waiting for placement");
   }
 }
 
@@ -354,36 +207,118 @@ void VillageLayer::setupInputCallbacks() {
 
     // ========== 回调 2: 建筑选中（自动进入移动模式）==========
     _inputController->setOnBuildingSelectedCallback([this](const Vec2& screenPos) {
-        auto building = getBuildingAtScreenPos(screenPos);
+      auto building = getBuildingAtScreenPos(screenPos);
 
-        // --- 获取 HUD 层 ---
-        auto scene = this->getScene();
-        HUDLayer* hudLayer = nullptr;
-        if (scene) {
-            hudLayer = dynamic_cast<HUDLayer*>(scene->getChildByTag(100));
-        }
-        // ------------------------
+      auto scene = this->getScene();
+      HUDLayer* hudLayer = nullptr;
+      if (scene) {
+        hudLayer = dynamic_cast<HUDLayer*>(scene->getChildByTag(100));
+      }
 
-        if (building) {
-            int buildingId = building->getBuildingId();
-            CCLOG("VillageLayer: Building selected ID=%d", buildingId);
+      if (building) {
+        int buildingId = building->getBuildingId();
+        CCLOG("VillageLayer: Building selected ID=%d", buildingId);
 
-            // --- 显示底部操作菜单 ---
+        auto dataManager = VillageDataManager::getInstance();
+        auto buildingData = dataManager->getBuildingById(buildingId);
+
+        if (buildingData) {
+          if (buildingData->state == BuildingInstance::State::BUILT) {
+            // 已完成的建筑：显示完整操作菜单
             if (hudLayer) {
-                hudLayer->showBuildingActions(buildingId);
+              hudLayer->showBuildingActions(buildingId);
             }
-            // -----------------------------
-
-            // 【注意】原来的自动移动逻辑：
-            // 如果你希望点击建筑只显示菜单，不直接开始拖动，建议先注释掉下面这行。
-            // 这样点击是“选中”，长按或点击菜单里的“移动”按钮才是“移动”（类似COC逻辑）。
-            //_moveBuildingController->startMoving(buildingId); 
-
+          } else if (buildingData->state == BuildingInstance::State::CONSTRUCTING) {
+            // 建造中的建筑：只显示基本信息（不显示升级/训练按钮）
+            // 可以选择不显示菜单，或显示简化版菜单
+            CCLOG("VillageLayer: Constructing building tapped, can still be moved by long press");
+            // 不显示操作菜单，但可以长按移动
+          } else if (buildingData->state == BuildingInstance::State::PLACING) {
+            CCLOG("VillageLayer: PLACING building should not trigger select callback");
+          }
         }
-        else {
-            CCLOG("VillageLayer: ERROR - Building selected callback triggered but no building found!");
-        }
-        });
+      }
+    });
 
     CCLOG("VillageLayer: Input callbacks configured");
+}
+
+void VillageLayer::removeBuildingSprite(int buildingId) {
+  if (_buildingManager) {
+    _buildingManager->removeBuildingSprite(buildingId);
+    CCLOG("VillageLayer: Removed building sprite ID=%d", buildingId);
+  }
+}
+
+void VillageLayer::updateBuildingDisplay(int buildingId) {
+  auto dataManager = VillageDataManager::getInstance();
+  auto building = dataManager->getBuildingById(buildingId);
+  
+  if (building && _buildingManager) {
+    _buildingManager->updateBuilding(buildingId, *building);
+    CCLOG("VillageLayer: Updated building display for ID=%d", buildingId);
+  }
+}
+
+void VillageLayer::updateBuildingPreviewPosition(int buildingId, const cocos2d::Vec2& worldPos) {
+  auto sprite = _buildingManager->getBuildingSprite(buildingId);
+  if (!sprite) {
+    CCLOG("VillageLayer: Building sprite not found ID=%d", buildingId);
+    return;
+  }
+
+  // 使用 GridMapUtils 转换坐标
+  cocos2d::Vec2 gridPosFloat = GridMapUtils::pixelToGrid(worldPos);
+
+  auto config = BuildingConfig::getInstance()->getConfig(sprite->getBuildingType());
+  if (!config) return;
+
+  // 计算建筑左下角网格坐标（触摸点作为建筑中心）
+  float leftBottomGridX = gridPosFloat.x - config->gridWidth * 0.5f;
+  float leftBottomGridY = gridPosFloat.y - config->gridHeight * 0.5f;
+
+  int gridX = (int)std::round(leftBottomGridX);
+  int gridY = (int)std::round(leftBottomGridY);
+
+  // 计算对齐后的世界坐标
+  cocos2d::Vec2 alignedWorldPos = GridMapUtils::getVisualPosition(
+    gridX, gridY, sprite->getVisualOffset()
+  );
+
+  // 更新精灵位置（平滑移动）
+  cocos2d::Vec2 currentPos = sprite->getPosition();
+  cocos2d::Vec2 smoothPos = currentPos.lerp(alignedWorldPos, 0.3f);
+  sprite->setPosition(smoothPos);
+
+  // 更新网格坐标
+  sprite->setGridPos(cocos2d::Vec2(gridX, gridY));
+
+  // 更新数据层坐标（用于碰撞检测）
+  auto dataManager = VillageDataManager::getInstance();
+  dataManager->setBuildingPosition(buildingId, gridX, gridY);
+
+  // ✅ 修复：isAreaOccupied() 需要 5 个参数
+  bool canPlace = !dataManager->isAreaOccupied(
+    gridX,
+    gridY,
+    config->gridWidth,    // ✅ 添加宽度参数
+    config->gridHeight,   // ✅ 添加高度参数
+    buildingId            // ✅ 忽略自己
+  );
+
+  // 显示视觉反馈
+  sprite->setDraggingMode(true);
+  sprite->setPlacementPreview(canPlace);
+
+  // 通知 HUDLayer 更新按钮状态
+  auto scene = this->getScene();
+  if (scene) {
+    auto hudLayer = dynamic_cast<HUDLayer*>(scene->getChildByTag(100));
+    if (hudLayer) {
+      hudLayer->updatePlacementUIState(canPlace);
+    }
+  }
+
+  CCLOG("VillageLayer: Preview at grid(%d, %d) - %s",
+        gridX, gridY, canPlace ? "VALID" : "INVALID");
 }

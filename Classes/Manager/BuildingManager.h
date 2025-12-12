@@ -44,7 +44,8 @@ public:
 
   // 世界坐标转网格坐标（使用 GridMapUtils）
   Vec2 worldToGrid(const Vec2& worldPos) const;
-
+  // 在 BuildingManager 类中添加
+  void removeBuildingSprite(int buildingId);
 private:
   Layer* _parentLayer;                                      // 父层
   std::unordered_map<int, BuildingSprite*> _buildings;    // 建筑映射表 <buildingId, sprite>

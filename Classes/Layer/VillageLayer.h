@@ -39,6 +39,9 @@ public:
 
   // 清理
   virtual void cleanup() override;
+  void removeBuildingSprite(int buildingId);
+  void updateBuildingPreviewPosition(int buildingId, const cocos2d::Vec2& worldPos);
+  void updateBuildingDisplay(int buildingId);  // 新增：更新建筑显示
 
 private:
   // ========== 初始化方法 ==========

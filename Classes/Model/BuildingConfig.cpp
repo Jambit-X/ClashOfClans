@@ -31,191 +31,290 @@ void BuildingConfig::destroyInstance() {
 
 void BuildingConfig::initConfigs() {
   // 1: 大本营 (Town Hall)
-  _configs[1] = {
-    /*.type = */1,
-    /*.name = */"大本营",
-    /*.category = */"核心",
-    /*.spritePathTemplate = */"UI/Shop/core_architecture/Town_Hall{level}.png",
-    /*.gridWidth = */4,
-    /*.gridHeight = */4,
-    /*.anchorOffset = */Vec2(30, -30),  // 4x4建筑需要更大偏移
-    /*.maxLevel = */13,
-    /*.initialCost = */0,  // 大本营不能购买
-    /*.costType = */"金币",
-    /*.buildTimeSeconds = */0,  // 初始已建造 
-    /*.hitPoints = */1500,
-    /*.damagePerSecond = */0,
-    /*.attackRange = */0,
-    /*.resourceCapacity = */0,
-    /*.productionRate = */0
-  };
+  BuildingConfigData townHall;
+  townHall.type = 1;
+  townHall.name = "大本营";
+  townHall.category = "核心";
+  townHall.spritePathTemplate = "buildings/Town_Hall/Town_Hall{level}.png";  // 从 .webp 改为 .png
+  townHall.gridWidth = 4;
+  townHall.gridHeight = 4;
+  townHall.anchorOffset = Vec2(0,-60);
+  townHall.maxLevel = 13;
+  townHall.initialCost = 0;
+  townHall.costType = "金币";
+  townHall.buildTimeSeconds = 0;
+  townHall.hitPoints = 1500;
+  townHall.damagePerSecond = 0;
+  townHall.attackRange = 0;
+  townHall.resourceCapacity = 0;
+  townHall.productionRate = 0;
+  _configs[1] = townHall;
   
-  // ========== 军队建筑 ==========
-   // 101: 兵营
-  _configs[101] = {
-    /* .type = */ 101,
-    /* .name = */ "兵营",
-    /* .category = */ "军队",
-    /* .spritePathTemplate = */ "UI/Shop/military_architecture/Army_Camp{level}.png",
-    /* .gridWidth = */ 3,
-    /* .gridHeight = */ 3,
-    /* .anchorOffset = */ Vec2(44, -30),
-    /* .maxLevel = */ 10,
-    /* .initialCost = */ 250,
-    /* .costType = */ "圣水",
-    /* .buildTimeSeconds = */ 300,
-    /* .hitPoints = */ 0,
-    /* .damagePerSecond = */ 0,
-    /* .attackRange = */ 0,
-    /* .resourceCapacity = */ 0,
-    /* .productionRate = */ 0
-  };
+  // ========== 军事建筑 ========= =
+  // 101: 兵营
+  BuildingConfigData armyCamp;
+  armyCamp.type = 101;
+  armyCamp.name = "兵营";
+  armyCamp.category = "军事";
+  armyCamp.spritePathTemplate = "buildings/military_architecture/army_camp/Army_Camp{level}.png";
+  armyCamp.gridWidth = 3;
+  armyCamp.gridHeight = 3;
+  armyCamp.anchorOffset = Vec2(0, -30);
+  armyCamp.maxLevel = 10;
+  armyCamp.initialCost = 250;
+  armyCamp.costType = "圣水";
+  armyCamp.buildTimeSeconds = 300;
+  armyCamp.hitPoints = 0;
+  armyCamp.damagePerSecond = 0;
+  armyCamp.attackRange = 0;
+  armyCamp.resourceCapacity = 0;
+  armyCamp.productionRate = 0;
+  _configs[101] = armyCamp;
 
   // 102: 训练营
-  _configs[102] = {
-    /* .type = */ 102,
-    /* .name = */ "训练营", 
-    /* .category = */ "军队",
-    /* .spritePathTemplate = */ "UI/Shop/military_architecture/Barracks{level}.png",
-    /* .gridWidth = */ 3,
-    /* .gridHeight = */ 3,
-    /* .anchorOffset = */ Vec2(36, -30),
-    /* .maxLevel = */ 13,
-    /* .initialCost = */ 200,
-    /* .costType = */ "圣水",
-    /* .buildTimeSeconds = */ 60,
-    /* .hitPoints = */ 0,
-    /* .damagePerSecond = */ 0,
-    /* .attackRange = */ 0,
-    /* .resourceCapacity = */ 0,
-    /* .productionRate = */ 0
-  }; 
+  BuildingConfigData barracks;
+  barracks.type = 102;
+  barracks.name = "训练营";
+  barracks.category = "军事";
+  barracks.spritePathTemplate = "buildings/military_architecture/barracks/Barracks{level}.png";
+  barracks.gridWidth = 3;
+  barracks.gridHeight = 3;
+  barracks.anchorOffset = Vec2(0, -30);
+  barracks.maxLevel = 13;
+  barracks.initialCost = 200;
+  barracks.costType = "圣水";
+  barracks.buildTimeSeconds = 60;
+  barracks.hitPoints = 0;
+  barracks.damagePerSecond = 0;
+  barracks.attackRange = 0;
+  barracks.resourceCapacity = 0;
+  barracks.productionRate = 0;
+  _configs[102] = barracks;
 
   // 103: 实验室
-  _configs[103] = {
-      /*.type = */103,
-      /*.name = */"实验室",
-      /*.category = */"军队",
-      /*.spritePathTemplate = */"UI/Shop/military_architecture/Laboratory{level}.png",
-      /*.gridWidth = */3,
-      /*.gridHeight = */3,
-      /*.anchorOffset=*/Vec2(33, -30),
-      /*.maxLevel = */10,
-      /*.initialCost = */500,
-      /*.costType = */"圣水",
-      /*.buildTimeSeconds = */1800,  // 30分钟
-      /*.hitPoints = */0,
-      /*.damagePerSecond = */0,
-      /*.attackRange = */0,
-      /*.resourceCapacity = */0,
-      /*.productionRate = */0
-  };
+  BuildingConfigData laboratory;
+  laboratory.type = 103;
+  laboratory.name = "实验室";
+  laboratory.category = "军事";
+  laboratory.spritePathTemplate = "buildings/military_architecture/laboratory/Laboratory{level}.png";
+  laboratory.gridWidth = 3;
+  laboratory.gridHeight = 3;
+  laboratory.anchorOffset = Vec2(0, -35);
+  laboratory.maxLevel = 10;
+  laboratory.initialCost = 500;
+  laboratory.costType = "圣水";
+  laboratory.buildTimeSeconds = 1800;
+  laboratory.hitPoints = 0;
+  laboratory.damagePerSecond = 0;
+  laboratory.attackRange = 0;
+  laboratory.resourceCapacity = 0;
+  laboratory.productionRate = 0;
+  _configs[103] = laboratory;
 
-  // ========== 资源建筑 ==========
-
+  // ========== 资源建筑 =========
   // 202: 金矿
-  _configs[202] = {
-      /*.type = */202,
-      /*.name = */"金矿",
-      /*.category = */"资源",
-      /*.spritePathTemplate = */"UI/Shop/resource_architecture/Gold_Mine{level}.png",
-      /*.gridWidth = */3,
-      /*.gridHeight = */3,
-      /*.anchorOffset = */Vec2(32, -30),
-      /*.maxLevel = */14,
-      /*.initialCost = */150,
-      /*.costType = */"圣水",
-      /*.buildTimeSeconds = */60,  // 1分钟
-      /*.hitPoints = */400,
-      /*.damagePerSecond = */0,
-      /*.attackRange = */0,
-      /*.resourceCapacity = */500,
-      /*.productionRate = */20  // 每小时产20金币
-  };
+  BuildingConfigData goldMine;
+  goldMine.type = 202;
+  goldMine.name = "金矿";
+  goldMine.category = "资源";
+  goldMine.spritePathTemplate = "buildings/resource_architecture/gold_mine/Gold_Mine{level}.png";
+  goldMine.gridWidth = 3;
+  goldMine.gridHeight = 3;
+  goldMine.anchorOffset = Vec2(0, -35);
+  goldMine.maxLevel = 14;
+  goldMine.initialCost = 150;
+  goldMine.costType = "圣水";
+  goldMine.buildTimeSeconds = 60;
+  goldMine.hitPoints = 400;
+  goldMine.damagePerSecond = 0;
+  goldMine.attackRange = 0;
+  goldMine.resourceCapacity = 500;
+  goldMine.productionRate = 7200;
+  _configs[202] = goldMine;
 
   // 203: 圣水收集器
-  _configs[203] = { 
-      /*.type = */203,
-      /*.name = */"圣水收集器",
-      /*.category = */"资源",
-      /*.spritePathTemplate = */"UI/Shop/resource_architecture/Elixir_Collector{level}.png",
-      /*.gridWidth = */3,
-      /*.gridHeight = */3,
-      /*.anchorOffset = */Vec2(36, -30),
-      /*.maxLevel = */14,
-      /*.initialCost = */150,
-      /*.costType = */"金币",
-      /*.buildTimeSeconds = */60,
-      /*.hitPoints = */400,
-      /*.damagePerSecond = */0,
-      /*.attackRange = */0,
-      /*.resourceCapacity = */500,
-      /*.productionRate = */20  // 每小时产20圣水
-  };
+  BuildingConfigData elixirCollector;
+  elixirCollector.type = 203;
+  elixirCollector.name = "圣水收集器";
+  elixirCollector.category = "资源";
+  elixirCollector.spritePathTemplate = "buildings/resource_architecture/elixir_collector/Elixir_Collector{level}.png";
+  elixirCollector.gridWidth = 3;
+  elixirCollector.gridHeight = 3;
+  elixirCollector.anchorOffset = Vec2(0, -35);
+  elixirCollector.maxLevel = 14;
+  elixirCollector.initialCost = 150;
+  elixirCollector.costType = "金币";
+  elixirCollector.buildTimeSeconds = 60;
+  elixirCollector.hitPoints = 400;
+  elixirCollector.damagePerSecond = 0;
+  elixirCollector.attackRange = 0;
+  elixirCollector.resourceCapacity = 500;
+  elixirCollector.productionRate = 7200;
+  _configs[203] = elixirCollector;
 
-  // ========== 防御建筑 ==========
+  // 204: 储金罐
+  BuildingConfigData goldStorage;
+  goldStorage.type = 204;
+  goldStorage.name = "储金罐";
+  goldStorage.category = "资源";
+  goldStorage.spritePathTemplate = "buildings/resource_architecture/gold_storage/Gold_Storage{level}.png";
+  goldStorage.gridWidth = 3;
+  goldStorage.gridHeight = 3;
+  goldStorage.anchorOffset = Vec2(0, -40);
+  goldStorage.maxLevel = 14;
+  goldStorage.initialCost = 300;
+  goldStorage.costType = "圣水";
+  goldStorage.buildTimeSeconds = 900;  // 15分钟
+  goldStorage.hitPoints = 600;
+  goldStorage.damagePerSecond = 0;
+  goldStorage.attackRange = 0;
+  goldStorage.resourceCapacity = 5000;  // 储存容量
+  goldStorage.productionRate = 0;
+  _configs[204] = goldStorage;
 
+  // 205: 圣水瓶
+  BuildingConfigData elixirStorage;
+  elixirStorage.type = 205;
+  elixirStorage.name = "圣水瓶";
+  elixirStorage.category = "资源";
+  elixirStorage.spritePathTemplate = "buildings/resource_architecture/elixir_storage/Elixir_Storage{level}.png";
+  elixirStorage.gridWidth = 3;
+  elixirStorage.gridHeight = 3;
+  elixirStorage.anchorOffset = Vec2(0, -40);
+  elixirStorage.maxLevel = 14;
+  elixirStorage.initialCost = 300;
+  elixirStorage.costType = "金币";
+  elixirStorage.buildTimeSeconds = 900;  // 15分钟
+  elixirStorage.hitPoints = 600;
+  elixirStorage.damagePerSecond = 0;
+  elixirStorage.attackRange = 0;
+  elixirStorage.resourceCapacity = 5000;  // 储存容量
+  elixirStorage.productionRate = 0;
+  _configs[205] = elixirStorage;
+
+  // ========== 防御建筑 =========
   // 301: 加农炮
-  _configs[301] = {
-      /*.type = */301,
-      /*.name = */"加农炮",
-      /*.category = */"防御",
-      /*.spritePathTemplate = */"UI/Shop/defence_architecture/Cannon_lvl{level}.png",
-      /*.gridWidth = */3,
-      /*.gridHeight = */3,
-      /*.anchorOffset = */Vec2(62, -6),
-      /*.maxLevel = */18,
-      /*.initialCost = */250,
-      /*.costType = */"金币",
-      /*.buildTimeSeconds = */60,
-      /*.hitPoints = */620,
-      /*.damagePerSecond = */11,
-      /*.attackRange = */9,
-      /*.resourceCapacity = */0,
-      /*.productionRate = */0
-  };
+  BuildingConfigData cannon;
+  cannon.type = 301;
+  cannon.name = "加农炮";
+  cannon.category = "防御";
+  cannon.spritePathTemplate = "buildings/defence_architecture/cannon/Cannon_lvl{level}.png";
+  cannon.gridWidth = 3;
+  cannon.gridHeight = 3;
+  cannon.anchorOffset = Vec2(0, -50);
+  cannon.maxLevel = 18;
+  cannon.initialCost = 250;
+  cannon.costType = "金币";
+  cannon.buildTimeSeconds = 60;
+  cannon.hitPoints = 620;
+  cannon.damagePerSecond = 11;
+  cannon.attackRange = 9;
+  cannon.resourceCapacity = 0;
+  cannon.productionRate = 0;
+  _configs[301] = cannon;
 
   // 302: 箭塔
-  _configs[302] = {
-      /*.type = */302,
-      /*.name = */"箭塔",
-      /*.category = */"防御",
-      /*.spritePathTemplate = */"UI/Shop/defence_architecture/Archer_Tower{level}.png",
-      /*.gridWidth = */3,
-      /*.gridHeight = */3,
-      /*.anchorOffset = */Vec2(34, -30),
-      /*.maxLevel = */18,
-      /*.initialCost = */1000,
-      /*.costType = */"金币",
-      /*.buildTimeSeconds = */900,  // 15分钟
-      /*.hitPoints = */380,
-      /*.damagePerSecond = */11,
-      /*.attackRange = */10,
-      /*.resourceCapacity = */0,
-      /*.productionRate = */0
-  };
+  BuildingConfigData archerTower;
+  archerTower.type = 302;
+  archerTower.name = "箭塔";
+  archerTower.category = "防御"; 
+  archerTower.spritePathTemplate = "buildings/defence_architecture/archer_tower/Archer_Tower{level}.png";
+  archerTower.gridWidth = 3;
+  archerTower.gridHeight = 3;
+  archerTower.anchorOffset = Vec2(0, -50);
+  archerTower.maxLevel = 18;
+  archerTower.initialCost = 1000;
+  archerTower.costType = "金币";
+  archerTower.buildTimeSeconds = 900;
+  archerTower.hitPoints = 380;
+  archerTower.damagePerSecond = 11;
+  archerTower.attackRange = 10;
+  archerTower.resourceCapacity = 0;
+  archerTower.productionRate = 0;
+  _configs[302] = archerTower;
 
   // 303: 城墙
-  _configs[303] = {
-      /*.type = */303,
-      /*.name = */"城墙",
-      /*.category = */"防御",
-      /*.spritePathTemplate = */"UI/Shop/defence_architecture/Wall{level}.png",
-      /*.gridWidth = */1,
-      /*.gridHeight = */1,
-      /*.anchorOffset = */Vec2(5, -7),
-      /*.maxLevel = */14,
-      /*.initialCost = */50,
-      /*.costType = */"金币",
-      /*.buildTimeSeconds = */0,  // 立即建造
-      /*.hitPoints = */300,
-      /*.damagePerSecond = */0,
-      /*.attackRange = */0,
-      /*.resourceCapacity = */0,
-      /*.productionRate = */0
-  };
+  BuildingConfigData wall;
+  wall.type = 303;
+  wall.name = "城墙";
+  wall.category = "防御";
+  wall.spritePathTemplate = "buildings/defence_architecture/wall/Wall{level}.png";
+  wall.gridWidth = 1;
+  wall.gridHeight = 1;
+  wall.anchorOffset = Vec2(0, -15);
+  wall.maxLevel = 14;
+  wall.initialCost = 50;
+  wall.costType = "金币";
+  wall.buildTimeSeconds = 0;
+  wall.hitPoints = 300;
+  wall.damagePerSecond = 0;
+  wall.attackRange = 0;
+  wall.resourceCapacity = 0;
+  wall.productionRate = 0;
+  _configs[303] = wall;
+  // ========== 陷阱 =========
+// 401: 炸弹
+  BuildingConfigData bomb;
+  bomb.type = 401;
+  bomb.name = "炸弹";
+  bomb.category = "陷阱";
+  bomb.spritePathTemplate = "buildings/trap/bomb/Bomb{level}.png";
+  bomb.gridWidth = 1;
+  bomb.gridHeight = 1;
+  bomb.anchorOffset = Vec2(0, -15);
+  bomb.maxLevel = 8;
+  bomb.initialCost = 400;
+  bomb.costType = "金币";
+  bomb.buildTimeSeconds = 0;  // 陷阱瞬间建造
+  bomb.hitPoints = 1;  // 陷阱很脆弱
+  bomb.damagePerSecond = 100;  // 爆炸伤害
+  bomb.attackRange = 1;  // 触发范围
+  bomb.resourceCapacity = 0;
+  bomb.productionRate = 0;
+  _configs[401] = bomb;
+
+  // 402: 隐形弹簧
+  BuildingConfigData springTrap;
+  springTrap.type = 402;
+  springTrap.name = "隐形弹簧";
+  springTrap.category = "陷阱";
+  springTrap.spritePathTemplate = "buildings/trap/spring/Spring_Trap{level}.png";
+  springTrap.gridWidth = 1;
+  springTrap.gridHeight = 1;
+  springTrap.anchorOffset = Vec2(0, -15);
+  springTrap.maxLevel = 5;
+  springTrap.initialCost = 2000;
+  springTrap.costType = "金币";
+  springTrap.buildTimeSeconds = 0;
+  springTrap.hitPoints = 1;
+  springTrap.damagePerSecond = 0;  // 弹飞敌人，不造成伤害
+  springTrap.attackRange = 1;
+  springTrap.resourceCapacity = 0;
+  springTrap.productionRate = 0;
+  _configs[402] = springTrap;
+
+  // 404: 巨型炸弹
+  BuildingConfigData giantBomb;
+  giantBomb.type = 404;
+  giantBomb.name = "巨型炸弹";
+  giantBomb.category = "陷阱";
+  giantBomb.spritePathTemplate = "buildings/trap/giant_bomb/Giant_Bomb{level}.png";
+  giantBomb.gridWidth = 2;
+  giantBomb.gridHeight = 2;
+  giantBomb.anchorOffset = Vec2(0, -25);
+  giantBomb.maxLevel = 5;
+  giantBomb.initialCost = 12500;
+  giantBomb.costType = "金币";
+  giantBomb.buildTimeSeconds = 0;
+  giantBomb.hitPoints = 1;
+  giantBomb.damagePerSecond = 400;  // 巨大爆炸伤害
+  giantBomb.attackRange = 2;  // 更大的触发范围
+  giantBomb.resourceCapacity = 0;
+  giantBomb.productionRate = 0;
+  _configs[404] = giantBomb;
 
   CCLOG("BuildingConfig: Initialized %lu building configs", _configs.size());
+  CCLOG("BuildingConfig: Town Hall sprite path template: %s", townHall.spritePathTemplate.c_str());
 }
 
 const BuildingConfigData* BuildingConfig::getConfig(int buildingType) const {
@@ -231,6 +330,7 @@ const BuildingConfigData* BuildingConfig::getConfig(int buildingType) const {
 std::string BuildingConfig::getSpritePath(int buildingType, int level) const {
   const BuildingConfigData* config = getConfig(buildingType);
   if (!config) {
+    CCLOG("BuildingConfig: ERROR - No config for building type %d", buildingType);
     return "";
   }
 
@@ -241,6 +341,8 @@ std::string BuildingConfig::getSpritePath(int buildingType, int level) const {
     path.replace(pos, 7, std::to_string(level));
   }
 
+  CCLOG("BuildingConfig: Generated sprite path for type=%d, level=%d: %s", 
+        buildingType, level, path.c_str());
   return path;
 }
 

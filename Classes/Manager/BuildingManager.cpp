@@ -57,21 +57,31 @@ void BuildingManager::removeBuilding(int buildingId) {
 }
 
 void BuildingManager::updateBuilding(int buildingId, const BuildingInstance& building) {
-    auto sprite = getBuildingSprite(buildingId);
-    if (sprite) {
-        sprite->updateBuilding(building);
+  auto sprite = getBuildingSprite(buildingId);
+  if (sprite) {
+    sprite->updateBuilding(building);
 
-        // 更新位置
-        Vec2 worldPos = GridMapUtils::gridToPixel(building.gridX, building.gridY);
-        Vec2 finalPos = worldPos + sprite->getVisualOffset();
-        sprite->setPosition(finalPos);
+    Vec2 worldPos = GridMapUtils::gridToPixel(building.gridX, building.gridY);
+    Vec2 finalPos = worldPos + sprite->getVisualOffset();
+    sprite->setPosition(finalPos);
 
-        // ? 修复：移动后更新 Z-Order
-        int zOrder = building.gridX + building.gridY;
-        sprite->setLocalZOrder(zOrder);
-        
-        CCLOG("BuildingManager: Updated building ID=%d, new Z-Order=%d", buildingId, zOrder);
+    int zOrder = building.gridX + building.gridY;
+    sprite->setLocalZOrder(zOrder);
+
+    // 状态切换到建造中时的特殊处理
+    if (building.state == BuildingInstance::State::CONSTRUCTING) {
+      CCLOG("BuildingManager: Building %d entering CONSTRUCTING state", buildingId);
+
+      // 彻底清除拖动和预览状态
+      sprite->setDraggingMode(false);
+      sprite->clearPlacementPreview();
+
+      // 启动建造动画（会把建筑变暗灰色）
+      sprite->startConstruction();
     }
+
+    CCLOG("BuildingManager: Updated building ID=%d", buildingId);
+  }
 }
 
 BuildingSprite* BuildingManager::getBuildingSprite(int buildingId) const {
@@ -124,43 +134,69 @@ BuildingSprite* BuildingManager::getBuildingAtWorldPos(const Vec2& worldPos) con
 }
 
 void BuildingManager::update(float dt) {
-    auto dataManager = VillageDataManager::getInstance();
-    const auto& buildings = dataManager->getAllBuildings();
-    long long currentTime = time(nullptr);
+  auto dataManager = VillageDataManager::getInstance();
+  const auto& buildings = dataManager->getAllBuildings();
+  long long currentTime = time(nullptr);
 
-    for (auto& building : buildings) {
-        if (building.state == BuildingInstance::State::CONSTRUCTING) {
-            // 检查完成
-            if (building.finishTime > 0 && currentTime >= building.finishTime) {
-                dataManager->setBuildingState(building.id, BuildingInstance::State::BUILT, 0);
+  for (auto& building : buildings) {
+    if (building.state == BuildingInstance::State::CONSTRUCTING) {
+      auto sprite = getBuildingSprite(building.id);
+      if (!sprite) continue;
 
-                auto sprite = getBuildingSprite(building.id);
-                if (sprite) {
-                    sprite->hideConstructionProgress();
-                    sprite->updateState(BuildingInstance::State::BUILT);
-                }
-                continue;
-            }
-
-            // 更新进度条
-            auto sprite = getBuildingSprite(building.id);
-            if (sprite && building.finishTime > 0) {
-                long long remainTime = building.finishTime - currentTime;
-
-                // 从配置表读取建造时间
-                auto config = BuildingConfig::getInstance()->getConfig(building.type);
-                long long totalTime = 300;  // 默认5分钟
-                if (config) {
-                    totalTime = config->buildTimeSeconds;
-                }
-                if (totalTime <= 0) totalTime = 1;
-
-                float progress = 1.0f - (static_cast<float>(remainTime) / (float)totalTime);
-                progress = clampf(progress, 0.0f, 1.0f);
-
-                sprite->showConstructionProgress(progress);
-                sprite->showCountdown((int)remainTime);
-            }
+      // 检查是否完成
+      if (building.finishTime > 0 && currentTime >= building.finishTime) {
+        CCLOG("BuildingManager: Building ID=%d construction complete", building.id);
+        
+        // 1. 隐藏进度UI
+        sprite->hideConstructionProgress();
+        
+        // 2. 使用标志位判断是新建筑还是升级
+        if (building.isInitialConstruction) {
+          // 新建筑：保持等级
+          CCLOG("BuildingManager: New building construction (level=%d)", building.level);
+          dataManager->finishNewBuildingConstruction(building.id);
+        } else {
+          // 升级：等级+1
+          CCLOG("BuildingManager: Upgrade (level %d -> %d)", building.level, building.level + 1);
+          dataManager->finishUpgradeBuilding(building.id);
         }
+        
+        // 3. 更新精灵
+        sprite->finishConstruction();
+        sprite->updateState(BuildingInstance::State::BUILT);
+        
+        auto updatedBuilding = dataManager->getBuildingById(building.id);
+        if (updatedBuilding) {
+            sprite->updateBuilding(*updatedBuilding);
+        }
+        
+        continue;
+      }
+
+      // 更新建造进度
+      if (building.finishTime > 0) {
+        long long remainTime = building.finishTime - currentTime;
+
+        auto config = BuildingConfig::getInstance()->getConfig(building.type);
+        long long totalTime = config ? config->buildTimeSeconds : 300;
+        if (totalTime <= 0) totalTime = 1;
+
+        float progress = 1.0f - (static_cast<float>(remainTime) / (float)totalTime);
+        progress = clampf(progress, 0.0f, 1.0f);
+
+        sprite->showConstructionProgress(progress);
+        sprite->showCountdown((int)remainTime);
+        sprite->updateConstructionProgress(progress);
+      }
     }
+  }
+}
+
+void BuildingManager::removeBuildingSprite(int buildingId) {
+  auto it = _buildings.find(buildingId);
+  if (it != _buildings.end()) {
+    CCLOG("BuildingManager: Removing sprite for building ID=%d", buildingId);
+    it->second->removeFromParent();
+    _buildings.erase(it);
+  }
 }
