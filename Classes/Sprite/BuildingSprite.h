@@ -29,6 +29,7 @@ public:
   // 拖动和放置预览
   void setDraggingMode(bool isDragging);
   void setPlacementPreview(bool isValid);
+  void clearPlacementPreview();  // 新增方法
 
   // Getter
   int getBuildingId() const { return _buildingId; }
@@ -46,7 +47,7 @@ private:
   int _buildingLevel;
   BuildingInstance::State _buildingState;
   cocos2d::Vec2 _visualOffset;
-  cocos2d::Vec2 _gridPos;  // 存储网格坐标
+  cocos2d::Vec2 _gridPos;
 
   cocos2d::ProgressTimer* _progressBar;
   cocos2d::Label* _countdownLabel;

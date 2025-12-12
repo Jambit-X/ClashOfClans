@@ -143,22 +143,22 @@ void BuildingSprite::showConstructionProgress(float progress) {
 }
 
 void BuildingSprite::hideConstructionProgress() {
-  // 移除进度条
+  // 1. 移除进度条
   if (_progressBar) {
     _progressBar->removeFromParent();
     _progressBar = nullptr;
   }
 
-  // 移除背景条（通过 Tag）
+  // 2. 移除背景条（通过 Tag）
   this->removeChildByTag(888);
 
-  // 移除倒计时标签
+  // 3. 移除倒计时标签
   if (_countdownLabel) {
     _countdownLabel->removeFromParent();
     _countdownLabel = nullptr;
   }
 
-  CCLOG("BuildingSprite: Progress bar, background and countdown removed");
+  CCLOG("BuildingSprite: All construction UI removed");
 }
 
 void BuildingSprite::showCountdown(int seconds) {
@@ -228,6 +228,12 @@ void BuildingSprite::updateVisuals() {
             this->setColor(Color3B::WHITE);
             break;
     }
+}
+
+void BuildingSprite::clearPlacementPreview() {
+  this->setColor(Color3B::WHITE);
+  this->setOpacity(255);
+  CCLOG("BuildingSprite: Cleared placement preview");
 }
 // ========== 网格和拖动相关实现 ==========
 

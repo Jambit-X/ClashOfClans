@@ -4,10 +4,9 @@
 
 USING_NS_CC;
 
-ConstructionAnimation::ConstructionAnimation(BuildingSprite* targetSprite)
-  : _targetSprite(targetSprite)
+ConstructionAnimation::ConstructionAnimation(BuildingSprite* sprite)
+  : _buildingSprite(sprite)  // 改为 _buildingSprite
   , _progressLabel(nullptr)
-  , _dotCount(0)
   , _isRunning(false) {}
 
 ConstructionAnimation::~ConstructionAnimation() {
@@ -18,24 +17,20 @@ void ConstructionAnimation::start() {
   if (_isRunning) return;
 
   _isRunning = true;
-  createAnimationLabel();
 
-  // 建筑变黑
-  if (_targetSprite) {
-    _targetSprite->runAction(TintTo::create(0.3f, 60, 60, 60));
+  // 创建进度标签（只创建一次）
+  if (!_progressLabel) {
+    _progressLabel = Label::createWithTTF("建造中...0%", "fonts/simhei.ttf", 20);
+    _progressLabel->setColor(Color3B::YELLOW);
+    _progressLabel->enableOutline(Color4B::BLACK, 2);
+
+    auto spriteSize = _buildingSprite->getContentSize();
+    _progressLabel->setPosition(Vec2(spriteSize.width / 2, spriteSize.height + 70));
+    _buildingSprite->addChild(_progressLabel, 12);
   }
 
-  // 启动省略号动画
-  auto scheduler = Director::getInstance()->getScheduler();
-  scheduler->schedule(
-    [this](float dt) { this->updateDots(dt); },
-    this,
-    0.5f,  // 每0.5秒更新一次省略号
-    CC_REPEAT_FOREVER,
-    0.0f,
-    false,
-    "construction_dots_animation"
-  );
+  // 建筑变暗效果
+  _buildingSprite->setColor(Color3B(100, 100, 100));
 
   CCLOG("ConstructionAnimation: Started");
 }
@@ -45,53 +40,24 @@ void ConstructionAnimation::stop() {
 
   _isRunning = false;
 
-  // 恢复建筑颜色
-  if (_targetSprite) {
-    _targetSprite->stopAllActions();
-    _targetSprite->runAction(TintTo::create(0.3f, 255, 255, 255));
-  }
-
-  // 移除标签
+  // 移除进度标签
   if (_progressLabel) {
     _progressLabel->removeFromParent();
     _progressLabel = nullptr;
   }
 
-  // 停止定时器
-  auto scheduler = Director::getInstance()->getScheduler();
-  scheduler->unschedule("construction_dots_animation", this);
+  // 恢复建筑颜色
+  _buildingSprite->setColor(Color3B::WHITE);
 
   CCLOG("ConstructionAnimation: Stopped");
 }
 
 void ConstructionAnimation::updateProgress(float progress) {
-  if (!_progressLabel || !_isRunning) return;
+  if (!_isRunning) return;
 
-  // 更新进度文字
-  int percentage = static_cast<int>(progress * 100);
-  std::string dotsStr = "";
-  for (int i = 0; i < _dotCount; ++i) {
-    dotsStr += ".";
+  // 只更新进度文字，不重新创建
+  if (_progressLabel) {
+    std::string progressText = StringUtils::format("建造中...%.0f%%", progress * 100);
+    _progressLabel->setString(progressText);
   }
-
-  _progressLabel->setString("建造中" + dotsStr + " " + std::to_string(percentage) + "%");
-}
-
-void ConstructionAnimation::createAnimationLabel() {
-  if (!_targetSprite) return;
-
-  _progressLabel = Label::createWithTTF("建造中...", "fonts/simhei.ttf", 20);
-  _progressLabel->setColor(Color3B::YELLOW);
-  _progressLabel->enableOutline(Color4B::BLACK, 2);
-
-  // 放在建筑上方
-  auto spriteSize = _targetSprite->getContentSize();
-  _progressLabel->setPosition(Vec2(spriteSize.width / 2, spriteSize.height + 20));
-
-  _targetSprite->addChild(_progressLabel, 10);
-}
-
-void ConstructionAnimation::updateDots(float dt) {
-  _dotCount = (_dotCount + 1) % 4;  // 0, 1, 2, 3 循环
-  updateProgress(0.0f);  // 触发更新，实际进度由外部设置
 }

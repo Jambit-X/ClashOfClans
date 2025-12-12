@@ -61,25 +61,26 @@ void BuildingManager::updateBuilding(int buildingId, const BuildingInstance& bui
   if (sprite) {
     sprite->updateBuilding(building);
 
-    // 更新位置
     Vec2 worldPos = GridMapUtils::gridToPixel(building.gridX, building.gridY);
     Vec2 finalPos = worldPos + sprite->getVisualOffset();
     sprite->setPosition(finalPos);
 
-    // 更新 Z-Order
     int zOrder = building.gridX + building.gridY;
     sprite->setLocalZOrder(zOrder);
 
-    // 新增：如果从 PLACING 切换到 CONSTRUCTING，恢复正常显示
+    // 状态切换到建造中时的特殊处理
     if (building.state == BuildingInstance::State::CONSTRUCTING) {
+      CCLOG("BuildingManager: Building %d entering CONSTRUCTING state", buildingId);
+
+      // 彻底清除拖动和预览状态
       sprite->setDraggingMode(false);
-      sprite->setPlacementPreview(false);
-      sprite->setColor(Color3B::WHITE);
-      sprite->setOpacity(255);
-      sprite->startConstruction();  // 开始建造动画
+      sprite->clearPlacementPreview();
+
+      // 启动建造动画（会把建筑变暗灰色）
+      sprite->startConstruction();
     }
 
-    CCLOG("BuildingManager: Updated building ID=%d, new Z-Order=%d", buildingId, zOrder);
+    CCLOG("BuildingManager: Updated building ID=%d", buildingId);
   }
 }
 
@@ -144,9 +145,15 @@ void BuildingManager::update(float dt) {
 
       // 检查是否完成
       if (building.finishTime > 0 && currentTime >= building.finishTime) {
+        // 先隐藏进度条和倒计时
+        sprite->hideConstructionProgress();
+
+        // 再更新状态
         dataManager->setBuildingState(building.id, BuildingInstance::State::BUILT, 0);
         sprite->finishConstruction();
         sprite->updateState(BuildingInstance::State::BUILT);
+
+        CCLOG("BuildingManager: Building ID=%d construction complete", building.id);
         continue;
       }
 
@@ -170,9 +177,6 @@ void BuildingManager::update(float dt) {
 
         // 更新建造动画进度
         sprite->updateConstructionProgress(progress);
-
-        CCLOG("BuildingManager: Building ID=%d progress=%.2f%%, remain=%lld sec",
-              building.id, progress * 100, remainTime);
       }
     }
   }
