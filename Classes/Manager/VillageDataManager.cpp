@@ -109,7 +109,9 @@ BuildingInstance* VillageDataManager::getBuildingById(int id) {
 }
 
 int VillageDataManager::addBuilding(int type, int level, int gridX, int gridY,
-                                    BuildingInstance::State state, long long finishTime) {
+                                    BuildingInstance::State state,
+                                    long long finishTime,
+                                    bool isInitialConstruction) {
   BuildingInstance building;
   building.id = _nextBuildingId++;
   building.type = type;
@@ -118,6 +120,7 @@ int VillageDataManager::addBuilding(int type, int level, int gridX, int gridY,
   building.gridY = gridY;
   building.state = state;
   building.finishTime = finishTime;
+  building.isInitialConstruction = isInitialConstruction;  // 设置标志
 
   _data.buildings.push_back(building);
 
@@ -125,8 +128,8 @@ int VillageDataManager::addBuilding(int type, int level, int gridX, int gridY,
     updateGridOccupancy();
   }
 
-  CCLOG("VillageDataManager: Added building ID=%d, type=%d at grid(%d, %d)",
-        building.id, type, gridX, gridY);
+  CCLOG("VillageDataManager: Added building ID=%d, type=%d, level=%d, initial=%s",
+        building.id, type, level, isInitialConstruction ? "YES" : "NO");
 
   return building.id;
 }
@@ -208,6 +211,7 @@ bool VillageDataManager::startUpgradeBuilding(int id) {
   long long finishTime = currentTime + configData->buildTimeSeconds;
   building->state = BuildingInstance::State::CONSTRUCTING;
   building->finishTime = finishTime;
+  building->isInitialConstruction = false;  // 升级不是首次建造
 
   CCLOG("VillageDataManager: Started upgrade for building %d, finish at %lld", id, finishTime);
 
@@ -215,11 +219,28 @@ bool VillageDataManager::startUpgradeBuilding(int id) {
   return true;
 }
 
+// 新增：新建筑建造完成（不升级）
+void VillageDataManager::finishNewBuildingConstruction(int id) {
+  auto* building = getBuildingById(id);
+  if (!building) return;
+
+  building->state = BuildingInstance::State::BUILT;
+  building->finishTime = 0;
+  building->isInitialConstruction = false;
+
+  CCLOG("VillageDataManager: New building %d construction complete (level=%d)", id, building->level);
+
+  saveToFile("village.json");
+
+  Director::getInstance()->getEventDispatcher()->dispatchCustomEvent(
+    "EVENT_BUILDING_CONSTRUCTED", &id);
+}
+
 void VillageDataManager::finishUpgradeBuilding(int id) {
   auto* building = getBuildingById(id);
   if (!building) return;
 
-  building->level++;
+  building->level++;  // 升级才+1
   building->state = BuildingInstance::State::BUILT;
   building->finishTime = 0;
 
@@ -299,11 +320,9 @@ void VillageDataManager::saveToFile(const std::string& filename) {
   doc.SetObject();
   auto& allocator = doc.GetAllocator();
 
-  // 只保存基础资源
   doc.AddMember("gold", _data.gold, allocator);
   doc.AddMember("elixir", _data.elixir, allocator);
 
-  // 保存建筑
   rapidjson::Value buildingsArray(rapidjson::kArrayType);
   for (const auto& building : _data.buildings) {
     rapidjson::Value buildingObj(rapidjson::kObjectType);
@@ -314,11 +333,11 @@ void VillageDataManager::saveToFile(const std::string& filename) {
     buildingObj.AddMember("gridY", building.gridY, allocator);
     buildingObj.AddMember("state", (int)building.state, allocator);
     buildingObj.AddMember("finishTime", building.finishTime, allocator);
+    buildingObj.AddMember("isInitialConstruction", building.isInitialConstruction, allocator);
     buildingsArray.PushBack(buildingObj, allocator);
   }
   doc.AddMember("buildings", buildingsArray, allocator);
 
-  // 转换并保存
   rapidjson::StringBuffer buffer;
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
   doc.Accept(writer);
@@ -360,7 +379,6 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
     return;
   }
 
-  // 加载资源
   if (doc.HasMember("gold") && doc["gold"].IsInt()) {
     _data.gold = doc["gold"].GetInt();
   }
@@ -368,7 +386,6 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
     _data.elixir = doc["elixir"].GetInt();
   }
 
-  // 加载建筑
   _data.buildings.clear();
   if (doc.HasMember("buildings") && doc["buildings"].IsArray()) {
     const auto& buildingsArray = doc["buildings"];
@@ -383,6 +400,13 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
       building.gridY = buildingObj["gridY"].GetInt();
       building.state = (BuildingInstance::State)buildingObj["state"].GetInt();
       building.finishTime = buildingObj["finishTime"].GetInt64();
+      
+      // 加载新字段（兼容旧存档）
+      if (buildingObj.HasMember("isInitialConstruction")) {
+        building.isInitialConstruction = buildingObj["isInitialConstruction"].GetBool();
+      } else {
+        building.isInitialConstruction = false;
+      }
 
       _data.buildings.push_back(building);
 

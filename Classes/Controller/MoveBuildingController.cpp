@@ -32,62 +32,98 @@ MoveBuildingController::~MoveBuildingController() {
 
 #pragma region 移动流程控制
 void MoveBuildingController::startMoving(int buildingId) {
-    if (_isMoving) {
-        CCLOG("MoveBuildingController: Already moving building %d", _movingBuildingId);
-        return;
+  if (_isMoving) {
+    CCLOG("MoveBuildingController: Already moving building %d", _movingBuildingId);
+    return;
+  }
+
+  // 检查建筑状态
+  auto dataManager = VillageDataManager::getInstance();
+  auto building = dataManager->getBuildingById(buildingId);
+
+  if (!building) {
+    CCLOG("MoveBuildingController: Building %d not found", buildingId);
+    return;
+  }
+
+  // 只有 PLACING 状态不允许通过长按移动（因为正在首次放置中）
+  if (building->state == BuildingInstance::State::PLACING) {
+    CCLOG("MoveBuildingController: Cannot move building in PLACING state");
+    return;
+  }
+
+  // 保存原始位置
+  saveOriginalPosition(buildingId);
+
+  _isMoving = true;
+  _movingBuildingId = buildingId;
+
+  auto sprite = _buildingManager->getBuildingSprite(buildingId);
+  if (sprite) {
+    // 根据建筑状态决定拖动模式的显示
+    if (building->state == BuildingInstance::State::CONSTRUCTING) {
+      // 建造中的建筑：保持暗灰色，不改变透明度
+      CCLOG("MoveBuildingController: Moving CONSTRUCTING building, keeping dark color");
+      // 不调用 setDraggingMode()，因为会覆盖建造动画的颜色
+      // 只增加一点缩放效果表示正在拖动
+      sprite->setScale(1.05f);
+    } else {
+      // 已建造完成的建筑：正常拖动模式
+      sprite->setDraggingMode(true);
     }
-    
-    // 保存原始位置
-    saveOriginalPosition(buildingId);
-    
-    _isMoving = true;
-    _movingBuildingId = buildingId;
-    
-    // 使用 BuildingSprite 的拖动模式
-    auto sprite = _buildingManager->getBuildingSprite(buildingId);
-    if (sprite) {
-        sprite->setDraggingMode(true);
-    }
-    
-    CCLOG("MoveBuildingController: Started moving building ID=%d", buildingId);
+  }
+
+  CCLOG("MoveBuildingController: Started moving building ID=%d (state=%d)",
+        buildingId, (int)building->state);
 }
 
 void MoveBuildingController::cancelMoving() {
-    if (!_isMoving) {
-        return;
+  if (!_isMoving) {
+    return;
+  }
+
+  CCLOG("MoveBuildingController: Cancelling move for building %d", _movingBuildingId);
+
+  // 检查建筑状态
+  auto dataManager = VillageDataManager::getInstance();
+  auto building = dataManager->getBuildingById(_movingBuildingId);
+  bool isConstructing = (building && building->state == BuildingInstance::State::CONSTRUCTING);
+
+  // 恢复原始位置
+  if (_originalPositions.find(_movingBuildingId) != _originalPositions.end()) {
+    Vec2 originalGridPos = _originalPositions[_movingBuildingId];
+
+    auto sprite = _buildingManager->getBuildingSprite(_movingBuildingId);
+    if (sprite) {
+      sprite->setGridPos(originalGridPos);
+
+      Vec2 visualPos = GridMapUtils::getVisualPosition(
+        (int)originalGridPos.x,
+        (int)originalGridPos.y,
+        sprite->getVisualOffset()
+      );
+      sprite->setPosition(visualPos);
+
+      // 根据状态恢复显示
+      if (isConstructing) {
+        // 建造中的建筑：保持建造动画状态
+        sprite->setScale(1.0f);
+        sprite->setOpacity(255);
+        sprite->setColor(Color3B(80, 80, 80));  // 保持暗灰色
+      } else {
+        // 已完成的建筑：完全恢复
+        sprite->setDraggingMode(false);
+        sprite->setPlacementPreview(false);
+        sprite->setColor(Color3B::WHITE);
+        sprite->setOpacity(255);
+      }
     }
-    
-    CCLOG("MoveBuildingController: Cancelling move for building %d", _movingBuildingId);
-    
-    // 恢复原始位置
-    if (_originalPositions.find(_movingBuildingId) != _originalPositions.end()) {
-        Vec2 originalGridPos = _originalPositions[_movingBuildingId];
-        
-        auto sprite = _buildingManager->getBuildingSprite(_movingBuildingId);
-        if (sprite) {
-            // ? 恢复网格坐标（确保数据一致）
-            sprite->setGridPos(originalGridPos);
-            
-            // ? 使用统一函数计算视觉位置
-            Vec2 visualPos = GridMapUtils::getVisualPosition(
-                (int)originalGridPos.x,  
-                (int)originalGridPos.y, 
-                sprite->getVisualOffset()
-            );
-            sprite->setPosition(visualPos);
-            
-            // 恢复正常显示模式
-            sprite->setDraggingMode(false);
-            sprite->setPlacementPreview(false);
-            sprite->setColor(Color3B::WHITE);
-            sprite->setOpacity(255);  // 确保完全不透明
-        }
-        
-        _originalPositions.erase(_movingBuildingId);
-    }
-    
-    _isMoving = false;
-    _movingBuildingId = -1;
+
+    _originalPositions.erase(_movingBuildingId);
+  }
+
+  _isMoving = false;
+  _movingBuildingId = -1;
 }
 
 #pragma endregion
@@ -213,86 +249,113 @@ _movingBuildingId, success ? "succeeded" : "failed");
 
 #pragma region 位置更新和完成
 void MoveBuildingController::updatePreviewPosition(const Vec2& worldPos) {
-    auto sprite = _buildingManager->getBuildingSprite(_movingBuildingId);
-    if (!sprite) {
-        CCLOG("MoveBuildingController: Building sprite not found: %d", _movingBuildingId);
-        return;
-    }
-    
-    // 统一计算位置信息
-    BuildingPositionInfo posInfo = calculatePositionInfo(worldPos, _movingBuildingId);
-    
-    // 更新精灵位置
-    // sprite->setPosition(posInfo.worldPos);
-    // 添加平滑移动（可选）
-    Vec2 currentPos = sprite->getPosition();
-    Vec2 targetPos = posInfo.worldPos;
-    float distance = currentPos.distance(targetPos);
+  auto sprite = _buildingManager->getBuildingSprite(_movingBuildingId);
+  if (!sprite) {
+    CCLOG("MoveBuildingController: Building sprite not found: %d", _movingBuildingId);
+    return;
+  }
 
-    if (distance > 1.0f) {  // 只有距离足够大才插值
-      // 线性插值，让移动更平滑
-      Vec2 smoothPos = currentPos.lerp(targetPos, 0.3f);
-      sprite->setPosition(smoothPos);
+  // 检查建筑状态
+  auto dataManager = VillageDataManager::getInstance();
+  auto building = dataManager->getBuildingById(_movingBuildingId);
+  if (!building) return;
+
+  bool isConstructing = (building->state == BuildingInstance::State::CONSTRUCTING);
+
+  // 统一计算位置信息
+  BuildingPositionInfo posInfo = calculatePositionInfo(worldPos, _movingBuildingId);
+
+  // 更新精灵位置（平滑移动）
+  Vec2 currentPos = sprite->getPosition();
+  Vec2 targetPos = posInfo.worldPos;
+  float distance = currentPos.distance(targetPos);
+
+  if (distance > 1.0f) {
+    Vec2 smoothPos = currentPos.lerp(targetPos, 0.3f);
+    sprite->setPosition(smoothPos);
+  } else {
+    sprite->setPosition(targetPos);
+  }
+
+  // 实时更新网格坐标（用于碰撞检测）
+  sprite->setGridPos(posInfo.gridPos);
+
+  // 显示视觉反馈（根据状态）
+  if (isConstructing) {
+    // 建造中的建筑：不改变颜色，只改变透明度表示合法性
+    if (posInfo.isValid) {
+      sprite->setOpacity(255);  // 可放置：保持原透明度
     } else {
-      sprite->setPosition(targetPos);
+      sprite->setOpacity(180);  // 不可放置：稍微变透明
     }
-    
-    // 实时更新网格坐标（用于碰撞检测）
-    sprite->setGridPos(posInfo.gridPos);
-    
-    // 显示视觉反馈
+    // 保持暗灰色（建造动画的颜色）
+    sprite->setColor(Color3B(80, 80, 80));
+  } else {
+    // 已完成的建筑：正常的绿/红预览
     sprite->setPlacementPreview(posInfo.isValid);
-    // 新增：通知 HUDLayer 更新按钮状态
-    auto scene = _parentLayer->getScene();
-    if (scene) {
-      auto hudLayer = dynamic_cast<HUDLayer*>(scene->getChildByTag(100));
-      if (hudLayer) {
-        hudLayer->updatePlacementUIState(posInfo.isValid);
-      }
-    }
-    
-    CCLOG("MoveBuildingController: Preview at grid(%.0f, %.0f) - %s", 
-          posInfo.gridPos.x, posInfo.gridPos.y, posInfo.isValid ? "VALID" : "INVALID");
+  }
+
+  CCLOG("MoveBuildingController: Preview at grid(%.0f, %.0f) - %s (constructing=%s)",
+        posInfo.gridPos.x, posInfo.gridPos.y,
+        posInfo.isValid ? "VALID" : "INVALID",
+        isConstructing ? "YES" : "NO");
 }
 
 bool MoveBuildingController::completeMove(const Vec2& worldPos) {
-    auto sprite = _buildingManager->getBuildingSprite(_movingBuildingId);
-    if (!sprite) {
-        return false;
-    }
-    
-    // 统一计算位置信信息
-    BuildingPositionInfo posInfo = calculatePositionInfo(worldPos, _movingBuildingId);
-    
-    // 检查是否可以放置
-    if (!posInfo.isValid) {
-        CCLOG("MoveBuildingController: Invalid position, cancelling move");
-        cancelMoving();
-        return false;
-    }
-    
-    // ? 1. 更新数据层
-    auto dataManager = VillageDataManager::getInstance();
-    dataManager->setBuildingPosition(_movingBuildingId, (int)posInfo.gridPos.x, (int)posInfo.gridPos.y);
-    
-    // ? 2. 更新精灵的网格坐标（确保数据一致）
-    sprite->setGridPos(posInfo.gridPos);
-    
-    // ? 3. 更新精灵显示 - 完全恢复正常状态
-    sprite->setPosition(posInfo.worldPos);
-    sprite->setDraggingMode(false);      // 退出拖动模式（会恢复 opacity 和 scale）
-    sprite->setPlacementPreview(false);  // 关闭预览模式
-    sprite->setColor(Color3B::WHITE);    // 恢复颜色
-    sprite->setOpacity(255);             // 确保完全不透明
-    
-    // 清除原始位置记录
-    _originalPositions.erase(_movingBuildingId);
-    
-    CCLOG("MoveBuildingController: Building %d moved to grid(%.0f, %.0f)", 
-          _movingBuildingId, posInfo.gridPos.x, posInfo.gridPos.y);
-    
-    return true;
+  auto sprite = _buildingManager->getBuildingSprite(_movingBuildingId);
+  if (!sprite) {
+    return false;
+  }
+
+  // 检查建筑状态
+  auto dataManager = VillageDataManager::getInstance();
+  auto building = dataManager->getBuildingById(_movingBuildingId);
+  if (!building) return false;
+
+  bool isConstructing = (building->state == BuildingInstance::State::CONSTRUCTING);
+
+  // 统一计算位置信息
+  BuildingPositionInfo posInfo = calculatePositionInfo(worldPos, _movingBuildingId);
+
+  // 检查是否可以放置
+  if (!posInfo.isValid) {
+    CCLOG("MoveBuildingController: Invalid position, cancelling move");
+    cancelMoving();
+    return false;
+  }
+
+  // 1. 更新数据层
+  dataManager->setBuildingPosition(_movingBuildingId, (int)posInfo.gridPos.x, (int)posInfo.gridPos.y);
+
+  // 2. 更新精灵的网格坐标
+  sprite->setGridPos(posInfo.gridPos);
+  sprite->setPosition(posInfo.worldPos);
+
+  // 3. 根据状态恢复显示
+  if (isConstructing) {
+    // 建造中的建筑：恢复建造动画状态
+    sprite->setScale(1.0f);  // 恢复缩放
+    sprite->setOpacity(255);  // 恢复透明度
+    sprite->setColor(Color3B(80, 80, 80));  // 保持暗灰色
+    CCLOG("MoveBuildingController: Constructing building moved, keeping dark color");
+  } else {
+    // 已完成的建筑：完全恢复正常
+    sprite->setDraggingMode(false);
+    sprite->setPlacementPreview(false);
+    sprite->setColor(Color3B::WHITE);
+    sprite->setOpacity(255);
+    CCLOG("MoveBuildingController: Built building moved, restored to normal");
+  }
+
+  // 清除原始位置记录
+  _originalPositions.erase(_movingBuildingId);
+
+  CCLOG("MoveBuildingController: Building %d moved to grid(%.0f, %.0f)",
+        _movingBuildingId, posInfo.gridPos.x, posInfo.gridPos.y);
+
+  return true;
 }
+
 #pragma endregion
 
 #pragma region 合法性检查

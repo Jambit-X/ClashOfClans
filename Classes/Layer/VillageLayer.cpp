@@ -207,36 +207,38 @@ void VillageLayer::setupInputCallbacks() {
 
     // ========== 回调 2: 建筑选中（自动进入移动模式）==========
     _inputController->setOnBuildingSelectedCallback([this](const Vec2& screenPos) {
-        auto building = getBuildingAtScreenPos(screenPos);
+      auto building = getBuildingAtScreenPos(screenPos);
 
-        // --- 获取 HUD 层 ---
-        auto scene = this->getScene();
-        HUDLayer* hudLayer = nullptr;
-        if (scene) {
-            hudLayer = dynamic_cast<HUDLayer*>(scene->getChildByTag(100));
-        }
-        // ------------------------
+      auto scene = this->getScene();
+      HUDLayer* hudLayer = nullptr;
+      if (scene) {
+        hudLayer = dynamic_cast<HUDLayer*>(scene->getChildByTag(100));
+      }
 
-        if (building) {
-            int buildingId = building->getBuildingId();
-            CCLOG("VillageLayer: Building selected ID=%d", buildingId);
+      if (building) {
+        int buildingId = building->getBuildingId();
+        CCLOG("VillageLayer: Building selected ID=%d", buildingId);
 
-            // --- 显示底部操作菜单 ---
+        auto dataManager = VillageDataManager::getInstance();
+        auto buildingData = dataManager->getBuildingById(buildingId);
+
+        if (buildingData) {
+          if (buildingData->state == BuildingInstance::State::BUILT) {
+            // 已完成的建筑：显示完整操作菜单
             if (hudLayer) {
-                hudLayer->showBuildingActions(buildingId);
+              hudLayer->showBuildingActions(buildingId);
             }
-            // -----------------------------
-
-            // 【注意】原来的自动移动逻辑：
-            // 如果你希望点击建筑只显示菜单，不直接开始拖动，建议先注释掉下面这行。
-            // 这样点击是“选中”，长按或点击菜单里的“移动”按钮才是“移动”（类似COC逻辑）。
-            //_moveBuildingController->startMoving(buildingId); 
-
+          } else if (buildingData->state == BuildingInstance::State::CONSTRUCTING) {
+            // 建造中的建筑：只显示基本信息（不显示升级/训练按钮）
+            // 可以选择不显示菜单，或显示简化版菜单
+            CCLOG("VillageLayer: Constructing building tapped, can still be moved by long press");
+            // 不显示操作菜单，但可以长按移动
+          } else if (buildingData->state == BuildingInstance::State::PLACING) {
+            CCLOG("VillageLayer: PLACING building should not trigger select callback");
+          }
         }
-        else {
-            CCLOG("VillageLayer: ERROR - Building selected callback triggered but no building found!");
-        }
-        });
+      }
+    });
 
     CCLOG("VillageLayer: Input callbacks configured");
 }
@@ -245,6 +247,16 @@ void VillageLayer::removeBuildingSprite(int buildingId) {
   if (_buildingManager) {
     _buildingManager->removeBuildingSprite(buildingId);
     CCLOG("VillageLayer: Removed building sprite ID=%d", buildingId);
+  }
+}
+
+void VillageLayer::updateBuildingDisplay(int buildingId) {
+  auto dataManager = VillageDataManager::getInstance();
+  auto building = dataManager->getBuildingById(buildingId);
+  
+  if (building && _buildingManager) {
+    _buildingManager->updateBuilding(buildingId, *building);
+    CCLOG("VillageLayer: Updated building display for ID=%d", buildingId);
   }
 }
 

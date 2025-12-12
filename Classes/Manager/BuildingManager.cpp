@@ -145,37 +145,47 @@ void BuildingManager::update(float dt) {
 
       // 检查是否完成
       if (building.finishTime > 0 && currentTime >= building.finishTime) {
-        // 先隐藏进度条和倒计时
+        CCLOG("BuildingManager: Building ID=%d construction complete", building.id);
+        
+        // 1. 隐藏进度UI
         sprite->hideConstructionProgress();
-
-        // 再更新状态
-        dataManager->setBuildingState(building.id, BuildingInstance::State::BUILT, 0);
+        
+        // 2. 使用标志位判断是新建筑还是升级
+        if (building.isInitialConstruction) {
+          // 新建筑：保持等级
+          CCLOG("BuildingManager: New building construction (level=%d)", building.level);
+          dataManager->finishNewBuildingConstruction(building.id);
+        } else {
+          // 升级：等级+1
+          CCLOG("BuildingManager: Upgrade (level %d -> %d)", building.level, building.level + 1);
+          dataManager->finishUpgradeBuilding(building.id);
+        }
+        
+        // 3. 更新精灵
         sprite->finishConstruction();
         sprite->updateState(BuildingInstance::State::BUILT);
-
-        CCLOG("BuildingManager: Building ID=%d construction complete", building.id);
+        
+        auto updatedBuilding = dataManager->getBuildingById(building.id);
+        if (updatedBuilding) {
+            sprite->updateBuilding(*updatedBuilding);
+        }
+        
         continue;
       }
 
-      // 更新进度
+      // 更新建造进度
       if (building.finishTime > 0) {
         long long remainTime = building.finishTime - currentTime;
 
         auto config = BuildingConfig::getInstance()->getConfig(building.type);
-        long long totalTime = 300;
-        if (config) {
-          totalTime = config->buildTimeSeconds;
-        }
+        long long totalTime = config ? config->buildTimeSeconds : 300;
         if (totalTime <= 0) totalTime = 1;
 
         float progress = 1.0f - (static_cast<float>(remainTime) / (float)totalTime);
         progress = clampf(progress, 0.0f, 1.0f);
 
-        // 更新进度条和倒计时
         sprite->showConstructionProgress(progress);
         sprite->showCountdown((int)remainTime);
-
-        // 更新建造动画进度
         sprite->updateConstructionProgress(progress);
       }
     }

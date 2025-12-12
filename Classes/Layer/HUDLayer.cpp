@@ -119,18 +119,12 @@ bool HUDLayer::init() {
     if (success) {
       CCLOG("HUDLayer: Building placed successfully, starting construction");
 
-      // 通知 VillageLayer 更新建筑外观
+      // 通知 VillageLayer 更新建筑显示
       auto scene = this->getScene();
       if (scene) {
         auto villageLayer = dynamic_cast<VillageLayer*>(scene->getChildByTag(1));
         if (villageLayer) {
-          // 获取建筑精灵并恢复正常状态
-          auto dataManager = VillageDataManager::getInstance();
-          auto building = dataManager->getBuildingById(buildingId);
-          if (building) {
-            // TODO: 通知 BuildingManager 更新建筑显示
-            CCLOG("HUDLayer: Building construction started");
-          }
+          villageLayer->updateBuildingDisplay(buildingId);
         }
       }
     } else {
