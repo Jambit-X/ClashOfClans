@@ -4,6 +4,7 @@
 #include "Manager/VillageDataManager.h"
 #include "Manager/BuildingUpgradeManager.h" 
 #include "Model/BuildingConfig.h"
+#include "Layer/TrainingLayer.h"
 #include "UI/ResourceCollectionUI.h"  
 #include "Layer/VillageLayer.h"
 
@@ -246,15 +247,20 @@ void HUDLayer::initActionMenu() {
   _upgradeCostLabel->setPosition(Vec2(btnSize / 2, btnSize - 10));
   _btnUpgrade->addChild(_upgradeCostLabel);
 
-  // 训练按钮
-  _btnTrain = Button::create(imgPath + "training.png");
-  _btnTrain->ignoreContentAdaptWithSize(false);
-  _btnTrain->setContentSize(Size(btnSize, btnSize));
-  _btnTrain->setPosition(Vec2(btnSize + spacing, 0));
-  _btnTrain->addClickEventListener([=](Ref*) {
-    CCLOG("点击了训练部队");
-  });
-  _actionMenuNode->addChild(_btnTrain);
+    // ================= [训练按钮] =================
+    _btnTrain = Button::create(imgPath + "training.png");
+    _btnTrain->ignoreContentAdaptWithSize(false);
+    _btnTrain->setContentSize(Size(btnSize, btnSize));
+    _btnTrain->setPosition(Vec2(btnSize + spacing, 0)); // 放右边
+    _btnTrain->addClickEventListener([=](Ref*) {
+        CCLOG("点击了训练部队");
+        
+        // 创建并显示训练层
+        auto trainLayer = TrainingLayer::create();
+        // ZOrder 设为 150，比 HUD (100) 和 Shop (100) 都高，保证在最上层
+        this->getScene()->addChild(trainLayer, 150);
+        });
+    _actionMenuNode->addChild(_btnTrain);
 }
 
 void HUDLayer::showBuildingActions(int buildingId) {
