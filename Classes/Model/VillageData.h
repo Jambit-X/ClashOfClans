@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <map> 
 
 struct BuildingInstance {
   int id;
@@ -26,4 +27,7 @@ struct VillageData {
   int gold;
   int elixir;
   std::vector<BuildingInstance> buildings;
+
+  // 已训练的军队数据 <兵种ID, 数量>
+  std::map<int, int> troops;
 };

@@ -34,8 +34,6 @@ bool TrainingLayer::init() {
     }
 
     // 初始化数据
-    _currentSpaceOccupied = 0;
-    _trainedTroops.clear();
     _capacityLabel = nullptr; // 防止野指针
 
     // 1. 全屏半透明遮罩
@@ -53,7 +51,9 @@ bool TrainingLayer::init() {
 
     // 3. 【新增】初始化底部选择面板
     initTroopSelectionPanel();
-
+    
+    updateCapacityLabel();
+    updateArmyView();
     return true;
 }
 
@@ -115,6 +115,9 @@ void TrainingLayer::initBackground() {
         Color4B(70, 50, 70, 255),
         -130.0f,
         [=]() { this->onSpellsSectionClicked(); });
+
+    updateCapacityLabel();
+    updateArmyView();
 }
 
 void TrainingLayer::createSection(const std::string& title,
@@ -275,34 +278,30 @@ Widget* TrainingLayer::createArmyUnitCell(int troopId, int count) {
 void TrainingLayer::updateArmyView() {
     if (!_armyScrollView) return;
 
-    _armyScrollView->removeAllChildren(); // 先清空，重新绘制（简单粗暴但有效）
+    _armyScrollView->removeAllChildren();
 
-    auto allTroops = TroopConfig::getInstance()->getAllTroops();
+    auto dataManager = VillageDataManager::getInstance();
+    auto allConfig = TroopConfig::getInstance()->getAllTroops(); // 获取所有配置以保持顺序
 
     float startX = 0;
     float padding = 10.0f;
-    float cellSize = 90.0f; // 与上面一致
+    float cellSize = 90.0f;
 
-    // 遍历配置表是为了保证显示顺序（比如总是先显示野蛮人，再显示弓箭手）
-    // 如果直接遍历 map，顺序可能是乱的
-    for (const auto& info : allTroops) {
+    // 遍历所有可能的兵种ID
+    for (const auto& info : allConfig) {
         int id = info.id;
+        int count = dataManager->getTroopCount(id); // 向 Manager 查询数量
 
-        // 只有当训练数量 > 0 时才显示
-        if (_trainedTroops.find(id) != _trainedTroops.end() && _trainedTroops[id] > 0) {
-            int count = _trainedTroops[id];
-
-            // 创建带数字的卡片
+        if (count > 0) {
             auto cell = createArmyUnitCell(id, count);
             cell->setAnchorPoint(Vec2(0, 0));
-            cell->setPosition(Vec2(startX, 10)); // Y=10 稍微居中
+            cell->setPosition(Vec2(startX, 10));
             _armyScrollView->addChild(cell);
 
             startX += cellSize + padding;
         }
     }
 
-    // 更新滚动区域大小
     _armyScrollView->setInnerContainerSize(Size(startX, 110));
 }
 
@@ -310,26 +309,14 @@ void TrainingLayer::updateArmyView() {
 // removeTroop（点击移除）
 // ==========================================
 void TrainingLayer::removeTroop(int troopId) {
-    if (_trainedTroops.find(troopId) == _trainedTroops.end() || _trainedTroops[troopId] <= 0) {
-        return;
+    auto dataManager = VillageDataManager::getInstance();
+
+    // 调用 Manager 移除1个单位
+    if (dataManager->removeTroop(troopId, 1)) {
+        // 如果移除成功，刷新界面
+        updateCapacityLabel();
+        updateArmyView();
     }
-
-    TroopInfo info = TroopConfig::getInstance()->getTroopById(troopId);
-
-    // 1. 减少数量
-    _trainedTroops[troopId]--;
-    _currentSpaceOccupied -= info.housingSpace;
-
-    // 2. 如果数量归零，从 map 中移除（可选，为了干净）
-    if (_trainedTroops[troopId] <= 0) {
-        _trainedTroops.erase(troopId);
-    }
-
-    // 3. 刷新 UI
-    updateCapacityLabel();
-    updateArmyView();
-
-    CCLOG("移除了一个 %s, 剩余军队: %d", info.name.c_str(), _currentSpaceOccupied);
 }
 
 // ==========================================
@@ -480,38 +467,46 @@ Widget* TrainingLayer::createTroopCard(const TroopInfo& info, bool isUnlocked) {
 // ==========================================
 
 void TrainingLayer::onTroopCardClicked(int troopId) {
+    auto dataManager = VillageDataManager::getInstance();
     TroopInfo info = TroopConfig::getInstance()->getTroopById(troopId);
 
-    // 1. 检查人口
-    if (_currentSpaceOccupied + info.housingSpace > MAX_SPACE) {
-        // 【需求4】弹出提示
+    // 1. 从 Manager 获取当前占用和总容量
+    int currentSpace = dataManager->getCurrentHousingSpace();
+    int maxSpace = dataManager->calculateTotalHousingSpace();
+
+    // 2. 检查人口
+    if (currentSpace + info.housingSpace > maxSpace) {
+        // 弹出提示
         auto tip = Label::createWithTTF("军队队列空间不足！", TRAIN_FONT, 30);
         tip->setPosition(Director::getInstance()->getVisibleSize() / 2);
         tip->setColor(Color3B::RED);
         this->addChild(tip, 100);
 
-        // 1秒后消失
         tip->runAction(Sequence::create(DelayTime::create(1.0f), FadeOut::create(0.5f), RemoveSelf::create(), nullptr));
 
-        // 红色闪烁容量文字
         if (_capacityLabel) {
             _capacityLabel->runAction(Sequence::create(TintTo::create(0.1f, Color3B::RED), TintTo::create(0.1f, Color3B::WHITE), nullptr));
         }
         return;
     }
 
-    // 2. 训练成功逻辑
-    _currentSpaceOccupied += info.housingSpace;
-    _trainedTroops[troopId]++;
+    // 3. 【无消耗】直接训练：调用 Manager 添加兵种
+    dataManager->addTroop(troopId, 1);
 
-    // 3. 【关键】刷新 UI
-    updateCapacityLabel(); // 刷新 8/40
-    updateArmyView();      // 刷新上方的堆叠图标
+    // 4. 刷新 UI
+    updateCapacityLabel();
+    updateArmyView();
 }
 
 void TrainingLayer::updateCapacityLabel() {
+    auto dataManager = VillageDataManager::getInstance();
+
+    // 实时计算
+    int current = dataManager->getCurrentHousingSpace();
+    int max = dataManager->calculateTotalHousingSpace();
+
     if (_capacityLabel) {
-        _capacityLabel->setString(StringUtils::format("%d/%d", _currentSpaceOccupied, MAX_SPACE));
+        _capacityLabel->setString(StringUtils::format("%d/%d", current, max));
     }
 }
 

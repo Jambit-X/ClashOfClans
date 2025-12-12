@@ -2,6 +2,7 @@
 #include "../Model/VillageData.h"
 #include <functional>
 #include <ctime>
+#include "../Model/TroopConfig.h"
 
 class VillageDataManager {
 public:
@@ -58,6 +59,28 @@ public:
   // ========== 存档/读档 ==========
   void loadFromFile(const std::string& filename);
   void saveToFile(const std::string& filename);
+
+  // ========== 军队与兵营接口 ==========
+
+  // 获取大本营等级
+  int getTownHallLevel() const;
+
+  // 获取兵营数量
+  int getArmyCampCount() const;
+
+  // 计算总人口容量 (根据兵营等级 20/30/40)
+  int calculateTotalHousingSpace() const;
+
+  // 计算当前已占用人口
+  int getCurrentHousingSpace() const;
+
+  // 兵种增删查
+  int getTroopCount(int troopId) const;
+  void addTroop(int troopId, int count);
+  bool removeTroop(int troopId, int count);
+
+  // 获取所有兵种数据(用于UI显示)
+  const std::map<int, int>& getAllTroops() const { return _data.troops; }
 
   // ========== 资源生产系统 ==========
   void startResourceProduction();

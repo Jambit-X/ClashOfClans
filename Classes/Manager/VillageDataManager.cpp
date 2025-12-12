@@ -93,6 +93,88 @@ void VillageDataManager::notifyResourceChanged() {
   Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("EVENT_RESOURCE_CHANGED");
 }
 
+
+// ========== 军队与兵营接口实现 ==========
+
+int VillageDataManager::getTownHallLevel() const {
+    for (const auto& building : _data.buildings) {
+        if (building.type == 1) { // 假设大本营 ID 为 1
+            return building.level;
+        }
+    }
+    return 1; // 默认1级
+}
+
+int VillageDataManager::getArmyCampCount() const {
+    int count = 0;
+    for (const auto& building : _data.buildings) {
+        // 排除放置中的兵营，只计算已存在的
+        if (building.type == 101 && building.state != BuildingInstance::State::PLACING) {
+            count++;
+        }
+    }
+    return count;
+}
+
+int VillageDataManager::calculateTotalHousingSpace() const {
+    int totalSpace = 0;
+    for (const auto& building : _data.buildings) {
+        // 兵营 ID = 101, 且不是放置中状态
+        if (building.type == 101 && building.state != BuildingInstance::State::PLACING) {
+            // 规则：1级=20, 2级=30, 3级=40
+            // 公式：10 + 等级 * 10
+            int space = 10 + (building.level * 10);
+            totalSpace += space;
+        }
+    }
+    return totalSpace;
+}
+
+int VillageDataManager::getCurrentHousingSpace() const {
+    int usedSpace = 0;
+    auto troopConfig = TroopConfig::getInstance();
+
+    for (const auto& pair : _data.troops) {
+        int troopId = pair.first;
+        int count = pair.second;
+
+        TroopInfo info = troopConfig->getTroopById(troopId);
+        usedSpace += info.housingSpace * count;
+    }
+    return usedSpace;
+}
+
+int VillageDataManager::getTroopCount(int troopId) const {
+    auto it = _data.troops.find(troopId);
+    if (it != _data.troops.end()) {
+        return it->second;
+    }
+    return 0;
+}
+
+void VillageDataManager::addTroop(int troopId, int count) {
+    if (count <= 0) return;
+    _data.troops[troopId] += count;
+    saveToFile("village.json"); // 立即保存
+}
+
+bool VillageDataManager::removeTroop(int troopId, int count) {
+    if (count <= 0) return false;
+
+    auto it = _data.troops.find(troopId);
+    if (it == _data.troops.end() || it->second < count) {
+        return false;
+    }
+
+    it->second -= count;
+    if (it->second <= 0) {
+        _data.troops.erase(it);
+    }
+
+    saveToFile("village.json"); // 立即保存
+    return true;
+}
+
 // ========== 建筑接口 ==========
 
 const std::vector<BuildingInstance>& VillageDataManager::getAllBuildings() const {
@@ -323,6 +405,17 @@ void VillageDataManager::saveToFile(const std::string& filename) {
   doc.AddMember("gold", _data.gold, allocator);
   doc.AddMember("elixir", _data.elixir, allocator);
 
+  // --- 保存军队数据 ---
+  rapidjson::Value troopsArray(rapidjson::kArrayType);
+  for (const auto& pair : _data.troops) {
+      rapidjson::Value troopObj(rapidjson::kObjectType);
+      troopObj.AddMember("id", pair.first, allocator);
+      troopObj.AddMember("count", pair.second, allocator);
+      troopsArray.PushBack(troopObj, allocator);
+  }
+  doc.AddMember("troops", troopsArray, allocator);
+
+  // 保存建筑数据
   rapidjson::Value buildingsArray(rapidjson::kArrayType);
   for (const auto& building : _data.buildings) {
     rapidjson::Value buildingObj(rapidjson::kObjectType);
@@ -338,6 +431,7 @@ void VillageDataManager::saveToFile(const std::string& filename) {
   }
   doc.AddMember("buildings", buildingsArray, allocator);
 
+  // 写入文件
   rapidjson::StringBuffer buffer;
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
   doc.Accept(writer);
@@ -378,7 +472,7 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
     CCLOG("VillageDataManager: JSON parse error");
     return;
   }
-
+  // 读取资源
   if (doc.HasMember("gold") && doc["gold"].IsInt()) {
     _data.gold = doc["gold"].GetInt();
   }
@@ -386,6 +480,18 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
     _data.elixir = doc["elixir"].GetInt();
   }
 
+  // --- 读取军队数据 ---
+  _data.troops.clear();
+  if (doc.HasMember("troops") && doc["troops"].IsArray()) {
+      const auto& troopsArray = doc["troops"];
+      for (rapidjson::SizeType i = 0; i < troopsArray.Size(); i++) {
+          const auto& obj = troopsArray[i];
+          int id = obj["id"].GetInt();
+          int count = obj["count"].GetInt();
+          _data.troops[id] = count;
+      }
+  }
+  //  读取建筑数据
   _data.buildings.clear();
   if (doc.HasMember("buildings") && doc["buildings"].IsArray()) {
     const auto& buildingsArray = doc["buildings"];
@@ -415,9 +521,10 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
       }
     }
   }
-
+  // 4. 更新后续状态
   updateGridOccupancy();
   notifyResourceChanged();
 
-  CCLOG("VillageDataManager: Loaded %lu buildings", _data.buildings.size());
+  CCLOG("VillageDataManager: Loaded %lu buildings and %lu troop types",
+      _data.buildings.size(), _data.troops.size());
 }

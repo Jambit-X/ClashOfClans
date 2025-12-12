@@ -324,6 +324,32 @@ std::vector<ShopItemData> ShopLayer::getDummyData(int categoryIndex) {
 void ShopLayer::onPurchaseBuilding(const ShopItemData& data) {
   auto dataManager = VillageDataManager::getInstance();
 
+  // ========== 兵营购买限制逻辑 ==========
+  if (data.id == 101) { // 101 是兵营
+      int thLevel = dataManager->getTownHallLevel();
+      int currentCamps = dataManager->getArmyCampCount();
+
+      // 规则：当前拥有的兵营数 必须 < 大本营等级
+      // 例如：1级大本营，如果已有1个，则 1 < 1 为假，不可购买
+      if (currentCamps >= thLevel) {
+          CCLOG("ShopLayer: Army Camp limit reached (TH Lv.%d, Camps: %d)", thLevel, currentCamps);
+
+          auto label = Label::createWithTTF("请升级大本营以解锁更多兵营！", "fonts/simhei.ttf", 24);
+          label->setPosition(Director::getInstance()->getVisibleSize() / 2);
+          label->setColor(Color3B::RED);
+          label->enableOutline(Color4B::BLACK, 2);
+          this->addChild(label, 100);
+
+          label->runAction(Sequence::create(
+              DelayTime::create(2.0f),
+              FadeOut::create(0.5f),
+              RemoveSelf::create(),
+              nullptr
+          ));
+          return; // 阻止购买
+      }
+  }
+  // ========================================
   bool success = false;
 
   if (data.costType == "金币") {
