@@ -32,7 +32,7 @@ public:
   void walkByOffset(const Vec2& offset, float duration = 2.0f,
                     const std::function<void()>& callback = nullptr);
 
-  // ===== 网格坐标行走（新增）=====
+  // ===== 网格坐标行走 =====
   
   // 从当前网格位置行走到目标网格位置
   void walkToGrid(int targetGridX, int targetGridY, float speed = 100.0f,
@@ -46,15 +46,6 @@ public:
 
   // ===== 方向攻击 =====
   
-  // 向指定方向攻击
-  void attackToDirection(const Vec2& targetPos, 
-                        const std::function<void()>& callback = nullptr);
-  
-  // 向指定网格位置攻击
-  void attackToGrid(int targetGridX, int targetGridY,
-                   const std::function<void()>& callback = nullptr);
-  // ===== 方向攻击（简化版）=====
-  
   // 向指定方向攻击（只播放动画，不移动）
   void attackInDirection(const Vec2& direction, 
                         const std::function<void()>& callback = nullptr);
@@ -66,6 +57,7 @@ public:
   // 攻击指定网格（计算方向，站定攻击）
   void attackTowardGrid(int targetGridX, int targetGridY,
                        const std::function<void()>& callback = nullptr);
+
   // ===== 网格位置管理 =====
   
   // 设置单位当前网格位置
@@ -77,7 +69,45 @@ public:
   // 将单位瞬移到网格位置（不播放动画）
   void teleportToGrid(int gridX, int gridY);
 
-  // 属性访问
+  // ===== 寻路移动 =====
+  
+  /**
+   * @brief 使用寻路算法移动到指定世界坐标
+   * @param targetWorldPos 目标世界坐标
+   * @param speed 移动速度（像素/秒）
+   * @param callback 完成后回调
+   */
+  void moveToTargetWithPathfinding(
+      const Vec2& targetWorldPos, 
+      float speed = 100.0f,
+      const std::function<void()>& callback = nullptr);
+  
+  /**
+   * @brief 使用寻路算法移动到指定网格（根据VillageDataManager的建筑占用表避开障碍）
+   * @param targetGridX 目标网格X坐标
+   * @param targetGridY 目标网格Y坐标
+   * @param speed 移动速度（像素/秒）
+   * @param callback 完成后回调
+   */
+  void moveToGridWithPathfinding(
+      int targetGridX, 
+      int targetGridY, 
+      float speed = 100.0f,
+      const std::function<void()>& callback = nullptr);
+  
+  /**
+   * @brief 沿指定路径列表移动
+   * @param path 路径点列表（世界坐标）
+   * @param speed 移动速度（像素/秒）
+   * @param callback 完成后回调
+   */
+  void followPath(
+      const std::vector<Vec2>& path, 
+      float speed = 100.0f,
+      const std::function<void()>& callback = nullptr);
+
+  // ===== 属性访问 =====
+  
   std::string getUnitType() const { return _unitType; }
   AnimationType getCurrentAnimation() const { return _currentAnimation; }
   bool isAnimating() const { return _isAnimating; }

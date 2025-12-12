@@ -71,6 +71,7 @@ list(APPEND GAME_SOURCE
      Classes/UI/PlacementConfirmUI.cpp
      Classes/UI/ResourceCollectionUI.cpp
      Classes/Util/GridMapUtils.cpp
+     Classes/Util/FindPathUtil.cpp
      Classes/Util/JsonUtils.cpp
      )
 list(APPEND GAME_HEADER
@@ -99,6 +100,7 @@ list(APPEND GAME_HEADER
      Classes/UI/PlacementConfirmUI.h
      Classes/UI/ResourceCollectionUI.h
      Classes/Util/GridMapUtils.h
+     Classes/Util/FindPathUtil.h
      Classes/Util/JsonUtils.h
      )
 

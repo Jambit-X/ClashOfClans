@@ -1,6 +1,7 @@
 // BattleUnitSprite.cpp
 #include "BattleUnitSprite.h"
 #include "Util/GridMapUtils.h"
+#include "Util/FindPathUtil.h"  // ? 添加寻路工具
 #include <algorithm>
 #include <cmath>
 
@@ -359,4 +360,124 @@ void BattleUnitSprite::attackTowardGrid(int targetGridX, int targetGridY,
         targetGridX, targetGridY);
 
   attackTowardPosition(targetPixelPos, callback);
+}
+
+// ===== ? 新增：寻路移动 =====
+
+void BattleUnitSprite::moveToTargetWithPathfinding(
+    const Vec2& targetWorldPos,
+    float speed,
+    const std::function<void()>& callback) {
+
+    // 1. 获取当前世界坐标
+    Vec2 currentWorldPos = this->getPosition();
+
+    // 2. 使用寻路工具查找路径
+    auto pathfinder = FindPathUtil::getInstance();
+    std::vector<Vec2> path = pathfinder->findPathInWorld(currentWorldPos, targetWorldPos);
+
+    if (path.empty()) {
+        CCLOG("BattleUnitSprite: No path found to target (%.0f, %.0f)",
+              targetWorldPos.x, targetWorldPos.y);
+        if (callback) callback();
+        return;
+    }
+
+    CCLOG("BattleUnitSprite: Path found with %lu waypoints", path.size());
+
+    // 3. 沿路径移动
+    followPath(path, speed, callback);
+}
+
+void BattleUnitSprite::moveToGridWithPathfinding(
+    int targetGridX,
+    int targetGridY,
+    float speed,
+    const std::function<void()>& callback) {
+
+    // 1. 检查目标合法性
+    if (!GridMapUtils::isValidGridPosition(targetGridX, targetGridY)) {
+        CCLOG("BattleUnitSprite: Invalid target grid (%d, %d)", targetGridX, targetGridY);
+        if (callback) callback();
+        return;
+    }
+
+    // 2. 转换为世界坐标
+    Vec2 targetWorldPos = GridMapUtils::gridToPixelCenter(targetGridX, targetGridY);
+
+    // 3. 寻路并移动
+    moveToTargetWithPathfinding(targetWorldPos, speed, callback);
+}
+
+void BattleUnitSprite::followPath(
+    const std::vector<Vec2>& path,
+    float speed,
+    const std::function<void()>& callback) {
+
+    if (path.empty()) {
+        CCLOG("BattleUnitSprite: Empty path, nothing to follow");
+        if (callback) callback();
+        return;
+    }
+
+    // 停止当前移动
+    this->stopActionByTag(MOVE_TAG);
+
+    // 创建动作序列
+    Vector<FiniteTimeAction*> actions;
+
+    Vec2 currentPos = this->getPosition();
+
+    for (const auto& waypoint : path) {
+        // 计算方向和距离
+        Vec2 direction = waypoint - currentPos;
+        float distance = direction.length();
+
+        if (distance < 0.1f) {
+            continue; // 跳过太近的点
+        }
+
+        direction.normalize();
+
+        // 选择动画
+        AnimationType animType;
+        bool flipX;
+        selectWalkAnimation(direction, animType, flipX);
+
+        // 播放行走动画
+        auto playAnim = CallFunc::create([this, animType, flipX]() {
+            this->setFlippedX(flipX);
+            playAnimation(animType, true);
+        });
+
+        // 移动到路径点
+        float duration = distance / speed;
+        auto moveAction = MoveTo::create(duration, waypoint);
+
+        actions.pushBack(playAnim);
+        actions.pushBack(moveAction);
+
+        currentPos = waypoint;
+    }
+
+    // 到达后播放待机动画
+    auto finishCallback = CallFunc::create([this, callback]() {
+        this->setFlippedX(false);
+        playIdleAnimation();
+
+        CCLOG("BattleUnitSprite: Path completed");
+
+        if (callback) {
+            callback();
+        }
+    });
+
+    actions.pushBack(finishCallback);
+
+    // 执行动作序列
+    auto sequence = Sequence::create(actions);
+    sequence->setTag(MOVE_TAG);
+    this->runAction(sequence);
+
+    CCLOG("BattleUnitSprite: Following path with %lu waypoints", path.size());
 }
