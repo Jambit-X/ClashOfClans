@@ -51,6 +51,7 @@ list(APPEND GAME_SOURCE
      Classes/AppDelegate/AppDelegate.cpp
      Classes/Scene/StartupScene.cpp
      Classes/Scene/VillageScene.cpp
+     Classes/Layer/BattleTroopLayer.cpp
      Classes/Layer/VillageLayer.cpp
      Classes/Layer/ShopLayer.cpp
      Classes/Layer/HUDLayer.cpp
@@ -79,6 +80,7 @@ list(APPEND GAME_HEADER
      Classes/AppDelegate/AppDelegate.h
      Classes/Scene/StartupScene.h
      Classes/Scene/VillageScene.h
+     Classes/Layer/BattleTroopLayer.cpp
      Classes/Layer/ShopLayer.h
      Classes/Layer/VillageLayer.h
      Classes/Layer/HUDLayer.h
