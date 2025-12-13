@@ -51,10 +51,14 @@ list(APPEND GAME_SOURCE
      Classes/AppDelegate/AppDelegate.cpp
      Classes/Scene/StartupScene.cpp
      Classes/Scene/VillageScene.cpp
+     Classes/Scene/BattleScene.cpp
      Classes/Layer/BattleTroopLayer.cpp
      Classes/Layer/VillageLayer.cpp
      Classes/Layer/ShopLayer.cpp
      Classes/Layer/HUDLayer.cpp
+     Classes/Layer/BattleMapLayer.cpp
+     Classes/Layer/BattleHUDLayer.cpp
+     Classes/Layer/BattleResultLayer.cpp
      Classes/Component/ConstructionAnimation.cpp
     Classes/Layer/TrainingLayer.cpp
      Classes/Controller/MoveMapController.cpp
@@ -83,10 +87,14 @@ list(APPEND GAME_HEADER
      Classes/AppDelegate/AppDelegate.h
      Classes/Scene/StartupScene.h
      Classes/Scene/VillageScene.h
-     Classes/Layer/BattleTroopLayer.cpp
+     Classes/Scene/BattleScene.h
+     Classes/Layer/BattleTroopLayer.h
      Classes/Layer/ShopLayer.h
      Classes/Layer/VillageLayer.h
      Classes/Layer/HUDLayer.h
+     Classes/Layer/BattleMapLayer.h
+     Classes/Layer/BattleHUDLayer.h
+     Classes/Layer/BattleResultLayer.h
      Classes/Component/ConstructionAnimation.h
      Classes/Layer/TrainingLayer.h
      Classes/Controller/MoveMapController.h

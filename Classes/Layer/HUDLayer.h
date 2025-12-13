@@ -7,6 +7,7 @@
 class HUDLayer : public cocos2d::Layer {
 public:
   virtual bool init();
+  virtual void cleanup() override;  // ? 添加 cleanup 方法
   CREATE_FUNC(HUDLayer);
 
   void updateResourceDisplay(int gold, int elixir);
@@ -18,8 +19,8 @@ public:
 
   virtual void update(float dt) override;
 
-  // 放置UI相关方法
-  void startBuildingPlacement(int buildingId);  // 新增：开始放置流程
+  // 建筑UI放置方法
+  void startBuildingPlacement(int buildingId);  // 从外部开始放置流程
   void showPlacementUI(int buildingId);
   void hidePlacementUI();
   void updatePlacementUIState(bool canPlace);

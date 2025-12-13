@@ -51,14 +51,14 @@ void StartupScene::showSplashPhase() {
     // 2. Supercell Logo - 调整为更小尺寸
     _logo = Sprite::create("Scene/supercell_logo.png");
     _logo->setPosition(Vec2(visibleSize.width / 2, visibleSize.height * 0.6f));
-    
+
     float targetScale = 0.6f; // 进一步缩小到0.6倍
     if (_logo->getContentSize().width * targetScale > visibleSize.width * 0.25f) {
         // 如果放大后太宽，调整到屏幕宽度的25%
         targetScale = (visibleSize.width * 0.25f) / _logo->getContentSize().width;
     }
     targetScale = std::max(targetScale, 0.4f); // 确保最小缩放不小于0.4倍
-    
+
     // 初始状态：完全透明，从小开始
     _logo->setOpacity(0);
     _logo->setScale(targetScale * 0.7f);
@@ -67,7 +67,7 @@ void StartupScene::showSplashPhase() {
     // Logo简化动画：淡入 + 缩放到目标大小
     auto fadeIn = FadeIn::create(0.8f);
     auto scaleUp = ScaleTo::create(0.8f, targetScale);
-    
+
     // 同时执行淡入和缩放动画
     auto logoAnimation = Spawn::create(fadeIn, scaleUp, nullptr);
     _logo->runAction(logoAnimation);
@@ -82,7 +82,7 @@ void StartupScene::showSplashPhase() {
     _legalTextLabel->setTextColor(Color4B::WHITE);
     _legalTextLabel->enableShadow(Color4B(0, 0, 0, 100), Size(1, -1));
     _legalTextLabel->setLineSpacing(4);
-    
+
     // 法律文本直接显示，无淡入动画
     _splashLayer->addChild(_legalTextLabel);
 
@@ -98,7 +98,7 @@ void StartupScene::showLoadingPhase(float dt) {
     if (_legalTextLabel) {
         _legalTextLabel->runAction(FadeOut::create(0.5f));
     }
-    
+
     // splash层背景也淡出，然后移除
     if (_splashLayer) {
         _splashLayer->runAction(Sequence::create(
@@ -115,7 +115,7 @@ void StartupScene::showLoadingPhase(float dt) {
     // 延迟0.5秒后开始进度条更新，等待淡入完成
     this->scheduleOnce([this](float) {
         this->schedule(CC_SCHEDULE_SELECTOR(StartupScene::updateLoadingBar), 0.05f);
-    }, 0.05f, "start_progress");
+        }, 0.05f, "start_progress");
 }
 
 void StartupScene::updateLoadingBar(float dt) {

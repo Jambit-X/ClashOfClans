@@ -31,6 +31,12 @@ public:
     
     virtual bool init() override;
     
+    // 启动单位 AI (寻路+攻击)
+    void startUnitAI(BattleUnitSprite* unit);
+
+    // 辅助：寻找最近建筑
+    const BuildingInstance* findNearestBuilding(const Vec2& unitWorldPos);
+    
     /**
      * @brief 在指定网格位置生成单位
      * @param unitType 单位类型（如 "Barbarian"）

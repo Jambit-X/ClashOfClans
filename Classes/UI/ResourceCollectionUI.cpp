@@ -22,18 +22,145 @@ bool ResourceCollectionUI::init() {
     return false;
   }
 
+  // ? 初始化有效标志
+  _isValid = std::make_shared<bool>(true);
+
   initButtons();
 
-  // 设置回调
+  // ? 修复：不捕获 this，而是捕获 shared_ptr 并通过它来访问成员
   auto productionSystem = ResourceProductionSystem::getInstance();
-  productionSystem->setPendingResourceCallback([this](int gold, int elixir) {
-    updateDisplay(gold, elixir);
+  
+  // 捕获成员变量的 shared_ptr 引用，而不是 this
+  std::weak_ptr<bool> weakValid = _isValid;
+  cocos2d::Label* goldLabel = _pendingGoldLabel;  // 捕获原始指针
+  cocos2d::Label* elixirLabel = _pendingElixirLabel;
+  cocos2d::ui::Button* goldBtn = _collectGoldBtn;
+  cocos2d::ui::Button* elixirBtn = _collectElixirBtn;
+  
+  productionSystem->setPendingResourceCallback([weakValid, goldLabel, elixirLabel, goldBtn, elixirBtn](int gold, int elixir) {
+    // ? 检查对象是否仍然有效
+    auto valid = weakValid.lock();
+  if (!valid || !*valid) {
+    CCLOG("ResourceCollectionUI: Callback ignored - object already destroyed");
+    return;
+    }
+  
+    // ? 在访问 Cocos2d 对象前检查它们是否还存在于渲染树中
+    // 如果对象已经被 removeFromParent()，getReferenceCount() 可能为 0
+    if (!goldLabel || !elixirLabel || !goldBtn || !elixirBtn) {
+      CCLOG("ResourceCollectionUI: Callback ignored - UI elements null");
+      return;
+    }
+    
+    // ? 再次检查引用计数，确保对象仍然有效
+    if (goldLabel->getReferenceCount() == 0 || elixirLabel->getReferenceCount() == 0) {
+      CCLOG("ResourceCollectionUI: Callback ignored - UI elements released");
+      return;
+    }
+    
+    // 安全地更新显示（内联 updateDisplay 的逻辑以避免调用 this）
+    auto prodSystem = ResourceProductionSystem::getInstance();
+    if (!prodSystem) return;
+
+    int goldCapacity = prodSystem->getGoldStorageCapacity();
+    int elixirCapacity = prodSystem->getElixirStorageCapacity();
+
+ // 更新金币显示
+    if (goldLabel && goldLabel->getReferenceCount() > 0) {
+  goldLabel->setString(cocos2d::StringUtils::format("+%d/%d", gold, goldCapacity));
+
+      float goldRatio = (float)gold / goldCapacity;
+      if (goldRatio >= 1.0f) {
+        goldLabel->setColor(cocos2d::Color3B::RED);
+      } else if (goldRatio >= 0.8f) {
+        goldLabel->setColor(cocos2d::Color3B::ORANGE);
+      } else {
+        goldLabel->setColor(cocos2d::Color3B::YELLOW);
+      }
+
+      if (gold > 0 && goldRatio < 1.0f) {
+        goldLabel->stopAllActions();
+        goldLabel->runAction(cocos2d::RepeatForever::create(
+      cocos2d::Sequence::create(
+            cocos2d::FadeOut::create(0.8f),
+      cocos2d::FadeIn::create(0.8f),
+            nullptr
+          )
+        ));
+        if (goldBtn) goldBtn->setEnabled(true);
+      } else {
+        goldLabel->stopAllActions();
+        goldLabel->setOpacity(255);
+        if (goldBtn) goldBtn->setEnabled(gold > 0);
+      }
+  }
+
+    // 更新圣水显示
+    if (elixirLabel && elixirLabel->getReferenceCount() > 0) {
+      elixirLabel->setString(cocos2d::StringUtils::format("+%d/%d", elixir, elixirCapacity));
+
+      float elixirRatio = (float)elixir / elixirCapacity;
+      if (elixirRatio >= 1.0f) {
+        elixirLabel->setColor(cocos2d::Color3B::RED);
+      } else if (elixirRatio >= 0.8f) {
+        elixirLabel->setColor(cocos2d::Color3B::ORANGE);
+    } else {
+      elixirLabel->setColor(cocos2d::Color3B::MAGENTA);
+      }
+
+      if (elixir > 0 && elixirRatio < 1.0f) {
+        elixirLabel->stopAllActions();
+        elixirLabel->runAction(cocos2d::RepeatForever::create(
+          cocos2d::Sequence::create(
+    cocos2d::FadeOut::create(0.8f),
+     cocos2d::FadeIn::create(0.8f),
+      nullptr
+          )
+        ));
+   if (elixirBtn) elixirBtn->setEnabled(true);
+      } else {
+        elixirLabel->stopAllActions();
+        elixirLabel->setOpacity(255);
+    if (elixirBtn) elixirBtn->setEnabled(elixir > 0);
+      }
+    }
   });
 
   // 初始化显示
   updateDisplay(productionSystem->getPendingGold(), productionSystem->getPendingElixir());
 
   return true;
+}
+
+void ResourceCollectionUI::onExit() {
+  CCLOG("ResourceCollectionUI::onExit - Cleaning up");
+  
+  // ? 标记对象已无效 - 这会阻止回调继续执行
+  if (_isValid) {
+    *_isValid = false;
+    CCLOG("ResourceCollectionUI::onExit - Marked as invalid");
+  }
+  
+  // ? 清除所有动画，避免回调在动画中触发
+  if (_pendingGoldLabel) {
+    _pendingGoldLabel->stopAllActions();
+  }
+  if (_pendingElixirLabel) {
+    _pendingElixirLabel->stopAllActions();
+  }
+  
+  // ? 清除回调，防止对象销毁后仍被调用
+  // 注意：这里可能有竞态条件，如果新的 ResourceCollectionUI 还没设置回调
+  // 所以我们先检查当前回调是否是"我们的"
+  auto productionSystem = ResourceProductionSystem::getInstance();
+  if (productionSystem) {
+    // 为了安全起见，直接设为 nullptr
+    // 新的 ResourceCollectionUI 会在 init() 中重新设置回调
+    productionSystem->setPendingResourceCallback(nullptr);
+    CCLOG("ResourceCollectionUI::onExit - Cleared callback");
+  }
+  
+  Node::onExit();
 }
 
 void ResourceCollectionUI::initButtons() {
@@ -99,22 +226,33 @@ void ResourceCollectionUI::onCollectGold() {
       nullptr
     ));
 
-    // 飘字效果
+    // ? 修复：飘字效果 - 检查父节点有效性
+    auto parent = this->getParent();
+    if (!parent) {
+      CCLOG("ResourceCollectionUI::onCollectGold - Parent is null, skip floating text");
+      return;
+    }
+    
     auto label = Label::createWithTTF("+" + std::to_string(pendingGold), FONT_PATH, 30);
     label->setColor(Color3B::YELLOW);
     label->enableOutline(Color4B::BLACK, 2);
     label->setPosition(_collectGoldBtn->getPosition() + Vec2(0, 40));
-    this->getParent()->addChild(label, 100);
+    parent->addChild(label, 100);
 
+    // ? 使用 retain/release 保护动画执行
+    label->retain();
     label->runAction(Sequence::create(
       DelayTime::create(3.0f),
       Spawn::create(
-      MoveBy::create(2.0f, Vec2(0, 100)),
-      FadeOut::create(2.0f),
-      nullptr
-    ),
-      RemoveSelf::create(),
-      nullptr
+        MoveBy::create(2.0f, Vec2(0, 100)),
+        FadeOut::create(2.0f),
+        nullptr
+      ),
+      CallFunc::create([label]() {
+     label->removeFromParent();
+        label->release();  // ← 释放引用
+      }),
+nullptr
     ));
   }
 }
@@ -132,20 +270,32 @@ void ResourceCollectionUI::onCollectElixir() {
       nullptr
     ));
 
+    // ? 修复：飘字效果 - 检查父节点有效性
+    auto parent = this->getParent();
+    if (!parent) {
+      CCLOG("ResourceCollectionUI::onCollectElixir - Parent is null, skip floating text");
+      return;
+    }
+    
     auto label = Label::createWithTTF("+" + std::to_string(pendingElixir), FONT_PATH, 30);
-    label->setColor(Color3B::MAGENTA);
+  label->setColor(Color3B::MAGENTA);
     label->enableOutline(Color4B::BLACK, 2);
     label->setPosition(_collectElixirBtn->getPosition() + Vec2(0, 40));
-    this->getParent()->addChild(label, 100);
+    parent->addChild(label, 100);
 
+    // ? 使用 retain/release 保护动画执行
+    label->retain();
     label->runAction(Sequence::create(
       DelayTime::create(3.0f),
       Spawn::create(
-      MoveBy::create(2.0f, Vec2(0, 100)),
-      FadeOut::create(2.0f),
-      nullptr
-    ),
-      RemoveSelf::create(),
+        MoveBy::create(2.0f, Vec2(0, 100)),
+     FadeOut::create(2.0f),
+        nullptr
+      ),
+      CallFunc::create([label]() {
+        label->removeFromParent();
+        label->release();  // ← 释放引用
+      }),
       nullptr
     ));
   }

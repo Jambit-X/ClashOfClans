@@ -553,3 +553,64 @@ void BattleTroopLayer::walkBarbarianToBuilding(const BuildingInstance& building)
 }
 
 #endif // COCOS2D_DEBUG
+void BattleTroopLayer::startUnitAI(BattleUnitSprite* unit) {
+    if (!unit) return;
+
+    // 1. 寻找最近的目标
+    const BuildingInstance* target = findNearestBuilding(unit->getPosition());
+
+    if (!target) {
+        CCLOG("No target found! Unit idling.");
+        unit->playIdleAnimation();
+        return;
+    }
+
+    // 2.【核心】直接调用已有的寻路功能
+    auto pathfinder = FindPathUtil::getInstance();
+    // 使用 findPathToAttackBuilding 自动计算绕过障碍的路径
+    std::vector<Vec2> path = pathfinder->findPathToAttackBuilding(unit->getPosition(), *target);
+
+    if (path.empty()) {
+        CCLOG("No path to target!");
+        unit->playIdleAnimation();
+        return;
+    }
+
+    // 3. 执行移动
+    // followPath 也是你已经写好的，直接用
+    unit->followPath(path, 100.0f, [unit, target, this]() {
+        CCLOG("Unit arrived at target!");
+
+        // 到达后，计算朝向并攻击
+        Vec2 buildingPos = GridMapUtils::gridToPixelCenter(target->gridX, target->gridY);
+
+        // 播放攻击动画 (暂无伤害逻辑，先做表现)
+        unit->attackTowardPosition(buildingPos, [unit]() {
+            unit->playIdleAnimation(); // 攻击一次后待机
+            // TODO: 这里以后接循环攻击和扣血逻辑
+            });
+        });
+}
+
+const BuildingInstance* BattleTroopLayer::findNearestBuilding(const Vec2& unitWorldPos) {
+    auto dataManager = VillageDataManager::getInstance();
+    const auto& buildings = dataManager->getAllBuildings();
+
+    const BuildingInstance* nearest = nullptr;
+    float minStartDistSq = FLT_MAX;
+
+    for (const auto& building : buildings) {
+        // 简单计算距离，寻找最近的建筑
+        auto config = BuildingConfig::getInstance()->getConfig(building.type);
+        if (!config) continue;
+
+        Vec2 bPos = GridMapUtils::gridToPixelCenter(building.gridX, building.gridY);
+        float distSq = unitWorldPos.distanceSquared(bPos);
+
+        if (distSq < minStartDistSq) {
+            minStartDistSq = distSq;
+            nearest = &building;
+        }
+    }
+    return nearest;
+}

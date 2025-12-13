@@ -7,6 +7,7 @@
 #include "Layer/TrainingLayer.h"
 #include "UI/ResourceCollectionUI.h"  
 #include "Layer/VillageLayer.h"
+#include "Scene/BattleScene.h"
 
 USING_NS_CC;
 using namespace ui;
@@ -105,7 +106,17 @@ bool HUDLayer::init() {
     battleBtn->setPosition(Vec2(origin.x + 20, origin.y + 20));
     battleBtn->setScale(0.8f);
     battleBtn->addClickEventListener([=](Ref* sender) {
-      CCLOG("点击了进攻按钮！TODO: 进入战斗场景");
+      CCLOG("点击了进攻按钮！");
+      
+    // ? 关键修复：使用延迟切换场景，避免在事件处理中直接切换导致监听器冲突
+      this->getScene()->runAction(Sequence::create(
+    DelayTime::create(0.1f),  // 延迟0.1秒，确保触摸事件完全结束
+        CallFunc::create([=]() {
+       auto battleScene = BattleScene::createScene();
+  Director::getInstance()->replaceScene(TransitionFade::create(0.5f, battleScene));
+     }),
+nullptr
+      ));
     });
     this->addChild(battleBtn);
   } else {
@@ -144,6 +155,27 @@ bool HUDLayer::init() {
 
   return true;
 }
+
+void HUDLayer::cleanup() {
+  CCLOG("HUDLayer::cleanup - Cleaning up resources");
+  
+  // 清理触摸监听器
+  if (_placementTouchListener) {
+    Director::getInstance()->getEventDispatcher()->removeEventListener(_placementTouchListener);
+    _placementTouchListener = nullptr;
+    CCLOG("HUDLayer::cleanup - Removed placement touch listener");
+  }
+  
+  // 清理放置控制器
+  if (_placementController) {
+  delete _placementController;
+    _placementController = nullptr;
+    CCLOG("HUDLayer::cleanup - Deleted placement controller");
+  }
+  
+  Layer::cleanup();
+}
+
 void HUDLayer::update(float dt) {
   Layer::update(dt);
   BuildingUpgradeManager::getInstance()->update(dt);
@@ -185,12 +217,14 @@ void HUDLayer::initActionMenu() {
   });
   _actionMenuNode->addChild(_btnInfo);
 
-  // 升级按钮
+  // ? 升级按钮 - 修复悬空指针问题
   _btnUpgrade = Button::create(imgPath + "upgrade.png");
   _btnUpgrade->ignoreContentAdaptWithSize(false);
   _btnUpgrade->setContentSize(Size(btnSize, btnSize));
   _btnUpgrade->setPosition(Vec2(0, 0));
-  _btnUpgrade->addClickEventListener([=](Ref*) {
+  
+  // ? 使用弱引用捕获 this
+  _btnUpgrade->addClickEventListener([this](Ref*) {
     CCLOG("点击升级");
 
     if (_currentSelectedBuildingId == -1) return;
@@ -199,20 +233,29 @@ void HUDLayer::initActionMenu() {
     auto building = dataManager->getBuildingById(_currentSelectedBuildingId);
 
     if (building && building->level >= 3) {
-      // 显示已满级提示
+      // ? 显示已满级提示 - 使用安全的方式
       auto visibleSize = Director::getInstance()->getVisibleSize();
       auto label = Label::createWithTTF("建筑已达到最大等级！", FONT_PATH, 30);
       label->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2));
       label->setColor(Color3B::RED);
       label->enableOutline(Color4B::BLACK, 2);
-      this->addChild(label, 1000);
-
-      label->runAction(Sequence::create(
-        DelayTime::create(1.5f),
-        FadeOut::create(0.5f),
-        RemoveSelf::create(),
-        nullptr
+      
+      // ? 检查场景有效性后再添加
+      auto scene = this->getScene();
+      if (scene) {
+        scene->addChild(label, 1000);  // 添加到场景而不是 this
+        
+        label->retain();  // 保护 label
+        label->runAction(Sequence::create(
+  DelayTime::create(1.5f),
+ FadeOut::create(0.5f),
+          CallFunc::create([label]() {
+         label->removeFromParent();
+         label->release();
+   }),
+  nullptr
       ));
+      }
       return;
     }
 
@@ -222,20 +265,28 @@ void HUDLayer::initActionMenu() {
     } else {
       CCLOG("升级失败:资源不足或已达最高等级");
 
-      // 显示失败提示
+      // ? 显示失败提示 - 使用安全的方式
       auto visibleSize = Director::getInstance()->getVisibleSize();
       auto label = Label::createWithTTF("升级失败：资源不足或已达最高等级", FONT_PATH, 28);
       label->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2));
       label->setColor(Color3B::RED);
       label->enableOutline(Color4B::BLACK, 2);
-      this->addChild(label, 1000);
-
-      label->runAction(Sequence::create(
-        DelayTime::create(1.5f),
-        FadeOut::create(0.5f),
-        RemoveSelf::create(),
+      
+      auto scene = this->getScene();
+      if (scene) {
+        scene->addChild(label, 1000);
+   
+        label->retain();
+        label->runAction(Sequence::create(
+          DelayTime::create(1.5f),
+          FadeOut::create(0.5f),
+          CallFunc::create([label]() {
+       label->removeFromParent();
+            label->release();
+          }),
         nullptr
-      ));
+        ));
+      }
     }
   });
   _actionMenuNode->addChild(_btnUpgrade);
@@ -247,20 +298,23 @@ void HUDLayer::initActionMenu() {
   _upgradeCostLabel->setPosition(Vec2(btnSize / 2, btnSize - 10));
   _btnUpgrade->addChild(_upgradeCostLabel);
 
-    // ================= [训练按钮] =================
-    _btnTrain = Button::create(imgPath + "training.png");
-    _btnTrain->ignoreContentAdaptWithSize(false);
-    _btnTrain->setContentSize(Size(btnSize, btnSize));
-    _btnTrain->setPosition(Vec2(btnSize + spacing, 0)); // 放右边
-    _btnTrain->addClickEventListener([=](Ref*) {
-        CCLOG("点击了训练部队");
-        
-        // 创建并显示训练层
-        auto trainLayer = TrainingLayer::create();
-        // ZOrder 设为 150，比 HUD (100) 和 Shop (100) 都高，保证在最上层
-        this->getScene()->addChild(trainLayer, 150);
-        });
-    _actionMenuNode->addChild(_btnTrain);
+  // ================= [训练按钮] =================
+  _btnTrain = Button::create(imgPath + "training.png");
+  _btnTrain->ignoreContentAdaptWithSize(false);
+  _btnTrain->setContentSize(Size(btnSize, btnSize));
+  _btnTrain->setPosition(Vec2(btnSize + spacing, 0));
+  
+  // ? 训练按钮也使用安全捕获
+  _btnTrain->addClickEventListener([this](Ref*) {
+    CCLOG("点击了训练部队");
+    
+    auto scene = this->getScene();
+    if (scene) {
+ auto trainLayer = TrainingLayer::create();
+  scene->addChild(trainLayer, 150);
+  }
+  });
+  _actionMenuNode->addChild(_btnTrain);
 }
 
 void HUDLayer::showBuildingActions(int buildingId) {
