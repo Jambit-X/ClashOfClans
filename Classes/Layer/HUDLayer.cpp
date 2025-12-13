@@ -8,6 +8,7 @@
 #include "Layer/TrainingLayer.h"
 #include "UI/ResourceCollectionUI.h"
 #include "Layer/VillageLayer.h"
+#include "Scene/BattleScene.h"  // 添加战斗场景头文件
 
 USING_NS_CC;
 using namespace ui;
@@ -118,7 +119,17 @@ bool HUDLayer::init() {
     battleBtn->setPosition(Vec2(origin.x + 20, origin.y + 20));
     battleBtn->setScale(0.8f);
     battleBtn->addClickEventListener([=](Ref* sender) {
-      CCLOG("点击了进攻按钮！TODO: 进入战斗场景");
+      CCLOG("点击了进攻按钮！");
+      
+      // 关键修复：使用延迟切换场景，避免在事件处理中直接切换导致监听器冲突
+      this->getScene()->runAction(Sequence::create(
+        DelayTime::create(0.1f),  // 延迟0.1秒，确保触摸事件完全结束
+        CallFunc::create([=]() {
+          auto battleScene = BattleScene::createScene();
+          Director::getInstance()->replaceScene(TransitionFade::create(0.5f, battleScene));
+        }),
+        nullptr
+      ));
     });
     this->addChild(battleBtn);
   }
