@@ -2,7 +2,8 @@
 #include "cocos2d.h"
 #include "../Model/VillageData.h"
 
-class ConstructionAnimation;
+//  不再需要 ConstructionAnimation 类
+// class ConstructionAnimation;
 
 class BuildingSprite : public cocos2d::Sprite {
 public:
@@ -29,7 +30,7 @@ public:
   // 拖动和放置预览
   void setDraggingMode(bool isDragging);
   void setPlacementPreview(bool isValid);
-  void clearPlacementPreview();  // 清除预览
+  void clearPlacementPreview();
 
   // Getter
   int getBuildingId() const { return _buildingId; }
@@ -42,6 +43,11 @@ private:
   void loadSprite(int type, int level);
   void updateVisuals();
 
+  //  新增：UI 管理方法
+  void initConstructionUI();    // 创建 UI 容器（只调用一次）
+  void showConstructionUI();    // 显示建造 UI
+  void hideConstructionUI();    // 隐藏建造 UI
+
   int _buildingId;
   int _buildingType;
   int _buildingLevel;
@@ -49,7 +55,12 @@ private:
   cocos2d::Vec2 _visualOffset;
   cocos2d::Vec2 _gridPos;
 
-  cocos2d::ProgressTimer* _progressBar;
-  cocos2d::Label* _countdownLabel;
-  ConstructionAnimation* _constructionAnim;
+  //  新的 UI 容器结构
+  cocos2d::Node* _constructionUIContainer;  // UI 容器
+
+  //  子元素指针（便于访问）
+  cocos2d::Sprite* _progressBg;            // 进度条背景
+  cocos2d::ProgressTimer* _progressBar;     // 进度条
+  cocos2d::Label* _countdownLabel;          // 倒计时
+  cocos2d::Label* _percentLabel;            // 百分比标签
 };

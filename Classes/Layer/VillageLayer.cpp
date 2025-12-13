@@ -87,7 +87,29 @@ bool VillageLayer::init() {
         }
     });
   _eventDispatcher->addEventListenerWithSceneGraphPriority(upgradeListener, this);
+  auto speedupListener = EventListenerCustom::create("EVENT_BUILDING_SPEEDUP_COMPLETE",
+                                                     [this](EventCustom* event) {
+    int buildingId = *(int*)event->getUserData();
 
+    CCLOG("VillageLayer: Building %d speedup complete, updating UI", buildingId);
+
+    // 获取更新后的建筑数据
+    auto dataManager = VillageDataManager::getInstance();
+    auto building = dataManager->getBuildingById(buildingId);
+
+    if (building && _buildingManager) {
+      auto sprite = _buildingManager->getBuildingSprite(buildingId);
+      if (sprite) {
+        // 强制隐藏进度条和完成建造动画
+        sprite->hideConstructionProgress();
+        sprite->finishConstruction();
+
+        // 更新建筑等级和状态
+        sprite->updateBuilding(*building);
+      }
+    }
+  });
+  _eventDispatcher->addEventListenerWithSceneGraphPriority(speedupListener, this);
   return true;
 }
 

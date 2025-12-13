@@ -1,6 +1,7 @@
 // Classes/Manager/BuildingSpeedupManager.cpp
 #include "BuildingSpeedupManager.h"
 #include "VillageDataManager.h"
+#include "BuildingManager.h"  // 需要添加这个头文件
 
 BuildingSpeedupManager* BuildingSpeedupManager::instance = nullptr;
 
@@ -30,12 +31,12 @@ bool BuildingSpeedupManager::canSpeedup(int buildingId) const {
     return false;
   }
 
-  // 检查1：建筑必须在建造中
+  // 检查1:建筑必须在建造中
   if (building->state != BuildingInstance::State::CONSTRUCTING) {
     return false;
   }
 
-  // 检查2：必须有至少1颗宝石
+  // 检查2:必须有至少1颗宝石
   if (dataManager->getGem() < 1) {
     return false;
   }
@@ -56,7 +57,7 @@ bool BuildingSpeedupManager::speedupBuilding(int buildingId) {
     return false;
   }
 
-  // 2. 立即完成建造
+  // 2. 立即完成建造(这会改变数据层状态为 BUILT)
   auto building = dataManager->getBuildingById(buildingId);
   if (building->isInitialConstruction) {
     // 首次建造完成
@@ -65,6 +66,14 @@ bool BuildingSpeedupManager::speedupBuilding(int buildingId) {
     // 升级完成
     dataManager->finishUpgradeBuilding(buildingId);
   }
+
+  // ?? 关键修复:直接通知 BuildingManager 更新 UI
+  // 触发自定义事件,让 VillageLayer/BuildingManager 更新 BuildingSprite
+  cocos2d::EventCustom event("EVENT_BUILDING_SPEEDUP_COMPLETE");
+  int* data = new int(buildingId);
+  event.setUserData(data);
+  cocos2d::Director::getInstance()->getEventDispatcher()->dispatchEvent(&event);
+  delete data;
 
   CCLOG("BuildingSpeedupManager: Building %d speedup completed (1 gem consumed)", buildingId);
   return true;
@@ -83,7 +92,7 @@ std::string BuildingSpeedupManager::getSpeedupFailReason(int buildingId) const {
   }
 
   if (dataManager->getGem() < 1) {
-    return "宝石不足（需要1颗）";
+    return "宝石不足(需要1颗)";
   }
 
   return "";
