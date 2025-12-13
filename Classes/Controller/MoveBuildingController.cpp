@@ -15,9 +15,9 @@ MoveBuildingController::MoveBuildingController(Layer* layer, BuildingManager* bu
     , _touchListener(nullptr)
     , _isDragging(false)
     , _touchStartPos(Vec2::ZERO)
-    , _touchDownTime(0.0f)        // ✅ 初始化
-    , _isLongPressTriggered(false)   // ✅ 初始化
-    , _touchedBuildingId(-1) {          // ✅ 初始化
+    , _touchDownTime(0.0f)        //  初始化
+    , _isLongPressTriggered(false)   //  初始化
+    , _touchedBuildingId(-1) {          //  初始化
     CCLOG("MoveBuildingController: Initialized");
 }
 
@@ -147,11 +147,11 @@ bool MoveBuildingController::onTouchBegan(Touch* touch, Event* event) {
     auto building = _buildingManager->getBuildingAtWorldPos(worldPos);
     
     if (building) {
-        // ✅ 点击到建筑，记录建筑ID，但不立即进入移动模式
+        //  点击到建筑，记录建筑ID，但不立即进入移动模式
         _touchedBuildingId = building->getBuildingId();
         CCLOG("MoveBuildingController: Touched building ID=%d, waiting for long press", _touchedBuildingId);
         
-        // ✅ 启动定时器检测长按
+        //  启动定时器检测长按
         _parentLayer->schedule([this](float dt) {
             if (checkLongPress()) {
       CCLOG("MoveBuildingController: Long press detected! Starting move mode");
@@ -163,7 +163,7 @@ bool MoveBuildingController::onTouchBegan(Touch* touch, Event* event) {
     }
         }, 0.05f, "long_press_check");  // 每0.05秒检查一次
         
-    return true;  // ✅ 吞噬事件（防止地图移动）
+    return true;  //  吞噬事件（防止地图移动）
     }
     
     // ========== 情況3: 没有点击到建筑 =========
@@ -194,7 +194,7 @@ const float DRAG_THRESHOLD = 5.0f;  // 5像素阈值
     // ========== 情况2: 还没触发长按，但手指移动了 =========
     if (_touchedBuildingId >= 0 && !_isLongPressTriggered) {
   if (distance > DRAG_THRESHOLD) {
-            // ✅ 手指移动超过阈值，取消长按检测
+            //  手指移动超过阈值，取消长按检测
     CCLOG("MoveBuildingController: Finger moved, cancelling long press check");
             _parentLayer->unschedule("long_press_check");
             _touchedBuildingId = -1;
@@ -235,7 +235,7 @@ _movingBuildingId, success ? "succeeded" : "failed");
     if (_touchedBuildingId >= 0 && !_isLongPressTriggered) {
         CCLOG("MoveBuildingController: Short tap on building ID=%d, triggering callback", _touchedBuildingId);
   
-        // ✅ 触发短按回调
+        //  触发短按回调
    if (_onBuildingTapped) {
        _onBuildingTapped(_touchedBuildingId);
      }

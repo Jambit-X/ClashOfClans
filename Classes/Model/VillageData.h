@@ -26,6 +26,7 @@ struct BuildingInstance {
 struct VillageData {
   int gold;
   int elixir;
+  int gem;
   std::vector<BuildingInstance> buildings;
 
   // 已训练的军队数据 <兵种ID, 数量>

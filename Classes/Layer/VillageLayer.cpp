@@ -32,11 +32,11 @@ bool VillageLayer::init() {
   // 3. 初始化建筑管理器
   _buildingManager = new BuildingManager(this);
 
-  // ✅ 4. 先初始化建筑移动控制器（优先级更高）
+  //  4. 先初始化建筑移动控制器（优先级更高）
   _moveBuildingController = new MoveBuildingController(this, _buildingManager);
   _moveBuildingController->setupTouchListener();
   
-  // ✅ 设置短按建筑回调
+  //  设置短按建筑回调
   _moveBuildingController->setOnBuildingTappedCallback([this](int buildingId) {
       CCLOG("VillageLayer: Building tapped ID=%d, showing menu", buildingId);
     
@@ -297,13 +297,13 @@ void VillageLayer::updateBuildingPreviewPosition(int buildingId, const cocos2d::
   auto dataManager = VillageDataManager::getInstance();
   dataManager->setBuildingPosition(buildingId, gridX, gridY);
 
-  // ✅ 修复：isAreaOccupied() 需要 5 个参数
+  //  修复：isAreaOccupied() 需要 5 个参数
   bool canPlace = !dataManager->isAreaOccupied(
     gridX,
     gridY,
-    config->gridWidth,    // ✅ 添加宽度参数
-    config->gridHeight,   // ✅ 添加高度参数
-    buildingId            // ✅ 忽略自己
+    config->gridWidth,    //  添加宽度参数
+    config->gridHeight,   //  添加高度参数
+    buildingId            //  忽略自己
   );
 
   // 显示视觉反馈

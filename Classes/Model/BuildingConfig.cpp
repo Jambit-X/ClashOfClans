@@ -39,7 +39,7 @@ void BuildingConfig::initConfigs() {
   townHall.gridWidth = 4;
   townHall.gridHeight = 4;
   townHall.anchorOffset = Vec2(0,-60);
-  townHall.maxLevel = 13;
+  townHall.maxLevel = 3;
   townHall.initialCost = 0;
   townHall.costType = "金币";
   townHall.buildTimeSeconds = 0;
@@ -60,7 +60,7 @@ void BuildingConfig::initConfigs() {
   armyCamp.gridWidth = 3;
   armyCamp.gridHeight = 3;
   armyCamp.anchorOffset = Vec2(0, -30);
-  armyCamp.maxLevel = 10;
+  armyCamp.maxLevel = 3;
   armyCamp.initialCost = 250;
   armyCamp.costType = "圣水";
   armyCamp.buildTimeSeconds = 300;
@@ -80,7 +80,7 @@ void BuildingConfig::initConfigs() {
   barracks.gridWidth = 3;
   barracks.gridHeight = 3;
   barracks.anchorOffset = Vec2(0, -30);
-  barracks.maxLevel = 13;
+  barracks.maxLevel = 3;
   barracks.initialCost = 200;
   barracks.costType = "圣水";
   barracks.buildTimeSeconds = 60;
@@ -100,7 +100,7 @@ void BuildingConfig::initConfigs() {
   laboratory.gridWidth = 3;
   laboratory.gridHeight = 3;
   laboratory.anchorOffset = Vec2(0, -35);
-  laboratory.maxLevel = 10;
+  laboratory.maxLevel = 3;
   laboratory.initialCost = 500;
   laboratory.costType = "圣水";
   laboratory.buildTimeSeconds = 1800;
@@ -121,7 +121,7 @@ void BuildingConfig::initConfigs() {
   goldMine.gridWidth = 3;
   goldMine.gridHeight = 3;
   goldMine.anchorOffset = Vec2(0, -35);
-  goldMine.maxLevel = 14;
+  goldMine.maxLevel = 3;
   goldMine.initialCost = 150;
   goldMine.costType = "圣水";
   goldMine.buildTimeSeconds = 60;
@@ -141,7 +141,7 @@ void BuildingConfig::initConfigs() {
   elixirCollector.gridWidth = 3;
   elixirCollector.gridHeight = 3;
   elixirCollector.anchorOffset = Vec2(0, -35);
-  elixirCollector.maxLevel = 14;
+  elixirCollector.maxLevel = 3;
   elixirCollector.initialCost = 150;
   elixirCollector.costType = "金币";
   elixirCollector.buildTimeSeconds = 60;
@@ -161,7 +161,7 @@ void BuildingConfig::initConfigs() {
   goldStorage.gridWidth = 3;
   goldStorage.gridHeight = 3;
   goldStorage.anchorOffset = Vec2(0, -40);
-  goldStorage.maxLevel = 14;
+  goldStorage.maxLevel = 3;
   goldStorage.initialCost = 300;
   goldStorage.costType = "圣水";
   goldStorage.buildTimeSeconds = 900;  // 15分钟
@@ -181,7 +181,7 @@ void BuildingConfig::initConfigs() {
   elixirStorage.gridWidth = 3;
   elixirStorage.gridHeight = 3;
   elixirStorage.anchorOffset = Vec2(0, -40);
-  elixirStorage.maxLevel = 14;
+  elixirStorage.maxLevel = 3;
   elixirStorage.initialCost = 300;
   elixirStorage.costType = "金币";
   elixirStorage.buildTimeSeconds = 900;  // 15分钟
@@ -202,7 +202,7 @@ void BuildingConfig::initConfigs() {
   cannon.gridWidth = 3;
   cannon.gridHeight = 3;
   cannon.anchorOffset = Vec2(0, -50);
-  cannon.maxLevel = 18;
+  cannon.maxLevel = 3;
   cannon.initialCost = 250;
   cannon.costType = "金币";
   cannon.buildTimeSeconds = 60;
@@ -222,7 +222,7 @@ void BuildingConfig::initConfigs() {
   archerTower.gridWidth = 3;
   archerTower.gridHeight = 3;
   archerTower.anchorOffset = Vec2(0, -50);
-  archerTower.maxLevel = 18;
+  archerTower.maxLevel = 3;
   archerTower.initialCost = 1000;
   archerTower.costType = "金币";
   archerTower.buildTimeSeconds = 900;
@@ -242,7 +242,7 @@ void BuildingConfig::initConfigs() {
   wall.gridWidth = 1;
   wall.gridHeight = 1;
   wall.anchorOffset = Vec2(0, -15);
-  wall.maxLevel = 14;
+  wall.maxLevel = 3;
   wall.initialCost = 50;
   wall.costType = "金币";
   wall.buildTimeSeconds = 0;
@@ -262,7 +262,7 @@ void BuildingConfig::initConfigs() {
   bomb.gridWidth = 1;
   bomb.gridHeight = 1;
   bomb.anchorOffset = Vec2(0, -15);
-  bomb.maxLevel = 8;
+  bomb.maxLevel = 3;
   bomb.initialCost = 400;
   bomb.costType = "金币";
   bomb.buildTimeSeconds = 0;  // 陷阱瞬间建造
@@ -282,7 +282,7 @@ void BuildingConfig::initConfigs() {
   springTrap.gridWidth = 1;
   springTrap.gridHeight = 1;
   springTrap.anchorOffset = Vec2(0, -15);
-  springTrap.maxLevel = 5;
+  springTrap.maxLevel = 3;
   springTrap.initialCost = 2000;
   springTrap.costType = "金币";
   springTrap.buildTimeSeconds = 0;
@@ -302,7 +302,7 @@ void BuildingConfig::initConfigs() {
   giantBomb.gridWidth = 2;
   giantBomb.gridHeight = 2;
   giantBomb.anchorOffset = Vec2(0, -25);
-  giantBomb.maxLevel = 5;
+  giantBomb.maxLevel = 3;
   giantBomb.initialCost = 12500;
   giantBomb.costType = "金币";
   giantBomb.buildTimeSeconds = 0;

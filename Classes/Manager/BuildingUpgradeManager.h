@@ -14,6 +14,11 @@ public:
   // 检查并完成所有到期的升级
   void checkFinishedUpgrades();
 
+  // 检查指定建筑是否可以升级
+  bool canUpgrade(int buildingId);
+
+  std::string getUpgradeFailReason(int buildingId) const;
+
 private:
   BuildingUpgradeManager();
   ~BuildingUpgradeManager();

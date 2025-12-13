@@ -11,7 +11,6 @@ public:
   CREATE_FUNC(HUDLayer);
 
   void updateResourceDisplay(int gold, int elixir);
-  void updatePendingResourceDisplay(int pendingGold, int pendingElixir);
 
   void showBuildingActions(int buildingId);
   void hideBuildingActions();
@@ -19,22 +18,35 @@ public:
 
   virtual void update(float dt) override;
 
-  // 建筑UI放置方法
-  void startBuildingPlacement(int buildingId);  // 从外部开始放置流程
+  // 放置UI相关方法
+  void startBuildingPlacement(int buildingId);
   void showPlacementUI(int buildingId);
   void hidePlacementUI();
   void updatePlacementUIState(bool canPlace);
 
 private:
   void initActionMenu();
-  void initCollectButtons();
+
+  // 按钮布局配置
+  struct ButtonLayout {
+    cocos2d::Vec2 infoPos;
+    cocos2d::Vec2 upgradePos;
+    cocos2d::Vec2 trainPos;
+  };
+
+  static const ButtonLayout LAYOUT_TWO_BUTTONS;
+  static const ButtonLayout LAYOUT_THREE_BUTTONS;
+
+  // 提示消息复用
+  void showTips(const std::string& text, const cocos2d::Color3B& color);
+  void hideTips();
+
+  // 加速按钮回调
+  void onSpeedupClicked(int buildingId);
 
   cocos2d::Label* _goldLabel;
   cocos2d::Label* _elixirLabel;
-  cocos2d::Label* _pendingGoldLabel;
-  cocos2d::Label* _pendingElixirLabel;
-  cocos2d::ui::Button* _collectGoldBtn;
-  cocos2d::ui::Button* _collectElixirBtn;
+  cocos2d::Label* _gemLabel;
 
   cocos2d::Node* _actionMenuNode;
   cocos2d::Label* _buildingNameLabel;
@@ -42,12 +54,15 @@ private:
   cocos2d::ui::Button* _btnInfo;
   cocos2d::ui::Button* _btnUpgrade;
   cocos2d::ui::Button* _btnTrain;
+  cocos2d::ui::Button* _btnSpeedup;  // 加速按钮
 
   int _currentSelectedBuildingId = -1;
 
   PlacementConfirmUI* _placementUI;
   BuildingPlacementController* _placementController;
 
-  // 放置模式的触摸监听器
   cocos2d::EventListenerTouchOneByOne* _placementTouchListener;
+
+  // 复用的提示Label
+  cocos2d::Label* _tipsLabel;
 };

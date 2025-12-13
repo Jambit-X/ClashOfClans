@@ -58,6 +58,8 @@ private:
     // --- 颜色配置 ---
     const cocos2d::Color4B COLOR_TAB_NORMAL = cocos2d::Color4B(50, 50, 50, 255);   // 未选中(深灰)
     const cocos2d::Color4B COLOR_TAB_SELECT = cocos2d::Color4B(100, 200, 50, 255); // 选中(绿)
+
+    void showErrorDialog(const std::string& message);
 };
 
 #endif // __SHOP_LAYER_H__

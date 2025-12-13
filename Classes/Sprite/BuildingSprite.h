@@ -29,7 +29,7 @@ public:
   // 拖动和放置预览
   void setDraggingMode(bool isDragging);
   void setPlacementPreview(bool isValid);
-  void clearPlacementPreview();  // 新增方法
+  void clearPlacementPreview();  // 清除预览
 
   // Getter
   int getBuildingId() const { return _buildingId; }

@@ -6,6 +6,8 @@
 #include "ShopLayer.h"
 #include "Manager/BuildingManager.h" 
 #include "Layer/HUDLayer.h" 
+#include "Model/BuildingRequirements.h" 
+#include "Model/BuildingConfig.h"
 
 USING_NS_CC;
 using namespace ui;
@@ -324,38 +326,43 @@ std::vector<ShopItemData> ShopLayer::getDummyData(int categoryIndex) {
 void ShopLayer::onPurchaseBuilding(const ShopItemData& data) {
   auto dataManager = VillageDataManager::getInstance();
 
-  // ========== 兵营购买限制逻辑 ==========
-  if (data.id == 101) { // 101 是兵营
-      int thLevel = dataManager->getTownHallLevel();
-      int currentCamps = dataManager->getArmyCampCount();
+  int buildingType = data.id;
 
-      // 规则：当前拥有的兵营数 必须 < 大本营等级
-      // 例如：1级大本营，如果已有1个，则 1 < 1 为假，不可购买
-      if (currentCamps >= thLevel) {
-          CCLOG("ShopLayer: Army Camp limit reached (TH Lv.%d, Camps: %d)", thLevel, currentCamps);
+  auto configManager = BuildingConfig::getInstance();
+  auto config = configManager->getConfig(buildingType);
+  auto requirements = BuildingRequirements::getInstance();
 
-          auto label = Label::createWithTTF("请升级大本营以解锁更多兵营！", "fonts/simhei.ttf", 24);
-          label->setPosition(Director::getInstance()->getVisibleSize() / 2);
-          label->setColor(Color3B::RED);
-          label->enableOutline(Color4B::BLACK, 2);
-          this->addChild(label, 100);
-
-          label->runAction(Sequence::create(
-              DelayTime::create(2.0f),
-              FadeOut::create(0.5f),
-              RemoveSelf::create(),
-              nullptr
-          ));
-          return; // 阻止购买
-      }
+  if (!config) {
+    CCLOG("ShopLayer: Invalid building type %d", buildingType);
+    return;
   }
-  // ========================================
+
+  // 修改：只统计非 PLACING 状态的建筑
+  int currentCount = 0;
+  for (const auto& building : dataManager->getAllBuildings()) {
+    if (building.type == buildingType && building.state != BuildingInstance::State::PLACING) {
+      currentCount++;
+    }
+  }
+
+  int currentTHLevel = dataManager->getTownHallLevel();
+
+  if (!requirements->canPurchase(buildingType, currentTHLevel, currentCount)) {
+    std::string reason = requirements->getRestrictionReason(buildingType, 0, currentTHLevel, currentCount);
+    showErrorDialog(reason);
+    return;
+  }
+
   bool success = false;
 
   if (data.costType == "金币") {
-    success = dataManager->spendGold(data.cost);
+    if (dataManager->getGold() >= data.cost) {
+      success = dataManager->spendGold(data.cost);
+    }
   } else if (data.costType == "圣水") {
-    success = dataManager->spendElixir(data.cost);
+    if (dataManager->getElixir() >= data.cost) {
+      success = dataManager->spendElixir(data.cost);
+    }
   } else if (data.costType == "宝石") {
     CCLOG("宝石购买尚未实现");
     return;
@@ -364,19 +371,17 @@ void ShopLayer::onPurchaseBuilding(const ShopItemData& data) {
   if (success) {
     CCLOG("购买成功: %s", data.name.c_str());
 
-    // 添加建筑数据（状态为 PLACING）
     int buildingId = dataManager->addBuilding(
-      data.id,
+      buildingType,
       1,
-      22, 22,  // 默认放在地图中心
+      22, 22,
       BuildingInstance::State::PLACING,
-      0
+      0,
+      true
     );
 
-    // 关闭商店
     this->onCloseClicked(nullptr);
 
-    // 通知 VillageLayer 开始放置
     auto scene = this->getScene();
     if (scene) {
       auto villageLayer = dynamic_cast<VillageLayer*>(scene->getChildByTag(1));
@@ -384,7 +389,6 @@ void ShopLayer::onPurchaseBuilding(const ShopItemData& data) {
         villageLayer->onBuildingPurchased(buildingId);
       }
 
-      // 显示放置UI
       auto hudLayer = dynamic_cast<HUDLayer*>(scene->getChildByTag(100));
       if (hudLayer) {
         hudLayer->showPlacementUI(buildingId);
@@ -416,4 +420,43 @@ void ShopLayer::onCloseClicked(Ref* sender) {
 
 void ShopLayer::onTabClicked(Ref* sender, int index) {
     switchTab(index);
+}
+
+void ShopLayer::showErrorDialog(const std::string& message) {
+  auto shieldLayer = cocos2d::LayerColor::create(cocos2d::Color4B(0, 0, 0, 150));
+  this->addChild(shieldLayer, 100);
+
+  auto dialogBg = cocos2d::LayerColor::create(cocos2d::Color4B(180, 0, 0, 255), 400, 150);
+  dialogBg->ignoreAnchorPointForPosition(false);
+  dialogBg->setAnchorPoint(cocos2d::Vec2(0.5f, 0.5f));
+
+  auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
+  dialogBg->setPosition(visibleSize.width / 2, visibleSize.height / 2);
+  shieldLayer->addChild(dialogBg);
+
+  auto label = cocos2d::Label::createWithTTF(message, "fonts/simhei.ttf", 24);
+  if (!label) {
+    label = cocos2d::Label::createWithSystemFont(message, "Arial", 24);
+  }
+  label->setPosition(200, 100);
+  label->setColor(cocos2d::Color3B::WHITE);
+  dialogBg->addChild(label);
+
+  auto okBtn = cocos2d::ui::Button::create();
+  okBtn->setTitleText("确定");
+  okBtn->setTitleFontSize(20);
+  okBtn->setTitleColor(cocos2d::Color3B::WHITE);
+  okBtn->setPosition(cocos2d::Vec2(200, 40));
+  okBtn->addClickEventListener([shieldLayer](cocos2d::Ref*) {
+    shieldLayer->removeFromParent();
+  });
+  dialogBg->addChild(okBtn);
+
+  auto listener = cocos2d::EventListenerTouchOneByOne::create();
+  listener->setSwallowTouches(true);
+  listener->onTouchBegan = [shieldLayer](cocos2d::Touch*, cocos2d::Event*) {
+    shieldLayer->removeFromParent();
+    return true;
+  };
+  this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener, shieldLayer);
 }

@@ -42,7 +42,7 @@ bool BattleTroopLayer::init() {
     // 方案3：运行寻路功能验证测试（3个野蛮人）
     // this->runPathfindingTest();
     
-    // 方案4：✅ 交互式寻路测试（生成1个野蛮人，等待建筑放置）
+    // 方案4： 交互式寻路测试（生成1个野蛮人，等待建筑放置）
     this->startInteractivePathfindingTest();
     
     CCLOG("BattleTroopLayer: Interactive pathfinding test enabled");
@@ -297,7 +297,7 @@ void BattleTroopLayer::runBarbarianTestSequence() {
     this->runAction(death);
 }
 
-// ===== ✅ 新增：寻路功能验证测试 =====
+// =====  新增：寻路功能验证测试 =====
 
 void BattleTroopLayer::runPathfindingTest() {
     CCLOG("=========================================");
@@ -314,7 +314,7 @@ void BattleTroopLayer::runPathfindingTest() {
         return;
     }
     
-    CCLOG("✅ Spawned 3 test barbarians:");
+    CCLOG(" Spawned 3 test barbarians:");
     CCLOG("   - Barbarian1 at (2, 2)");
     CCLOG("   - Barbarian2 at (40, 2)");
     CCLOG("   - Barbarian3 at (2, 40)");
@@ -329,7 +329,7 @@ void BattleTroopLayer::runPathfindingTest() {
             CCLOG("========================================");
             
             barbarian1->moveToGridWithPathfinding(40, 40, 100.0f, []() {
-                CCLOG("✅ TEST 1 COMPLETED: Barbarian1 arrived at (40,40)");
+                CCLOG(" TEST 1 COMPLETED: Barbarian1 arrived at (40,40)");
             });
         }),
         nullptr
@@ -345,7 +345,7 @@ void BattleTroopLayer::runPathfindingTest() {
             CCLOG("========================================");
             
             barbarian2->moveToGridWithPathfinding(2, 40, 100.0f, []() {
-                CCLOG("✅ TEST 2 COMPLETED: Barbarian2 arrived at (2,40)");
+                CCLOG(" TEST 2 COMPLETED: Barbarian2 arrived at (2,40)");
             });
         }),
         nullptr
@@ -361,7 +361,7 @@ void BattleTroopLayer::runPathfindingTest() {
             CCLOG("========================================");
             
             barbarian3->moveToGridWithPathfinding(22, 22, 100.0f, []() {
-                CCLOG("✅ TEST 3 COMPLETED: Barbarian3 arrived at (22,22)");
+                CCLOG(" TEST 3 COMPLETED: Barbarian3 arrived at (22,22)");
             });
         }),
         nullptr
@@ -378,7 +378,7 @@ void BattleTroopLayer::runPathfindingTest() {
             
             // 尝试走到一个可能被建筑占用的位置
             barbarian1->moveToGridWithPathfinding(0, 0, 100.0f, []() {
-                CCLOG("✅ TEST 4 COMPLETED (or failed, check logs)");
+                CCLOG(" TEST 4 COMPLETED (or failed, check logs)");
             });
         }),
         nullptr
@@ -431,7 +431,7 @@ void BattleTroopLayer::startInteractivePathfindingTest() {
         return;
     }
     
-    CCLOG("✅ Test barbarian spawned at (5, 5)");
+    CCLOG(" Test barbarian spawned at (5, 5)");
     CCLOG("📌 Instructions:");
     CCLOG("   1. Place a building anywhere on the map");
     CCLOG("   2. Barbarian will automatically walk to the building");
@@ -530,7 +530,7 @@ void BattleTroopLayer::walkBarbarianToBuilding(const BuildingInstance& building)
     CCLOG("Target building: Type=%d, grid(%d, %d)", 
           static_cast<int>(building.type), building.gridX, building.gridY);
     
-    // ✅ 核心逻辑：直接调用 FindPathUtil 的智能寻路
+    //  核心逻辑：直接调用 FindPathUtil 的智能寻路
     auto pathfinder = FindPathUtil::getInstance();
     std::vector<Vec2> worldPath = pathfinder->findPathToAttackBuilding(barbarianWorldPos, building);
     
@@ -540,13 +540,13 @@ void BattleTroopLayer::walkBarbarianToBuilding(const BuildingInstance& building)
         return;
     }
     
-    CCLOG("✅ Path found with %lu waypoints", worldPath.size());
+    CCLOG(" Path found with %lu waypoints", worldPath.size());
     CCLOG("========================================");
     
     // 让野蛮人跟随路径移动
     _testBarbarian->followPath(worldPath, 100.0f, []() {
         CCLOG("========================================");
-        CCLOG("✅ Barbarian arrived at building!");
+        CCLOG(" Barbarian arrived at building!");
         CCLOG("========================================");
         CCLOG("📌 You can place or move another building to test again!");
     });

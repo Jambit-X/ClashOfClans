@@ -16,6 +16,9 @@ public:
   void addElixir(int amount);
   bool spendGold(int amount);
   bool spendElixir(int amount);
+  int getGem() const;
+  void addGem(int amount);
+  bool spendGem(int amount);
 
   using ResourceCallback = std::function<void(int gold, int elixir)>;
   void setResourceCallback(ResourceCallback callback);

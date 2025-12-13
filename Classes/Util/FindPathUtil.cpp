@@ -33,7 +33,7 @@ FindPathUtil::FindPathUtil()
     _cameFrom.resize(mapSize, -1);
     _closedSet.resize(mapSize, false);
     
-    // ✅ 移除主动调用，改为由 VillageDataManager 通知
+    //  移除主动调用，改为由 VillageDataManager 通知
     // updatePathfindingMap();  // ❌ 删除
     
     CCLOG("FindPathUtil: Initialized with optimized memory pools (map size: %dx%d = %d cells)", 
@@ -235,7 +235,7 @@ std::vector<Vec2> FindPathUtil::aStarSearch(int startX, int startY, int endX, in
 
             if (!isWalkable(nx, ny)) continue;
 
-            // ✅ 修复：COC 允许对角线穿过相邻建筑的缝隙
+            //  修复：COC 允许对角线穿过相邻建筑的缝隙
             // 只要目标格子可通行，就允许对角线移动
             // 不再检查相邻两边是否被阻挡
 

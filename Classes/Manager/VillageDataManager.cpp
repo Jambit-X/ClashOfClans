@@ -21,6 +21,7 @@ VillageDataManager::VillageDataManager()
 
   _data.gold = 100000;
   _data.elixir = 100000;
+  _data.gem = 100;
 
   CCLOG("VillageDataManager: Initialized");
 }
@@ -76,6 +77,25 @@ bool VillageDataManager::spendGold(int amount) {
 bool VillageDataManager::spendElixir(int amount) {
   if (_data.elixir >= amount) {
     _data.elixir -= amount;
+    notifyResourceChanged();
+    return true;
+  }
+  return false;
+}
+
+// 宝石接口实现
+int VillageDataManager::getGem() const {
+  return _data.gem;
+}
+
+void VillageDataManager::addGem(int amount) {
+  _data.gem += amount;
+  notifyResourceChanged();
+}
+
+bool VillageDataManager::spendGem(int amount) {
+  if (_data.gem >= amount) {
+    _data.gem -= amount;
     notifyResourceChanged();
     return true;
   }
@@ -301,7 +321,7 @@ bool VillageDataManager::startUpgradeBuilding(int id) {
   return true;
 }
 
-// 新增：新建筑建造完成（不升级）
+// 新增：新建筑建造完成
 void VillageDataManager::finishNewBuildingConstruction(int id) {
   auto* building = getBuildingById(id);
   if (!building) return;
@@ -404,7 +424,7 @@ void VillageDataManager::saveToFile(const std::string& filename) {
 
   doc.AddMember("gold", _data.gold, allocator);
   doc.AddMember("elixir", _data.elixir, allocator);
-
+  doc.AddMember("gem", _data.gem, allocator);
   // --- 保存军队数据 ---
   rapidjson::Value troopsArray(rapidjson::kArrayType);
   for (const auto& pair : _data.troops) {
@@ -478,6 +498,9 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
   }
   if (doc.HasMember("elixir") && doc["elixir"].IsInt()) {
     _data.elixir = doc["elixir"].GetInt();
+  }
+  if (doc.HasMember("gem") && doc["gem"].IsInt()) {
+    _data.gem = doc["gem"].GetInt();  // 新增
   }
 
   // --- 读取军队数据 ---

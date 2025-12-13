@@ -2,7 +2,7 @@
 #define __FIND_PATH_UTIL_H__
 
 #include "cocos2d.h"
-#include "../Model/VillageData.h"  // ✅ 修正：引用 BuildingInstance 定义
+#include "../Model/VillageData.h"  //  修正：引用 BuildingInstance 定义
 #include <vector>
 #include <unordered_map>
 
@@ -32,10 +32,10 @@ public:
     // 辅助：判断某格是否可走
     bool isWalkable(int gridX, int gridY) const;
 
-    // ✅ 基础寻路接口（网格坐标）
+    //  基础寻路接口（网格坐标）
     std::vector<cocos2d::Vec2> findPath(const cocos2d::Vec2& startGridPos, const cocos2d::Vec2& endGridPos);
     
-    // ✅ 基础寻路接口（世界坐标）
+    //  基础寻路接口（世界坐标）
     std::vector<cocos2d::Vec2> findPathInWorld(const cocos2d::Vec2& startWorldPos, const cocos2d::Vec2& endWorldPos);
     
     // 辅助：获取两点间的基础 A* 路径 (网格坐标 -> 网格坐标)
@@ -51,7 +51,7 @@ private:
     int _mapHeight;
     std::vector<uint8_t> _pathfindingMap; // 扁平化的一维数组存储地图数据
 
-    // ✅ 性能优化：复用的 A* 数据结构（避免频繁分配）
+    //  性能优化：复用的 A* 数据结构（避免频繁分配）
     std::vector<int> _gScore;           // G值缓存
     std::vector<int> _cameFrom;         // 路径回溯表
     std::vector<bool> _closedSet;       // 已访问集合
