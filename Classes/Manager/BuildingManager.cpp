@@ -27,26 +27,23 @@ void BuildingManager::loadBuildingsFromData() {
 }
 
 BuildingSprite* BuildingManager::addBuilding(const BuildingInstance& building) {
-    auto sprite = BuildingSprite::create(building);
-    if (!sprite) return nullptr;
+  auto sprite = BuildingSprite::create(building);
+  if (!sprite) return nullptr;
 
-    // 设置位置（网格坐标 + 视觉偏移）
-    Vec2 worldPos = GridMapUtils::gridToPixel(building.gridX, building.gridY);
-    Vec2 finalPos = worldPos + sprite->getVisualOffset();
-    sprite->setPosition(finalPos);
+  Vec2 worldPos = GridMapUtils::gridToPixel(building.gridX, building.gridY);
+  Vec2 finalPos = worldPos + sprite->getVisualOffset();
+  sprite->setPosition(finalPos);
 
-    // ? 修复：等轴测地图的正确 Z-Order 公式
-    // 公式：gridX + gridY（越靠近屏幕下方，Z 越大）
-    int zOrder = building.gridX + building.gridY;
-    _parentLayer->addChild(sprite, zOrder);
+  // 使用统一函数计算 Z-Order
+  int zOrder = calculateZOrder(building.gridX, building.gridY);
+  _parentLayer->addChild(sprite, zOrder);
 
-    _buildings[building.id] = sprite;
-    CCLOG("BuildingManager: Added building ID=%d at grid(%d, %d), Z-Order=%d", 
-          building.id, building.gridX, building.gridY, zOrder);
-    
-    return sprite;
+  _buildings[building.id] = sprite;
+  CCLOG("BuildingManager: Added building ID=%d at grid(%d, %d), Z-Order=%d",
+        building.id, building.gridX, building.gridY, zOrder);
+
+  return sprite;
 }
-
 void BuildingManager::removeBuilding(int buildingId) {
     auto it = _buildings.find(buildingId);
     if (it != _buildings.end()) {
@@ -65,8 +62,9 @@ void BuildingManager::updateBuilding(int buildingId, const BuildingInstance& bui
     Vec2 finalPos = worldPos + sprite->getVisualOffset();
     sprite->setPosition(finalPos);
 
-    int zOrder = building.gridX + building.gridY;
-    sprite->setLocalZOrder(zOrder);
+    // 使用统一函数计算 Z-Order 并重新排序
+    int zOrder = calculateZOrder(building.gridX, building.gridY);
+    _parentLayer->reorderChild(sprite, zOrder);
 
     // 状态切换到建造中时的特殊处理
     if (building.state == BuildingInstance::State::CONSTRUCTING) {

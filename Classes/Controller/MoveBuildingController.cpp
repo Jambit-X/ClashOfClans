@@ -324,14 +324,21 @@ bool MoveBuildingController::completeMove(const Vec2& worldPos) {
     return false;
   }
 
-  // 1. 更新数据层
+  // 1. 更新数据层（必须先更新数据，因为 updateBuilding 会读取数据）
   dataManager->setBuildingPosition(_movingBuildingId, (int)posInfo.gridPos.x, (int)posInfo.gridPos.y);
 
-  // 2. 更新精灵的网格坐标
-  sprite->setGridPos(posInfo.gridPos);
-  sprite->setPosition(posInfo.worldPos);
+  // ========== 核心修复：调用 BuildingManager 的统一更新方法 ==========
+  // 这会自动处理：
+  //   - 精灵位置更新
+  //   - Z-Order 重新计算
+  //   - reorderChild() 重新排序
+  auto updatedBuilding = dataManager->getBuildingById(_movingBuildingId);
+  if (updatedBuilding) {
+    _buildingManager->updateBuilding(_movingBuildingId, *updatedBuilding);
+  }
+  // =======================================================================
 
-  // 3. 根据状态恢复显示
+  // 2. 根据状态恢复显示（在 updateBuilding 之后，避免被覆盖）
   if (isConstructing) {
     // 建造中的建筑：恢复建造动画状态
     sprite->setScale(1.0f);  // 恢复缩放
@@ -350,7 +357,7 @@ bool MoveBuildingController::completeMove(const Vec2& worldPos) {
   // 清除原始位置记录
   _originalPositions.erase(_movingBuildingId);
 
-  CCLOG("MoveBuildingController: Building %d moved to grid(%.0f, %.0f)",
+  CCLOG("MoveBuildingController: Building %d moved to grid(%.0f, %.0f), Z-Order updated",
         _movingBuildingId, posInfo.gridPos.x, posInfo.gridPos.y);
 
   return true;

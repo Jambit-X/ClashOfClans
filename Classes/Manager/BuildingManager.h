@@ -49,6 +49,10 @@ public:
 private:
   Layer* _parentLayer;                                      // 父层
   std::unordered_map<int, BuildingSprite*> _buildings;    // 建筑映射表 <buildingId, sprite>
+  // 统一的 Z-Order 计算函数
+  static int calculateZOrder(int gridX, int gridY) {
+    return gridX - gridY + 45;
+  }
 };
 
 #endif // __BUILDING_MANAGER_H__

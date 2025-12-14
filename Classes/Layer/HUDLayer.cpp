@@ -5,10 +5,11 @@
 #include "Manager/BuildingUpgradeManager.h"
 #include "Manager/BuildingSpeedupManager.h"
 #include "Model/BuildingConfig.h"
+#include "Model/BuildingRequirements.h"
 #include "Layer/TrainingLayer.h"
 #include "UI/ResourceCollectionUI.h"
 #include "Layer/VillageLayer.h"
-#include "Scene/BattleScene.h"  // 添加战斗场景头文件
+#include "Scene/BattleScene.h" 
 
 USING_NS_CC;
 using namespace ui;
@@ -260,11 +261,10 @@ void HUDLayer::initActionMenu() {
   });
   _actionMenuNode->addChild(_btnInfo);
 
-  // 升级按钮
+  // 升级按钮 - 修复版
   _btnUpgrade = Button::create(imgPath + "upgrade.png");
   _btnUpgrade->ignoreContentAdaptWithSize(false);
   _btnUpgrade->setContentSize(Size(btnSize, btnSize));
-  // 使用弱引用捕获 this
   _btnUpgrade->addClickEventListener([this](Ref*) {
     CCLOG("点击升级");
 
@@ -273,18 +273,44 @@ void HUDLayer::initActionMenu() {
     auto dataManager = VillageDataManager::getInstance();
     auto building = dataManager->getBuildingById(_currentSelectedBuildingId);
 
-    if (building && building->level >= 3) {
-      //  使用复用的提示Label
+    if (!building) return;
+
+    // ========== 检查1：是否满级 ==========
+    if (building->level >= 3) {
       showTips("建筑已达到最大等级！", Color3B::RED);
       return;
     }
 
+    auto requirements = BuildingRequirements::getInstance();
+
+    // ========== 检查2：大本营特殊处理 ==========
+    if (building->type == 1) {  // 大本营
+      if (!requirements->canUpgradeTownHall(building->level)) {
+        showTips("大本营升级条件未满足\n请先建造所有防御建筑！", Color3B::RED);
+        return;
+      }
+    }
+    // ========== 检查3：其他建筑的大本营等级限制 ==========
+    else {
+      int currentTHLevel = dataManager->getTownHallLevel();
+
+      if (!requirements->canUpgrade(building->type, building->level, currentTHLevel)) {
+        int targetLevel = building->level + 1;
+        int requiredTH = requirements->getRequiredTHLevel(building->type, targetLevel);
+
+        std::string reason = "需要" + std::to_string(requiredTH) + "级大本营";
+        showTips(reason, Color3B::ORANGE);  // 橙色警告
+        return;
+      }
+    }
+
+    // ========== 检查4：资源充足并开始升级 ==========
     if (dataManager->startUpgradeBuilding(_currentSelectedBuildingId)) {
       CCLOG("升级开始成功!");
       hideBuildingActions();
+      showTips("升级开始！", Color3B::GREEN);
     } else {
-      //  使用复用的提示Label
-      showTips("升级失败：资源不足或已达最高等级", Color3B::RED);
+      showTips("升级失败：资源不足", Color3B::RED);
     }
   });
   _actionMenuNode->addChild(_btnUpgrade);
@@ -307,7 +333,7 @@ void HUDLayer::initActionMenu() {
   });
   _actionMenuNode->addChild(_btnTrain);
 
-  //  新增：加速按钮
+  //  加速按钮
   _btnSpeedup = Button::create("UI/Village/Speedup_button.png");
   _btnSpeedup->ignoreContentAdaptWithSize(false);
   _btnSpeedup->setContentSize(Size(btnSize, btnSize));
@@ -360,42 +386,116 @@ void HUDLayer::updateActionButtons(int buildingId) {
   _btnSpeedup->setVisible(isConstructing);
 
   if (isConstructing) {
-    // 建造中：检查宝石
+    // 建造中：显示加速按钮
     bool hasGem = (dataManager->getGem() >= 1);
     _btnSpeedup->setTouchEnabled(hasGem);
     _btnSpeedup->setOpacity(hasGem ? 255 : 128);
   } else {
-    // 已完成：检查是否满级
-    if (buildingInstance->level >= 3) {
-      _upgradeCostLabel->setString("已满级");
-      _upgradeCostLabel->setColor(Color3B::RED);
-      _btnUpgrade->setTouchEnabled(false);
-      _btnUpgrade->setOpacity(128);
-    } else if (configMgr->canUpgrade(buildingInstance->type, buildingInstance->level)) {
-      int cost = configMgr->getUpgradeCost(buildingInstance->type, buildingInstance->level);
-      _upgradeCostLabel->setString(std::to_string(cost) + " 圣水");
-      _upgradeCostLabel->setColor(Color3B::MAGENTA);
-      _upgradeCostLabel->setVisible(true);
-      _btnUpgrade->setTouchEnabled(true);
-      _btnUpgrade->setOpacity(255);
-    } else {
-      _upgradeCostLabel->setString("已满级");
-      _upgradeCostLabel->setColor(Color3B::RED);
-      _btnUpgrade->setTouchEnabled(false);
-      _btnUpgrade->setOpacity(128);
+    // 已完成：根据建筑类型分别处理
+    auto requirements = BuildingRequirements::getInstance();
+    int currentTHLevel = dataManager->getTownHallLevel();
+
+    // ========== 大本营特殊处理 ==========
+    if (buildingInstance->type == 1) {
+      if (buildingInstance->level >= 3) {
+        _upgradeCostLabel->setString("已满级");
+        _upgradeCostLabel->setColor(Color3B::RED);
+        _btnUpgrade->setTouchEnabled(false);
+        _btnUpgrade->setOpacity(128);
+      } else if (!requirements->canUpgradeTownHall(buildingInstance->level)) {
+        _upgradeCostLabel->setString("需建造所有防御");
+        _upgradeCostLabel->setColor(Color3B::ORANGE);
+        _btnUpgrade->setTouchEnabled(false);
+        _btnUpgrade->setOpacity(128);
+      } else {
+        // 可以升级 - 翻译 costType
+        int cost = configMgr->getUpgradeCost(buildingInstance->type, buildingInstance->level);
+
+        // 翻译为中文
+        std::string costTypeCN;
+        if (config->costType == "gold") {
+          costTypeCN = "金币";
+        } else if (config->costType == "elixir") {
+          costTypeCN = "圣水";
+        } else if (config->costType == "gem") {
+          costTypeCN = "宝石";
+        }
+        _upgradeCostLabel->setString(std::to_string(cost) + " " + costTypeCN);
+
+        // 使用英文判断
+        if (config->costType == "gold") {
+          _upgradeCostLabel->setColor(Color3B::YELLOW);
+        } else if (config->costType == "elixir") {
+          _upgradeCostLabel->setColor(Color3B::MAGENTA);
+        } else {
+          _upgradeCostLabel->setColor(Color3B::GREEN);
+        }
+
+        _upgradeCostLabel->setVisible(true);
+        _btnUpgrade->setTouchEnabled(true);
+        _btnUpgrade->setOpacity(255);
+      }
+    }
+    // ========== 其他建筑的通用处理 ==========
+    else {
+      if (buildingInstance->level >= 3) {
+        _upgradeCostLabel->setString("已满级");
+        _upgradeCostLabel->setColor(Color3B::RED);
+        _btnUpgrade->setTouchEnabled(false);
+        _btnUpgrade->setOpacity(128);
+      } else if (!requirements->canUpgrade(buildingInstance->type, buildingInstance->level, currentTHLevel)) {
+        int targetLevel = buildingInstance->level + 1;
+        int requiredTH = requirements->getRequiredTHLevel(buildingInstance->type, targetLevel);
+
+        _upgradeCostLabel->setString("需要" + std::to_string(requiredTH) + "级大本营");
+        _upgradeCostLabel->setColor(Color3B::ORANGE);
+        _btnUpgrade->setTouchEnabled(false);
+        _btnUpgrade->setOpacity(128);
+      } else if (configMgr->canUpgrade(buildingInstance->type, buildingInstance->level)) {
+        // 可以升级 - 翻译 costType
+        int cost = configMgr->getUpgradeCost(buildingInstance->type, buildingInstance->level);
+
+        // 翻译为中文
+        std::string costTypeCN;
+        if (config->costType == "gold") {
+          costTypeCN = "金币";
+        } else if (config->costType == "elixir") {
+          costTypeCN = "圣水";
+        } else if (config->costType == "gem") {
+          costTypeCN = "宝石";
+        }
+        _upgradeCostLabel->setString(std::to_string(cost) + " " + costTypeCN);
+
+        // 使用英文判断
+        if (config->costType == "gold") {
+          _upgradeCostLabel->setColor(Color3B::YELLOW);
+        } else if (config->costType == "elixir") {
+          _upgradeCostLabel->setColor(Color3B::MAGENTA);
+        } else {
+          _upgradeCostLabel->setColor(Color3B::GREEN);
+        }
+
+        _upgradeCostLabel->setVisible(true);
+        _btnUpgrade->setTouchEnabled(true);
+        _btnUpgrade->setOpacity(255);
+      } else {
+        _upgradeCostLabel->setString("已满级");
+        _upgradeCostLabel->setColor(Color3B::RED);
+        _btnUpgrade->setTouchEnabled(false);
+        _btnUpgrade->setOpacity(128);
+      }
     }
   }
 
-  // ========== 使用配置驱动布局 ==========
+  // ========== 训练按钮显示逻辑 ==========
   bool canTrain = (buildingInstance->type == 101 || buildingInstance->type == 102);
   _btnTrain->setVisible(canTrain);
 
-  //  根据配置设置位置
   const ButtonLayout& layout = canTrain ? LAYOUT_THREE_BUTTONS : LAYOUT_TWO_BUTTONS;
 
   _btnInfo->setPosition(layout.infoPos);
   _btnUpgrade->setPosition(layout.upgradePos);
-  _btnSpeedup->setPosition(layout.upgradePos);  // 和升级位置相同
+  _btnSpeedup->setPosition(layout.upgradePos);
   _btnTrain->setPosition(layout.trainPos);
 }
 

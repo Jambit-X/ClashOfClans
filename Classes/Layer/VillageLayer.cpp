@@ -62,6 +62,12 @@ bool VillageLayer::init() {
     _buildingManager->update(dt);
   }, 1.0f, "building_update");
 
+  // 启动建造完成检测（每秒检查）
+  this->schedule([this](float dt) {
+    auto dataManager = VillageDataManager::getInstance();
+    dataManager->checkAndFinishConstructions();
+  }, 1.0f, "construction_checker");
+
   CCLOG("VillageLayer initialized successfully");
   CCLOG("  - MoveBuildingController added first (higher priority)");
   CCLOG("  - MoveMapController added second (lower priority)");

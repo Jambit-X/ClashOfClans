@@ -53,6 +53,24 @@ bool ShopLayer::init() {
     initTabs();
     initBottomBar();
 
+    // 监听大本营升级事件
+    auto townHallListener = EventListenerCustom::create("EVENT_TOWNHALL_UPGRADED",
+                                                        [this](EventCustom* event) {
+      CCLOG("ShopLayer: Town Hall upgraded, refreshing shop");
+      // 刷新当前标签的商店列表
+      if (!_tabButtons.empty()) {
+        // 找到当前选中的标签
+        for (int i = 0; i < _tabButtons.size(); ++i) {
+          auto btn = _tabButtons[i];
+          auto bgLayer = dynamic_cast<LayerColor*>(btn->getChildByTag(999));
+          if (bgLayer && bgLayer->getColor() == Color3B(COLOR_TAB_SELECT.r, COLOR_TAB_SELECT.g, COLOR_TAB_SELECT.b)) {
+            switchTab(i);  // 重新加载当前标签
+            break;
+          }
+        }
+      }
+    });
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(townHallListener, this);
     // 默认进入“军队”标签
     switchTab(0);
 
@@ -204,79 +222,184 @@ void ShopLayer::switchTab(int categoryIndex) {
 }
 
 void ShopLayer::addShopItem(const ShopItemData& data, int index) {
-    float cardWidth = 180;
-    float cardHeight = 260;
-    float margin = 20;
+  float cardWidth = 180;
+  float cardHeight = 260;
+  float margin = 20;
 
-    // 1. 卡片背景
-    auto bg = LayerColor::create(Color4B(40, 40, 40, 200));
-    bg->setContentSize(Size(cardWidth, cardHeight));
+  // ========== 获取建筑信息 ==========
+  auto dataManager = VillageDataManager::getInstance();
+  auto requirements = BuildingRequirements::getInstance();
 
-    // 垂直居中于 ScrollView
-    float y = (_scrollView->getContentSize().height - cardHeight) / 2;
-    float x = margin + index * (cardWidth + margin);
-    bg->setPosition(Vec2(x, y));
-
-    _scrollView->addChild(bg);
-
-    // 2. 建筑图片
-    auto sprite = Sprite::create(data.imagePath);
-    if (sprite) {
-        float maxImgSize = 140;
-        float scale = maxImgSize / std::max(sprite->getContentSize().width, sprite->getContentSize().height);
-        if (scale > 1.0f) scale = 1.0f;
-
-        sprite->setScale(scale);
-        sprite->setPosition(Vec2(cardWidth / 2, cardHeight / 2 + 20));
-        bg->addChild(sprite);
+  int currentTHLevel = dataManager->getTownHallLevel();
+  int currentCount = 0;
+  for (const auto& b : dataManager->getAllBuildings()) {
+    if (b.type == data.id && b.state != BuildingInstance::State::PLACING) {
+      currentCount++;
     }
-    else {
-        auto err = LayerColor::create(Color4B::RED, 100, 100);
-        err->setPosition(Vec2(40, 80));
-        bg->addChild(err);
+  }
+
+  bool isLocked = !requirements->canPurchase(data.id, currentTHLevel, currentCount);
+
+  // 获取最大数量和解锁大本营等级
+  int maxCount = requirements->getMaxCount(data.id, currentTHLevel);
+  int minTHLevel = requirements->getMinTHLevel(data.id);
+  // ==========================================
+
+  // 1. 卡片背景
+  auto bg = LayerColor::create(Color4B(40, 40, 40, 200));
+  bg->setContentSize(Size(cardWidth, cardHeight));
+
+  // 垂直居中于 ScrollView
+  float y = (_scrollView->getContentSize().height - cardHeight) / 2;
+  float x = margin + index * (cardWidth + margin);
+  bg->setPosition(Vec2(x, y));
+
+  _scrollView->addChild(bg);
+
+  // ========== 如果锁定，整体变暗 ==========
+  if (isLocked) {
+    bg->setColor(Color3B(80, 80, 80));
+  }
+  // ========================================
+
+  // ========== 修复：角标显示逻辑 ==========
+  // 判断锁定原因：是因为大本营等级不足，还是数量已满
+  bool isDueToTownHall = (currentTHLevel < minTHLevel);  // 大本营等级不足
+  bool isDueToCount = (currentCount >= maxCount);         // 数量已达上限
+
+  if (isDueToTownHall && !isDueToCount) {
+    // 情况1：大本营等级不足（且数量未满）- 显示解锁大本营等级
+    auto unlockBg = LayerColor::create(Color4B(200, 50, 50, 230), 85, 26);
+    unlockBg->setAnchorPoint(Vec2(0.5f, 0));
+    unlockBg->setPosition(Vec2(cardWidth / 2, cardHeight));
+    bg->addChild(unlockBg, 5);
+
+    std::string unlockText = "大本" + std::to_string(minTHLevel) + "级";
+    auto unlockLabel = Label::createWithTTF(unlockText, FONT_PATH, 14);
+    unlockLabel->setPosition(Vec2(42.5f, 13));
+    unlockLabel->setColor(Color3B::WHITE);
+    unlockLabel->enableOutline(Color4B::BLACK, 1);
+    unlockBg->addChild(unlockLabel);
+  } else {
+    // 情况2：大本营已解锁（无论数量是否已满）- 显示数量信息
+    // 根据是否达到上限选择背景颜色
+    Color4B bgColor = isDueToCount
+      ? Color4B(220, 120, 0, 230)   // 橙色警告（数量已满）
+      : Color4B(50, 180, 80, 230);  // 绿色正常（可继续购买）
+
+    auto countBg = LayerColor::create(bgColor, 70, 26);
+    countBg->setAnchorPoint(Vec2(0.5f, 0));
+    countBg->setPosition(Vec2(cardWidth / 2, cardHeight));
+    bg->addChild(countBg, 5);
+
+    std::string countText = std::to_string(currentCount) + "/" + std::to_string(maxCount);
+    auto countLabel = Label::createWithTTF(countText, FONT_PATH, 16);
+    countLabel->setPosition(Vec2(35, 13));
+    countLabel->setColor(Color3B::WHITE);
+    countLabel->enableOutline(Color4B::BLACK, 1);
+    countBg->addChild(countLabel);
+  }
+  // ===========================================================
+
+  // 2. 建筑图片
+  auto sprite = Sprite::create(data.imagePath);
+  if (sprite) {
+    float maxImgSize = 130;
+    float scale = maxImgSize / std::max(sprite->getContentSize().width, sprite->getContentSize().height);
+    if (scale > 1.0f) scale = 1.0f;
+
+    sprite->setScale(scale);
+    sprite->setPosition(Vec2(cardWidth / 2, cardHeight / 2 + 15));
+
+    if (isLocked) {
+      sprite->setColor(Color3B(100, 100, 100));
+      sprite->setOpacity(180);
     }
 
-    // 3. 信息按钮
-    auto infoBtn = Label::createWithTTF("i", FONT_PATH, 18);
-    infoBtn->setPosition(Vec2(cardWidth - 20, cardHeight - 20));
-    infoBtn->setColor(Color3B::GRAY);
-    bg->addChild(infoBtn);
+    bg->addChild(sprite);
+  } else {
+    auto err = LayerColor::create(Color4B::RED, 100, 100);
+    err->setPosition(Vec2(40, 80));
+    bg->addChild(err);
+  }
 
-    // 4. 名称
-    auto nameLabel = Label::createWithTTF(data.name, FONT_PATH, 18);
-    nameLabel->setAnchorPoint(Vec2(0, 1));
-    nameLabel->setPosition(Vec2(10, cardHeight - 10));
-    bg->addChild(nameLabel);
+  // 3. 信息按钮
+  auto infoBtn = Label::createWithTTF("i", FONT_PATH, 16);
+  infoBtn->setPosition(Vec2(cardWidth - 15, cardHeight - 15));
+  infoBtn->setColor(Color3B::GRAY);
+  bg->addChild(infoBtn);
 
-    // 5. 建造时间
-    auto timeLabel = Label::createWithTTF("建造时间： " + data.time, FONT_PATH, 14);
-    timeLabel->setAnchorPoint(Vec2(0, 0));
-    timeLabel->setPosition(Vec2(10, 60));
-    bg->addChild(timeLabel);
+  // 4. 名称
+  auto nameLabel = Label::createWithTTF(data.name, FONT_PATH, 17);
+  nameLabel->setAnchorPoint(Vec2(0, 1));
+  nameLabel->setPosition(Vec2(8, cardHeight - 8));
+  bg->addChild(nameLabel);
 
-    // 6. 价格
-    std::string priceStr = std::to_string(data.cost) + " " + data.costType;
-    auto priceLabel = Label::createWithTTF(priceStr, FONT_PATH, 20);
-    priceLabel->setPosition(Vec2(cardWidth / 2, 30));
+  // 5. 建造时间
+  auto timeLabel = Label::createWithTTF("时间: " + data.time, FONT_PATH, 13);
+  timeLabel->setAnchorPoint(Vec2(0, 0));
+  timeLabel->setPosition(Vec2(8, 55));
+  timeLabel->setColor(Color3B(200, 200, 200));
+  bg->addChild(timeLabel);
 
-    if (data.costType == "金币") priceLabel->setColor(Color3B::YELLOW);
-    else if (data.costType == "圣水") priceLabel->setColor(Color3B::MAGENTA);
-    else priceLabel->setColor(Color3B::GREEN);
+  // ========== 如果锁定，显示锁图标和解锁条件 ==========
+  if (isLocked) {
+    // 锁图标
+    auto lockLabel = Label::createWithSystemFont("🔒", "Arial", 40);
+    lockLabel->setPosition(Vec2(cardWidth / 2, cardHeight / 2 + 30));
+    lockLabel->setColor(Color3B(255, 200, 0));
+    bg->addChild(lockLabel, 10);
 
-    priceLabel->enableOutline(Color4B::BLACK, 2);
-    bg->addChild(priceLabel);
+    // ========== 修复：根据锁定原因显示不同的提示 ==========
+    std::string reason;
+    if (isDueToTownHall) {
+      // 大本营等级不足
+      reason = "需要" + std::to_string(minTHLevel) + "级大本营\n才能解锁";
+    } else if (isDueToCount) {
+      // 数量已达上限
+      reason = "数量已达上限\n最多" + std::to_string(maxCount) + "个";
+    }
 
-    // 7. 点击交互
-    auto touchBtn = Button::create();
-    touchBtn->setScale9Enabled(true);
-    touchBtn->setContentSize(Size(cardWidth, cardHeight));
-    touchBtn->setPosition(Vec2(cardWidth / 2, cardHeight / 2));
-    touchBtn->setOpacity(0);
+    auto lockReasonLabel = Label::createWithTTF(reason, FONT_PATH, 13);
+    lockReasonLabel->setPosition(Vec2(cardWidth / 2, cardHeight / 2 - 10));
+    lockReasonLabel->setColor(Color3B::RED);
+    lockReasonLabel->setDimensions(cardWidth - 20, 45);
+    lockReasonLabel->setAlignment(cocos2d::TextHAlignment::CENTER);
+    lockReasonLabel->setLineHeight(18);
+    lockReasonLabel->enableOutline(Color4B::BLACK, 1);
+    bg->addChild(lockReasonLabel, 10);
+  }
+  // ===========================================================
+
+  // 6. 价格
+  std::string priceStr = std::to_string(data.cost) + " " + data.costType;
+  auto priceLabel = Label::createWithTTF(priceStr, FONT_PATH, 20);
+  priceLabel->setPosition(Vec2(cardWidth / 2, 28));
+
+  if (data.costType == "金币") priceLabel->setColor(Color3B::YELLOW);
+  else if (data.costType == "圣水") priceLabel->setColor(Color3B::MAGENTA);
+  else priceLabel->setColor(Color3B::GREEN);
+
+  priceLabel->enableOutline(Color4B::BLACK, 2);
+  bg->addChild(priceLabel);
+
+  // 7. 点击交互
+  auto touchBtn = Button::create();
+  touchBtn->setScale9Enabled(true);
+  touchBtn->setContentSize(Size(cardWidth, cardHeight));
+  touchBtn->setPosition(Vec2(cardWidth / 2, cardHeight / 2));
+  touchBtn->setOpacity(0);
+
+  if (isLocked) {
+    touchBtn->setEnabled(false);
+  } else {
     touchBtn->addClickEventListener([=](Ref*) {
-        CCLOG("购买了 %s", data.name.c_str());
-        this->onPurchaseBuilding(data);
-        });
-    bg->addChild(touchBtn);
+      CCLOG("购买了 %s", data.name.c_str());
+      this->onPurchaseBuilding(data);
+    });
+  }
+
+  bg->addChild(touchBtn);
 }
 
 std::vector<ShopItemData> ShopLayer::getDummyData(int categoryIndex) {
@@ -325,7 +448,6 @@ std::vector<ShopItemData> ShopLayer::getDummyData(int categoryIndex) {
 // 购买调用函数
 void ShopLayer::onPurchaseBuilding(const ShopItemData& data) {
   auto dataManager = VillageDataManager::getInstance();
-
   int buildingType = data.id;
 
   auto configManager = BuildingConfig::getInstance();
@@ -337,7 +459,7 @@ void ShopLayer::onPurchaseBuilding(const ShopItemData& data) {
     return;
   }
 
-  // 修改：只统计非 PLACING 状态的建筑
+  // 统计非 PLACING 状态的建筑
   int currentCount = 0;
   for (const auto& building : dataManager->getAllBuildings()) {
     if (building.type == buildingType && building.state != BuildingInstance::State::PLACING) {
@@ -347,66 +469,55 @@ void ShopLayer::onPurchaseBuilding(const ShopItemData& data) {
 
   int currentTHLevel = dataManager->getTownHallLevel();
 
+  // 检查购买条件
   if (!requirements->canPurchase(buildingType, currentTHLevel, currentCount)) {
     std::string reason = requirements->getRestrictionReason(buildingType, 0, currentTHLevel, currentCount);
     showErrorDialog(reason);
     return;
   }
 
+  // 扣除资源
   bool success = false;
-
   if (data.costType == "金币") {
-    if (dataManager->getGold() >= data.cost) {
-      success = dataManager->spendGold(data.cost);
-    }
+    success = dataManager->spendGold(data.cost);
   } else if (data.costType == "圣水") {
-    if (dataManager->getElixir() >= data.cost) {
-      success = dataManager->spendElixir(data.cost);
-    }
+    success = dataManager->spendElixir(data.cost);
   } else if (data.costType == "宝石") {
-    CCLOG("宝石购买尚未实现");
+    success = dataManager->spendGem(data.cost);
+  }
+
+  if (!success) {
+    CCLOG("ShopLayer: Not enough resources to purchase %s", data.name.c_str());
+    showErrorDialog("资源不足！");
     return;
   }
 
-  if (success) {
-    CCLOG("购买成功: %s", data.name.c_str());
+  // 核心修复：创建 0 级建筑
+  CCLOG("ShopLayer: Purchased %s, creating level 0 building", data.name.c_str());
 
-    int buildingId = dataManager->addBuilding(
-      buildingType,
-      1,
-      22, 22,
-      BuildingInstance::State::PLACING,
-      0,
-      true
-    );
+  int buildingId = dataManager->addBuilding(
+    buildingType,
+    0,  // 购买时等级 = 0
+    22, 22,
+    BuildingInstance::State::PLACING,
+    0,
+    true  // isInitialConstruction = true
+  );
 
-    this->onCloseClicked(nullptr);
+  this->onCloseClicked(nullptr);
 
-    auto scene = this->getScene();
-    if (scene) {
-      auto villageLayer = dynamic_cast<VillageLayer*>(scene->getChildByTag(1));
-      if (villageLayer) {
-        villageLayer->onBuildingPurchased(buildingId);
-      }
-
-      auto hudLayer = dynamic_cast<HUDLayer*>(scene->getChildByTag(100));
-      if (hudLayer) {
-        hudLayer->showPlacementUI(buildingId);
-      }
+  // 通知 VillageLayer 和 HUDLayer
+  auto scene = this->getScene();
+  if (scene) {
+    auto villageLayer = dynamic_cast<VillageLayer*>(scene->getChildByTag(1));
+    if (villageLayer) {
+      villageLayer->onBuildingPurchased(buildingId);
     }
-  } else {
-    CCLOG("资源不足，无法购买 %s", data.name.c_str());
 
-    auto label = Label::createWithTTF("资源不足！", "fonts/simhei.ttf", 30);
-    label->setPosition(Director::getInstance()->getVisibleSize() / 2);
-    label->setColor(Color3B::RED);
-    this->addChild(label, 100);
-
-    label->runAction(Sequence::create(
-      FadeOut::create(1.5f),
-      RemoveSelf::create(),
-      nullptr
-    ));
+    auto hudLayer = dynamic_cast<HUDLayer*>(scene->getChildByTag(100));
+    if (hudLayer) {
+      hudLayer->showPlacementUI(buildingId);
+    }
   }
 }
 

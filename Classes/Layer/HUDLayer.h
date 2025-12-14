@@ -7,7 +7,7 @@
 class HUDLayer : public cocos2d::Layer {
 public:
   virtual bool init();
-  virtual void cleanup() override;  // ? 添加 cleanup 方法
+  virtual void cleanup() override;  // 添加 cleanup 方法
   CREATE_FUNC(HUDLayer);
 
   void updateResourceDisplay(int gold, int elixir);
