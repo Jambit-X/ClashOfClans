@@ -204,7 +204,7 @@ void BuildingConfig::initConfigs() {
   cannon.spritePathTemplate = "buildings/defence_architecture/cannon/Cannon_lvl{level}.png";
   cannon.gridWidth = 3;
   cannon.gridHeight = 3;
-  cannon.anchorOffset = Vec2(0, -50);
+  cannon.anchorOffset = Vec2(0, -30);
   cannon.maxLevel = 3;
   cannon.initialCost = 250;
   cannon.costType = "gold";  // ¸ÄÎªÓ¢ÎÄ
