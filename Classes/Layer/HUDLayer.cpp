@@ -5,10 +5,11 @@
 #include "Manager/BuildingUpgradeManager.h"
 #include "Manager/BuildingSpeedupManager.h"
 #include "Model/BuildingConfig.h"
+#include "Model/BuildingRequirements.h"
 #include "Layer/TrainingLayer.h"
 #include "UI/ResourceCollectionUI.h"
 #include "Layer/VillageLayer.h"
-#include "Scene/BattleScene.h"  // 添加战斗场景头文件
+#include "Scene/BattleScene.h" 
 
 USING_NS_CC;
 using namespace ui;
@@ -273,17 +274,32 @@ void HUDLayer::initActionMenu() {
     auto dataManager = VillageDataManager::getInstance();
     auto building = dataManager->getBuildingById(_currentSelectedBuildingId);
 
-    if (building && building->level >= 3) {
-      //  使用复用的提示Label
+    if (!building) return;
+
+    // ========== 检查1：是否满级 ==========
+    if (building->level >= 3) {
       showTips("建筑已达到最大等级！", Color3B::RED);
       return;
     }
 
+    // ========== 检查2：大本营等级限制 ==========
+    auto requirements = BuildingRequirements::getInstance();
+    int currentTHLevel = dataManager->getTownHallLevel();
+
+    if (!requirements->canUpgrade(building->type, building->level, currentTHLevel)) {
+      int targetLevel = building->level + 1;
+      int requiredTH = requirements->getRequiredTHLevel(building->type, targetLevel);
+
+      std::string reason = "需要" + std::to_string(requiredTH) + "级大本营";
+      showTips(reason, Color3B::ORANGE);  // 橙色警告
+      return;
+    }
+
+    // ========== 检查3：资源充足 ==========
     if (dataManager->startUpgradeBuilding(_currentSelectedBuildingId)) {
       CCLOG("升级开始成功!");
       hideBuildingActions();
     } else {
-      //  使用复用的提示Label
       showTips("升级失败：资源不足或已达最高等级", Color3B::RED);
     }
   });
@@ -365,13 +381,29 @@ void HUDLayer::updateActionButtons(int buildingId) {
     _btnSpeedup->setTouchEnabled(hasGem);
     _btnSpeedup->setOpacity(hasGem ? 255 : 128);
   } else {
-    // 已完成：检查是否满级
+    // 已完成：检查升级条件
+    auto requirements = BuildingRequirements::getInstance();
+    int currentTHLevel = dataManager->getTownHallLevel();
+
+    // 检查1：是否满级
     if (buildingInstance->level >= 3) {
       _upgradeCostLabel->setString("已满级");
       _upgradeCostLabel->setColor(Color3B::RED);
       _btnUpgrade->setTouchEnabled(false);
       _btnUpgrade->setOpacity(128);
-    } else if (configMgr->canUpgrade(buildingInstance->type, buildingInstance->level)) {
+    }
+    // 检查2：大本营等级限制
+    else if (!requirements->canUpgrade(buildingInstance->type, buildingInstance->level, currentTHLevel)) {
+      int targetLevel = buildingInstance->level + 1;
+      int requiredTH = requirements->getRequiredTHLevel(buildingInstance->type, targetLevel);
+
+      _upgradeCostLabel->setString("需要" + std::to_string(requiredTH) + "级大本营");
+      _upgradeCostLabel->setColor(Color3B::ORANGE);  // 橙色警告
+      _btnUpgrade->setTouchEnabled(false);
+      _btnUpgrade->setOpacity(128);
+    }
+    // 检查3：显示消耗
+    else if (configMgr->canUpgrade(buildingInstance->type, buildingInstance->level)) {
       int cost = configMgr->getUpgradeCost(buildingInstance->type, buildingInstance->level);
       _upgradeCostLabel->setString(std::to_string(cost) + " 圣水");
       _upgradeCostLabel->setColor(Color3B::MAGENTA);
@@ -390,12 +422,11 @@ void HUDLayer::updateActionButtons(int buildingId) {
   bool canTrain = (buildingInstance->type == 101 || buildingInstance->type == 102);
   _btnTrain->setVisible(canTrain);
 
-  //  根据配置设置位置
   const ButtonLayout& layout = canTrain ? LAYOUT_THREE_BUTTONS : LAYOUT_TWO_BUTTONS;
 
   _btnInfo->setPosition(layout.infoPos);
   _btnUpgrade->setPosition(layout.upgradePos);
-  _btnSpeedup->setPosition(layout.upgradePos);  // 和升级位置相同
+  _btnSpeedup->setPosition(layout.upgradePos);
   _btnTrain->setPosition(layout.trainPos);
 }
 

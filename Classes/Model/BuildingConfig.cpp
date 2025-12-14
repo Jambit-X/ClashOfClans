@@ -1,3 +1,6 @@
+// 【必须加在第一行】强制使用 UTF-8 编码，解决中文乱码
+#pragma execution_character_set("utf-8")
+
 #include "BuildingConfig.h"
 #include <cmath>
 #include <../proj.win32/Constants.h>
@@ -35,13 +38,13 @@ void BuildingConfig::initConfigs() {
   townHall.type = 1;
   townHall.name = "大本营";
   townHall.category = "核心";
-  townHall.spritePathTemplate = "buildings/Town_Hall/Town_Hall{level}.png";  // 从 .webp 改为 .png
+  townHall.spritePathTemplate = "buildings/Town_Hall/Town_Hall{level}.png";
   townHall.gridWidth = 4;
   townHall.gridHeight = 4;
-  townHall.anchorOffset = Vec2(0,-60);
+  townHall.anchorOffset = Vec2(0, -60);
   townHall.maxLevel = 3;
   townHall.initialCost = 0;
-  townHall.costType = "金币";
+  townHall.costType = "免费";
   townHall.buildTimeSeconds = 0;
   townHall.hitPoints = 1500;
   townHall.damagePerSecond = 0;
@@ -49,13 +52,13 @@ void BuildingConfig::initConfigs() {
   townHall.resourceCapacity = 0;
   townHall.productionRate = 0;
   _configs[1] = townHall;
-  
-  // ========== 军事建筑 ========= =
+
+  // ========== 军队建筑 ==========
   // 101: 兵营
   BuildingConfigData armyCamp;
   armyCamp.type = 101;
   armyCamp.name = "兵营";
-  armyCamp.category = "军事";
+  armyCamp.category = "军队";
   armyCamp.spritePathTemplate = "buildings/military_architecture/army_camp/Army_Camp{level}.png";
   armyCamp.gridWidth = 3;
   armyCamp.gridHeight = 3;
@@ -75,7 +78,7 @@ void BuildingConfig::initConfigs() {
   BuildingConfigData barracks;
   barracks.type = 102;
   barracks.name = "训练营";
-  barracks.category = "军事";
+  barracks.category = "军队";
   barracks.spritePathTemplate = "buildings/military_architecture/barracks/Barracks{level}.png";
   barracks.gridWidth = 3;
   barracks.gridHeight = 3;
@@ -95,7 +98,7 @@ void BuildingConfig::initConfigs() {
   BuildingConfigData laboratory;
   laboratory.type = 103;
   laboratory.name = "实验室";
-  laboratory.category = "军事";
+  laboratory.category = "军队";
   laboratory.spritePathTemplate = "buildings/military_architecture/laboratory/Laboratory{level}.png";
   laboratory.gridWidth = 3;
   laboratory.gridHeight = 3;
@@ -111,7 +114,7 @@ void BuildingConfig::initConfigs() {
   laboratory.productionRate = 0;
   _configs[103] = laboratory;
 
-  // ========== 资源建筑 =========
+  // ========== 资源建筑 ==========
   // 202: 金矿
   BuildingConfigData goldMine;
   goldMine.type = 202;
@@ -132,10 +135,10 @@ void BuildingConfig::initConfigs() {
   goldMine.productionRate = 7200;
   _configs[202] = goldMine;
 
-  // 203: 圣水收集器
+  // 203: 圣水采集器
   BuildingConfigData elixirCollector;
   elixirCollector.type = 203;
-  elixirCollector.name = "圣水收集器";
+  elixirCollector.name = "圣水采集器";
   elixirCollector.category = "资源";
   elixirCollector.spritePathTemplate = "buildings/resource_architecture/elixir_collector/Elixir_Collector{level}.png";
   elixirCollector.gridWidth = 3;
@@ -192,7 +195,7 @@ void BuildingConfig::initConfigs() {
   elixirStorage.productionRate = 0;
   _configs[205] = elixirStorage;
 
-  // ========== 防御建筑 =========
+  // ========== 防御建筑 ==========
   // 301: 加农炮
   BuildingConfigData cannon;
   cannon.type = 301;
@@ -217,7 +220,7 @@ void BuildingConfig::initConfigs() {
   BuildingConfigData archerTower;
   archerTower.type = 302;
   archerTower.name = "箭塔";
-  archerTower.category = "防御"; 
+  archerTower.category = "防御";
   archerTower.spritePathTemplate = "buildings/defence_architecture/archer_tower/Archer_Tower{level}.png";
   archerTower.gridWidth = 3;
   archerTower.gridHeight = 3;
@@ -252,8 +255,9 @@ void BuildingConfig::initConfigs() {
   wall.resourceCapacity = 0;
   wall.productionRate = 0;
   _configs[303] = wall;
-  // ========== 陷阱 =========
-// 401: 炸弹
+
+  // ========== 陷阱 ==========
+  // 401: 炸弹
   BuildingConfigData bomb;
   bomb.type = 401;
   bomb.name = "炸弹";
@@ -266,9 +270,9 @@ void BuildingConfig::initConfigs() {
   bomb.initialCost = 400;
   bomb.costType = "金币";
   bomb.buildTimeSeconds = 0;  // 陷阱瞬间建造
-  bomb.hitPoints = 1;  // 陷阱很脆弱
+  bomb.hitPoints = 1;  // 陷阱被触发
   bomb.damagePerSecond = 100;  // 爆炸伤害
-  bomb.attackRange = 1;  // 触发范围
+  bomb.attackRange = 1;  // 爆炸范围
   bomb.resourceCapacity = 0;
   bomb.productionRate = 0;
   _configs[401] = bomb;
@@ -308,7 +312,7 @@ void BuildingConfig::initConfigs() {
   giantBomb.buildTimeSeconds = 0;
   giantBomb.hitPoints = 1;
   giantBomb.damagePerSecond = 400;  // 巨大爆炸伤害
-  giantBomb.attackRange = 2;  // 更大的触发范围
+  giantBomb.attackRange = 2;  // 更大的爆炸范围
   giantBomb.resourceCapacity = 0;
   giantBomb.productionRate = 0;
   _configs[404] = giantBomb;
@@ -341,7 +345,7 @@ std::string BuildingConfig::getSpritePath(int buildingType, int level) const {
     path.replace(pos, 7, std::to_string(level));
   }
 
-  CCLOG("BuildingConfig: Generated sprite path for type=%d, level=%d: %s", 
+  CCLOG("BuildingConfig: Generated sprite path for type=%d, level=%d: %s",
         buildingType, level, path.c_str());
   return path;
 }
@@ -352,7 +356,7 @@ int BuildingConfig::getUpgradeCost(int buildingType, int currentLevel) const {
     return 0;
   }
 
-  // 简单的升级费用公式：初始费用 * (1.5 ^ currentLevel)
+  // 简单的升级费用公式：初始价格 * (1.5 ^ currentLevel)
   return static_cast<int>(config->initialCost * pow(1.5, currentLevel));
 }
 
