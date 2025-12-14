@@ -616,18 +616,21 @@ void HUDLayer::enterContinuousBuildMode(int buildingType) {
   _isContinuousBuildMode = true;
   _continuousBuildingType = buildingType;
 
-  // 创建顶部提示标签
+  // ========== 核心修复：将提示标签移到确认按钮上方 ==========
   auto visibleSize = Director::getInstance()->getVisibleSize();
 
   _modeHintLabel = Label::createWithTTF(
     "连续建造模式 | 按ESC退出",
     FONT_PATH,
-    24
+    20  // 字体稍微小一点，更紧凑
   );
-  _modeHintLabel->setPosition(visibleSize.width / 2, visibleSize.height - 50);
+
+  // 位置：Y=180，正好在确认按钮（Y=100）上方 80 像素
+  _modeHintLabel->setPosition(visibleSize.width / 2, 180.0f);
   _modeHintLabel->setColor(Color3B::YELLOW);
   _modeHintLabel->enableOutline(Color4B::BLACK, 2);
-  this->addChild(_modeHintLabel, 1000);
+  this->addChild(_modeHintLabel, 999);  // ZOrder 999，低于 PlacementConfirmUI
+  // ==================================================================
 
   // 更新 UI 显示剩余资源
   updateContinuousModeUI();
@@ -675,7 +678,6 @@ void HUDLayer::createNextWall() {
   auto config = BuildingConfig::getInstance()->getConfig(_continuousBuildingType);
 
   if (!config) {
-    CCLOG("HUDLayer: Failed to get config for type %d", _continuousBuildingType);
     exitContinuousBuildMode("配置错误");
     return;
   }
@@ -701,12 +703,11 @@ void HUDLayer::createNextWall() {
     _continuousBuildingType, 0, 0, 1, BuildingInstance::State::PLACING
   );
   if (buildingId < 0) {
-    CCLOG("HUDLayer: Failed to create building");
     exitContinuousBuildMode("创建失败");
     return;
   }
 
-  // 3. 通知 VillageLayer 创建精灵
+  // 3. 通知 VillageLayer 创建精灵并启动放置流程
   auto scene = this->getScene();
   if (scene) {
     auto villageLayer = dynamic_cast<VillageLayer*>(scene->getChildByTag(1));
@@ -715,26 +716,10 @@ void HUDLayer::createNextWall() {
     }
   }
 
+  // 直接更新 UI 即可
+  updateContinuousModeUI();
 
-  // ========== 核心修复:延迟启动放置流程,避免UI冲突 ==========
-  // 第一个城墙确认后,放置UI可能还在淡出动画中
-  // 延迟0.2秒再启动下一个城墙的放置流程,确保UI完全隐藏
-  this->runAction(Sequence::create(
-    DelayTime::create(0.2f),
-    CallFunc::create([this, buildingId]() {
-    // 4. 启动放置流程
-    startBuildingPlacement(buildingId);
-
-    // 5. 更新 UI
-    updateContinuousModeUI();
-
-    CCLOG("HUDLayer: Next wall placement started (ID=%d)", buildingId);
-  }),
-    nullptr
-  ));
-
-  CCLOG("HUDLayer: Created next wall (ID=%d), remaining gold=%d",
-        buildingId, dataManager->getGold());
+  CCLOG("HUDLayer: Created next wall (ID=%d)", buildingId);
 }
 
 // ========== 检查是否可以继续建造 ==========
@@ -785,16 +770,8 @@ void HUDLayer::updateContinuousModeUI() {
 
   if (!config) return;
 
-  // 计算还能建造多少个
-  int gold = dataManager->getGold();
-  int cost = config->initialCost;
-  int canBuild = (config->costType == "gold") ? (gold / cost) : 999;
-
-  // 更新标签文字
-  std::string text = "连续建造模式: " + config->name +
-    " | 剩余资源: " + std::to_string(gold) + " 金币" +
-    " | 还可建造: " + std::to_string(canBuild) + " 个" +
-    " | 按ESC退出";
+  // 简化后的提示文字
+  std::string text = "连续建造模式: " + config->name + " | 按ESC退出";
 
   _modeHintLabel->setString(text);
 }

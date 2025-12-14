@@ -82,12 +82,12 @@ void PlacementConfirmUI::setCancelCallback(CancelCallback callback) {
 }
 
 void PlacementConfirmUI::show() {
-  this->setVisible(true);
+  // ========== 核心修复：停止之前的动画，避免 hide() 覆盖 show() ==========
+  this->stopAllActions();  // 停止之前的 hide() 动画
 
-  // ========== 保持和升级按钮完全相同的动画 ==========
+  this->setVisible(true);
   this->setScale(0.1f);
   this->runAction(EaseBackOut::create(ScaleTo::create(0.2f, 1.0f)));
-  // ========================================================
 }
 
 void PlacementConfirmUI::hide() {
