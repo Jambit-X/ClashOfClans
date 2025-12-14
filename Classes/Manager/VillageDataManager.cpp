@@ -1,6 +1,7 @@
 #include "VillageDataManager.h"
 #include "../Util/GridMapUtils.h"
 #include "../Model/BuildingConfig.h"
+#include "../Model/BuildingRequirements.h"
 #include <algorithm>
 #include "cocos2d.h"
 #include "json/document.h"
@@ -284,24 +285,23 @@ bool VillageDataManager::startUpgradeBuilding(int id) {
     return false;
   }
 
-  // 检查是否已达到最大等级（3级）
+  // 检查最大等级
   if (building->level >= 3) {
     CCLOG("VillageDataManager: Building %d already at max level (3)", id);
     return false;
   }
 
-  if (!config->canUpgrade(building->type, building->level)) {
-    CCLOG("VillageDataManager: Building %d already max level", id);
-    return false;
-  }
-
+  // 获取升级成本
   int cost = config->getUpgradeCost(building->type, building->level);
 
+  // 改为英文判断
   bool success = false;
-  if (configData->costType == "金币") {
+  if (configData->costType == "gold") {  // 英文
     success = spendGold(cost);
-  } else if (configData->costType == "圣水") {
+  } else if (configData->costType == "elixir") {  // 英文
     success = spendElixir(cost);
+  } else if (configData->costType == "gem") {  // 新增宝石类型
+    success = spendGem(cost);
   }
 
   if (!success) {
@@ -309,23 +309,30 @@ bool VillageDataManager::startUpgradeBuilding(int id) {
     return false;
   }
 
+  // 开始升级
   long long currentTime = time(nullptr);
   long long finishTime = currentTime + configData->buildTimeSeconds;
   building->state = BuildingInstance::State::CONSTRUCTING;
   building->finishTime = finishTime;
   building->isInitialConstruction = false;  // 升级不是首次建造
 
-  CCLOG("VillageDataManager: Started upgrade for building %d, finish at %lld", id, finishTime);
+  CCLOG("VillageDataManager: Started upgrade for building %d (level %d → %d), finish at %lld",
+        id, building->level, building->level + 1, finishTime);
 
   saveToFile("village.json");
   return true;
 }
 
-// 新增：新建筑建造完成
+// 新建筑建造完成
 void VillageDataManager::finishNewBuildingConstruction(int id) {
   auto* building = getBuildingById(id);
-  if (!building) return;
+  if (!building) {
+    CCLOG("VillageDataManager: Building %d not found", id);
+    return;
+  }
 
+  // 核心修复：新建筑从 0 级升到 1 级
+  building->level++;
   building->state = BuildingInstance::State::BUILT;
   building->finishTime = 0;
   building->isInitialConstruction = false;
@@ -340,13 +347,23 @@ void VillageDataManager::finishNewBuildingConstruction(int id) {
 
 void VillageDataManager::finishUpgradeBuilding(int id) {
   auto* building = getBuildingById(id);
-  if (!building) return;
+  if (!building) {
+    CCLOG("VillageDataManager: Building %d not found", id);
+    return;
+  }
 
-  building->level++;  // 升级才+1
+  int oldLevel = building->level;
+  building->level++;  // 升级：等级 +1
   building->state = BuildingInstance::State::BUILT;
   building->finishTime = 0;
 
-  CCLOG("VillageDataManager: Building %d upgraded to level %d", id, building->level);
+  CCLOG("VillageDataManager: Building %d upgraded from level %d to %d", id, oldLevel, building->level);
+
+  // 如果是大本营升级，触发特殊事件
+  if (building->type == 1) {  // 大本营 ID = 1
+    CCLOG("VillageDataManager: Town Hall upgraded to level %d!", building->level);
+    Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("EVENT_TOWNHALL_UPGRADED");
+  }
 
   saveToFile("village.json");
 
@@ -416,6 +433,37 @@ void VillageDataManager::removeBuilding(int buildingId) {
     CCLOG("VillageDataManager: Building ID=%d not found", buildingId);
   }
 }
+
+// 新增方法：检查并完成所有到期的建造
+void VillageDataManager::checkAndFinishConstructions() {
+  long long currentTime = time(nullptr);
+  std::vector<int> finishedBuildings;  // 收集需要完成的建筑 ID
+
+  // 第一遍：找出所有完成的建筑
+  for (const auto& building : _data.buildings) {
+    if (building.state == BuildingInstance::State::CONSTRUCTING &&
+        building.finishTime > 0 &&
+        currentTime >= building.finishTime) {
+      finishedBuildings.push_back(building.id);
+    }
+  }
+
+  // 第二遍：完成建造（避免迭代中修改容器）
+  for (int buildingId : finishedBuildings) {
+    auto* building = getBuildingById(buildingId);
+    if (!building) continue;
+
+    if (building->isInitialConstruction) {
+      CCLOG("VillageDataManager: Auto-completing NEW building construction ID=%d", buildingId);
+      finishNewBuildingConstruction(buildingId);
+    } else {
+      CCLOG("VillageDataManager: Auto-completing building UPGRADE ID=%d", buildingId);
+      finishUpgradeBuilding(buildingId);
+    }
+  }
+}
+
+
 
 void VillageDataManager::saveToFile(const std::string& filename) {
   rapidjson::Document doc;

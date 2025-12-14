@@ -34,6 +34,8 @@ public:
 
   using PendingResourceCallback = std::function<void(int pendingGold, int pendingElixir)>;
   void setPendingResourceCallback(PendingResourceCallback callback);
+  // 检查并完成所有到期的建造任务
+  void checkAndFinishConstructions();
 
   // ========== 建筑接口 ==========
   const std::vector<BuildingInstance>& getAllBuildings() const;

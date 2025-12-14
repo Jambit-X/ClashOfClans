@@ -44,6 +44,15 @@ public:
   // 获取限制失败的原因（用于UI提示）
   std::string getRestrictionReason(int buildingType, int currentLevel, int currentTHLevel, int currentCount) const;
 
+  // 检查是否可以升级建筑（含特殊规则）
+  bool canUpgradeBuilding(int buildingType, int currentLevel, int townHallLevel) const;
+
+  // 检查大本营是否满足升级条件（所有防御建筑已建完）
+  bool canUpgradeTownHall(int currentTownHallLevel) const;
+
+  // 获取当前大本营等级要求的防御建筑类型
+  std::vector<int> getRequiredDefenseTypes(int townHallLevel) const;
+
 private:
   BuildingRequirements();
   ~BuildingRequirements();

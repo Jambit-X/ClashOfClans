@@ -53,6 +53,24 @@ bool ShopLayer::init() {
     initTabs();
     initBottomBar();
 
+    // 监听大本营升级事件
+    auto townHallListener = EventListenerCustom::create("EVENT_TOWNHALL_UPGRADED",
+                                                        [this](EventCustom* event) {
+      CCLOG("ShopLayer: Town Hall upgraded, refreshing shop");
+      // 刷新当前标签的商店列表
+      if (!_tabButtons.empty()) {
+        // 找到当前选中的标签
+        for (int i = 0; i < _tabButtons.size(); ++i) {
+          auto btn = _tabButtons[i];
+          auto bgLayer = dynamic_cast<LayerColor*>(btn->getChildByTag(999));
+          if (bgLayer && bgLayer->getColor() == Color3B(COLOR_TAB_SELECT.r, COLOR_TAB_SELECT.g, COLOR_TAB_SELECT.b)) {
+            switchTab(i);  // 重新加载当前标签
+            break;
+          }
+        }
+      }
+    });
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(townHallListener, this);
     // 默认进入“军队”标签
     switchTab(0);
 
@@ -430,7 +448,6 @@ std::vector<ShopItemData> ShopLayer::getDummyData(int categoryIndex) {
 // 购买调用函数
 void ShopLayer::onPurchaseBuilding(const ShopItemData& data) {
   auto dataManager = VillageDataManager::getInstance();
-
   int buildingType = data.id;
 
   auto configManager = BuildingConfig::getInstance();
@@ -442,7 +459,7 @@ void ShopLayer::onPurchaseBuilding(const ShopItemData& data) {
     return;
   }
 
-  // 修改：只统计非 PLACING 状态的建筑
+  // 统计非 PLACING 状态的建筑
   int currentCount = 0;
   for (const auto& building : dataManager->getAllBuildings()) {
     if (building.type == buildingType && building.state != BuildingInstance::State::PLACING) {
@@ -452,66 +469,55 @@ void ShopLayer::onPurchaseBuilding(const ShopItemData& data) {
 
   int currentTHLevel = dataManager->getTownHallLevel();
 
+  // 检查购买条件
   if (!requirements->canPurchase(buildingType, currentTHLevel, currentCount)) {
     std::string reason = requirements->getRestrictionReason(buildingType, 0, currentTHLevel, currentCount);
     showErrorDialog(reason);
     return;
   }
 
+  // 扣除资源
   bool success = false;
-
   if (data.costType == "金币") {
-    if (dataManager->getGold() >= data.cost) {
-      success = dataManager->spendGold(data.cost);
-    }
+    success = dataManager->spendGold(data.cost);
   } else if (data.costType == "圣水") {
-    if (dataManager->getElixir() >= data.cost) {
-      success = dataManager->spendElixir(data.cost);
-    }
+    success = dataManager->spendElixir(data.cost);
   } else if (data.costType == "宝石") {
-    CCLOG("宝石购买尚未实现");
+    success = dataManager->spendGem(data.cost);
+  }
+
+  if (!success) {
+    CCLOG("ShopLayer: Not enough resources to purchase %s", data.name.c_str());
+    showErrorDialog("资源不足！");
     return;
   }
 
-  if (success) {
-    CCLOG("购买成功: %s", data.name.c_str());
+  // 核心修复：创建 0 级建筑
+  CCLOG("ShopLayer: Purchased %s, creating level 0 building", data.name.c_str());
 
-    int buildingId = dataManager->addBuilding(
-      buildingType,
-      1,
-      22, 22,
-      BuildingInstance::State::PLACING,
-      0,
-      true
-    );
+  int buildingId = dataManager->addBuilding(
+    buildingType,
+    0,  // 购买时等级 = 0
+    22, 22,
+    BuildingInstance::State::PLACING,
+    0,
+    true  // isInitialConstruction = true
+  );
 
-    this->onCloseClicked(nullptr);
+  this->onCloseClicked(nullptr);
 
-    auto scene = this->getScene();
-    if (scene) {
-      auto villageLayer = dynamic_cast<VillageLayer*>(scene->getChildByTag(1));
-      if (villageLayer) {
-        villageLayer->onBuildingPurchased(buildingId);
-      }
-
-      auto hudLayer = dynamic_cast<HUDLayer*>(scene->getChildByTag(100));
-      if (hudLayer) {
-        hudLayer->showPlacementUI(buildingId);
-      }
+  // 通知 VillageLayer 和 HUDLayer
+  auto scene = this->getScene();
+  if (scene) {
+    auto villageLayer = dynamic_cast<VillageLayer*>(scene->getChildByTag(1));
+    if (villageLayer) {
+      villageLayer->onBuildingPurchased(buildingId);
     }
-  } else {
-    CCLOG("资源不足，无法购买 %s", data.name.c_str());
 
-    auto label = Label::createWithTTF("资源不足！", "fonts/simhei.ttf", 30);
-    label->setPosition(Director::getInstance()->getVisibleSize() / 2);
-    label->setColor(Color3B::RED);
-    this->addChild(label, 100);
-
-    label->runAction(Sequence::create(
-      FadeOut::create(1.5f),
-      RemoveSelf::create(),
-      nullptr
-    ));
+    auto hudLayer = dynamic_cast<HUDLayer*>(scene->getChildByTag(100));
+    if (hudLayer) {
+      hudLayer->showPlacementUI(buildingId);
+    }
   }
 }
 
