@@ -606,6 +606,20 @@ void VillageDataManager::saveToFile(const std::string& filename) {
   }
   doc.AddMember("buildings", buildingsArray, allocator);
 
+  // --- 保存兵种研究等级 ---
+  rapidjson::Value troopLevelsArray(rapidjson::kArrayType);
+  for (const auto& pair : _data.troopLevels) {
+    rapidjson::Value levelObj(rapidjson::kObjectType);
+    levelObj.AddMember("id", pair.first, allocator);
+    levelObj.AddMember("level", pair.second, allocator);
+    troopLevelsArray.PushBack(levelObj, allocator);
+  }
+  doc.AddMember("troopLevels", troopLevelsArray, allocator);
+
+  // --- 保存研究状态 ---
+  doc.AddMember("researchingTroopId", _data.researchingTroopId, allocator);
+  doc.AddMember("researchFinishTime", _data.researchFinishTime, allocator);
+
   // 写入文件
   rapidjson::StringBuffer buffer;
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
@@ -746,6 +760,33 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
       }
     }
   }
+
+  // --- 读取兵种研究等级（兼容旧存档）---
+  _data.troopLevels.clear();
+  if (doc.HasMember("troopLevels") && doc["troopLevels"].IsArray()) {
+    const auto& levelsArray = doc["troopLevels"];
+    for (rapidjson::SizeType i = 0; i < levelsArray.Size(); i++) {
+      const auto& obj = levelsArray[i];
+      int id = obj["id"].GetInt();
+      int level = obj["level"].GetInt();
+      _data.troopLevels[id] = level;
+    }
+    CCLOG("VillageDataManager: Loaded %lu troop levels", _data.troopLevels.size());
+  }
+
+  // --- 读取研究状态（兼容旧存档）---
+  if (doc.HasMember("researchingTroopId") && doc["researchingTroopId"].IsInt()) {
+    _data.researchingTroopId = doc["researchingTroopId"].GetInt();
+  } else {
+    _data.researchingTroopId = -1;
+  }
+
+  if (doc.HasMember("researchFinishTime") && doc["researchFinishTime"].IsInt64()) {
+    _data.researchFinishTime = doc["researchFinishTime"].GetInt64();
+  } else {
+    _data.researchFinishTime = 0;
+  }
+
   // 4. 更新后续状态
   updateGridOccupancy();
   notifyResourceChanged();
@@ -836,4 +877,200 @@ int VillageDataManager::getElixirStorageCapacity() const {
 
   CCLOG("VillageDataManager: Total elixir capacity = %d", totalCapacity);
   return totalCapacity;
+}
+
+// ========== 实验室与兵种升级实现 ==========
+
+#include "../Model/TroopUpgradeConfig.h"
+
+int VillageDataManager::getLaboratoryLevel() const {
+  int maxLevel = 0;
+  
+  // 遍历所有建筑，找到最高等级的已建成实验室（ID=103）
+  for (const auto& building : _data.buildings) {
+    if (building.type == 103 && building.state == BuildingInstance::State::BUILT) {
+      if (building.level > maxLevel) {
+        maxLevel = building.level;
+      }
+    }
+  }
+  
+  return maxLevel;
+}
+
+int VillageDataManager::getTroopLevel(int troopId) const {
+  auto it = _data.troopLevels.find(troopId);
+  if (it != _data.troopLevels.end()) {
+    return it->second;
+  }
+  return 1;  // 默认1级
+}
+
+bool VillageDataManager::canUpgradeTroop(int troopId) const {
+  // 1. 检查是否有正在进行的研究
+  if (isResearching()) {
+    CCLOG("canUpgradeTroop: FAILED - Already researching (troopId=%d)", troopId);
+    return false;
+  }
+  
+  // 2. 检查实验室是否存在且已建成
+  int labLevel = getLaboratoryLevel();
+  if (labLevel == 0) {
+    CCLOG("canUpgradeTroop: FAILED - No laboratory built (troopId=%d)", troopId);
+    return false;
+  }
+  CCLOG("canUpgradeTroop: Lab level = %d", labLevel);
+  
+  // 3. 检查实验室是否正在升级
+  for (const auto& building : _data.buildings) {
+    if (building.type == 103 && building.state == BuildingInstance::State::CONSTRUCTING) {
+      CCLOG("canUpgradeTroop: FAILED - Lab is upgrading (troopId=%d)", troopId);
+      return false;  // 实验室正在升级
+    }
+  }
+  
+  // 4. 检查兵种是否已解锁（通过训练营等级）
+  auto troopConfig = TroopConfig::getInstance();
+  TroopInfo info = troopConfig->getTroopById(troopId);
+  if (info.id == 0) {
+    CCLOG("canUpgradeTroop: FAILED - Troop not found (troopId=%d)", troopId);
+    return false;  // 兵种不存在
+  }
+  
+  // 获取最高训练营等级
+  int maxBarracksLevel = 0;
+  for (const auto& building : _data.buildings) {
+    if (building.type == 102 && building.state == BuildingInstance::State::BUILT) {
+      if (building.level > maxBarracksLevel) {
+        maxBarracksLevel = building.level;
+      }
+    }
+  }
+  CCLOG("canUpgradeTroop: Barracks level = %d, required = %d", maxBarracksLevel, info.unlockBarracksLvl);
+  
+  if (maxBarracksLevel < info.unlockBarracksLvl) {
+    CCLOG("canUpgradeTroop: FAILED - Barracks level too low (troopId=%d)", troopId);
+    return false;  // 训练营等级不够，兵种未解锁
+  }
+  
+  // 5. 检查兵种是否已满级
+  auto upgradeConfig = TroopUpgradeConfig::getInstance();
+  int currentLevel = getTroopLevel(troopId);
+  int maxLevel = upgradeConfig->getMaxLevel(troopId);
+  CCLOG("canUpgradeTroop: Troop level = %d, max = %d", currentLevel, maxLevel);
+  if (currentLevel >= maxLevel) {
+    CCLOG("canUpgradeTroop: FAILED - Already max level (troopId=%d)", troopId);
+    return false;  // 已满级
+  }
+  
+  // 6. 检查实验室等级是否足够
+  bool canUpgrade = upgradeConfig->canUpgradeWithLabLevel(troopId, currentLevel, labLevel);
+  CCLOG("canUpgradeTroop: canUpgradeWithLabLevel = %s", canUpgrade ? "YES" : "NO");
+  if (!canUpgrade) {
+    CCLOG("canUpgradeTroop: FAILED - Lab level too low for upgrade (troopId=%d)", troopId);
+    return false;
+  }
+  
+  CCLOG("canUpgradeTroop: SUCCESS - Can upgrade troop %d", troopId);
+  return true;
+}
+
+bool VillageDataManager::startTroopUpgrade(int troopId) {
+  if (!canUpgradeTroop(troopId)) {
+    CCLOG("VillageDataManager: Cannot upgrade troop %d", troopId);
+    return false;
+  }
+  
+  auto upgradeConfig = TroopUpgradeConfig::getInstance();
+  int currentLevel = getTroopLevel(troopId);
+  
+  // 获取升级费用和时间
+  int cost = upgradeConfig->getUpgradeCost(troopId, currentLevel);
+  int time = upgradeConfig->getUpgradeTime(troopId, currentLevel);
+  
+  // 扣除圣水
+  if (!spendElixir(cost)) {
+    CCLOG("VillageDataManager: Not enough elixir for troop upgrade");
+    return false;
+  }
+  
+  // 开始研究
+  _data.researchingTroopId = troopId;
+  _data.researchFinishTime = ::time(nullptr) + time;
+  
+  CCLOG("VillageDataManager: Started research for troop %d (level %d -> %d), cost=%d, time=%d",
+        troopId, currentLevel, currentLevel + 1, cost, time);
+  
+  saveToFile("village.json");
+  
+  // 触发研究开始事件
+  Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("EVENT_RESEARCH_STARTED");
+  
+  return true;
+}
+
+void VillageDataManager::finishTroopUpgrade() {
+  if (_data.researchingTroopId == -1) {
+    return;
+  }
+  
+  int troopId = _data.researchingTroopId;
+  int oldLevel = getTroopLevel(troopId);
+  int newLevel = oldLevel + 1;
+  
+  // 更新兵种等级
+  _data.troopLevels[troopId] = newLevel;
+  
+  // 清除研究状态
+  _data.researchingTroopId = -1;
+  _data.researchFinishTime = 0;
+  
+  CCLOG("VillageDataManager: Troop %d research complete! Level %d -> %d",
+        troopId, oldLevel, newLevel);
+  
+  saveToFile("village.json");
+  
+  // 触发研究完成事件
+  Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("EVENT_RESEARCH_COMPLETE");
+}
+
+void VillageDataManager::checkAndFinishResearch() {
+  if (_data.researchingTroopId == -1) {
+    return;
+  }
+  
+  long long currentTime = ::time(nullptr);
+  if (currentTime >= _data.researchFinishTime) {
+    CCLOG("VillageDataManager: Auto-completing research for troop %d", _data.researchingTroopId);
+    finishTroopUpgrade();
+  }
+}
+
+int VillageDataManager::getResearchingTroopId() const {
+  return _data.researchingTroopId;
+}
+
+long long VillageDataManager::getResearchFinishTime() const {
+  return _data.researchFinishTime;
+}
+
+bool VillageDataManager::canUpgradeLaboratory() const {
+  // 不能有正在进行的研究
+  return !isResearching();
+}
+
+bool VillageDataManager::isResearching() const {
+  return _data.researchingTroopId != -1;
+}
+
+void VillageDataManager::finishResearchImmediately() {
+  if (_data.researchingTroopId == -1) {
+    CCLOG("VillageDataManager: No research in progress to finish");
+    return;
+  }
+  
+  // 直接完成研究，不检查时间
+  finishTroopUpgrade();
+  
+  CCLOG("VillageDataManager: Research finished instantly with gems");
 }

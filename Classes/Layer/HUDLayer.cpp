@@ -13,6 +13,7 @@
 
 #include "Scene/BattleScene.h" 
 #include "DebugLayer.h"
+#include "Layer/LaboratoryLayer.h"
 
 USING_NS_CC;
 using namespace ui;
@@ -576,6 +577,18 @@ void HUDLayer::initActionMenu() {
     onSpeedupClicked(_currentSelectedBuildingId);
   });
   _actionMenuNode->addChild(_btnSpeedup);
+
+  // 研究按钮（实验室专用）
+  _btnResearch = Button::create("UI/laboratory/research.png");  // 实验室研究按钮
+  _btnResearch->ignoreContentAdaptWithSize(false);
+  _btnResearch->setContentSize(Size(btnSize, btnSize));
+  _btnResearch->setVisible(false);  // 默认隐藏
+  _btnResearch->addClickEventListener([this](Ref*) {
+    CCLOG("点击了研究按钮");
+    auto labLayer = LaboratoryLayer::create();
+    this->getScene()->addChild(labLayer, 150);
+  });
+  _actionMenuNode->addChild(_btnResearch);
 }
 
 void HUDLayer::showBuildingActions(int buildingId) {
@@ -733,13 +746,17 @@ void HUDLayer::updateActionButtons(int buildingId) {
   bool canTrain = (buildingInstance->type == 101 || buildingInstance->type == 102);
   _btnTrain->setVisible(canTrain);
 
+  // ========== 研究按钮显示逻辑（实验室 103）==========
+  bool canResearch = (buildingInstance->type == 103);
+  _btnResearch->setVisible(canResearch);
+
   // ========== 选择布局模板 ==========
   const ButtonLayout* layout;
   if (buildingInstance->type == 201) {
     // 建筑工人小屋：只有信息按钮，居中显示
     layout = &LAYOUT_ONE_BUTTON;
-  } else if (canTrain) {
-    // 兵营/法术工厂：信息 + 升级 + 训练
+  } else if (canTrain || canResearch) {
+    // 兵营/训练营/实验室：信息 + 升级 + 训练/研究
     layout = &LAYOUT_THREE_BUTTONS;
   } else {
     // 其他建筑：信息 + 升级
@@ -750,6 +767,7 @@ void HUDLayer::updateActionButtons(int buildingId) {
   _btnUpgrade->setPosition(layout->upgradePos);
   _btnSpeedup->setPosition(layout->upgradePos);
   _btnTrain->setPosition(layout->trainPos);
+  _btnResearch->setPosition(layout->trainPos);  // 研究按钮位置同训练按钮
 }
 
 //  新增：加速按钮回调

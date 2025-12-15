@@ -63,6 +63,7 @@ private:
   cocos2d::ui::Button* _btnUpgrade;
   cocos2d::ui::Button* _btnTrain;
   cocos2d::ui::Button* _btnSpeedup;  // 加速按钮
+  cocos2d::ui::Button* _btnResearch; // 研究按钮（实验室专用）
 
   int _currentSelectedBuildingId = -1;
 

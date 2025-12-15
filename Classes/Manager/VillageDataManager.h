@@ -115,6 +115,71 @@ public:
    */
   int getIdleWorkerCount() const;
 
+  // ========== 实验室与兵种升级 ==========
+
+  /**
+   * @brief 获取实验室等级（返回最高等级的已建成实验室）
+   * @return 实验室等级，如果没有实验室返回0
+   */
+  int getLaboratoryLevel() const;
+
+  /**
+   * @brief 获取兵种当前研究等级（默认1）
+   */
+  int getTroopLevel(int troopId) const;
+
+  /**
+   * @brief 检查兵种是否可以升级
+   * 条件：已解锁 + 未满级 + 实验室等级足够 + 没有正在研究的兵种
+   */
+  bool canUpgradeTroop(int troopId) const;
+
+  /**
+   * @brief 开始升级兵种
+   * @return 是否成功开始（会扣圣水）
+   */
+  bool startTroopUpgrade(int troopId);
+
+  /**
+   * @brief 完成兵种升级（研究完成时调用）
+   */
+  void finishTroopUpgrade();
+
+  /**
+   * @brief 检查并完成到期的研究
+   */
+  void checkAndFinishResearch();
+
+  /**
+   * @brief 获取正在研究的兵种ID（-1表示无）
+   */
+  int getResearchingTroopId() const;
+
+  /**
+   * @brief 获取研究完成时间戳
+   */
+  long long getResearchFinishTime() const;
+
+  /**
+   * @brief 检查实验室是否可以升级（没有正在进行的研究）
+   */
+  bool canUpgradeLaboratory() const;
+
+  /**
+   * @brief 检查是否有正在进行的研究
+   */
+  bool isResearching() const;
+
+  /**
+   * @brief 立即完成研究（用于钻石加速）
+   */
+  void finishResearchImmediately();
+
+  // 钻石接口别名（兼容性）
+  int getGems() const { return getGem(); }
+  void addGems(int amount) { addGem(amount); }
+
+
 private:
   VillageDataManager();
   ~VillageDataManager();

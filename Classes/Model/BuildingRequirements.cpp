@@ -571,10 +571,11 @@ bool BuildingRequirements::canUpgradeTownHall(int currentTownHallLevel) const {
 std::vector<int> BuildingRequirements::getRequiredDefenseTypes(int townHallLevel) const {
   std::vector<int> defenseTypes;
 
-  // 定义防御建筑 ID 范围：301-399
+  // 定义防御建筑 ID 范围：301-399（排除城墙 303）
   for (const auto& pair : rules) {
     int buildingType = pair.first;
-    if (buildingType >= 301 && buildingType <= 399) {
+    // 排除城墙（303）作为升级大本营的必要条件
+    if (buildingType >= 301 && buildingType <= 399 && buildingType != 303) {
       // 检查这个防御建筑在当前大本营等级是否解锁
       const BuildingUnlockRule& rule = pair.second;
       if (rule.minTownHallLevel <= townHallLevel && getMaxCount(buildingType, townHallLevel) > 0) {
