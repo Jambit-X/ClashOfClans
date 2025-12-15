@@ -47,27 +47,74 @@ bool HUDLayer::init() {
   auto visibleSize = Director::getInstance()->getVisibleSize();
   Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
-  // 1. 当前资源标签
-  _goldLabel = Label::createWithTTF("Gold: 0", "fonts/Marker Felt.ttf", 24);
-  _goldLabel->setPosition(Vec2(origin.x + 100, origin.y + visibleSize.height - 30));
-  _goldLabel->setColor(Color3B(255, 215, 0));  // 金色 RGB(255, 215, 0)
+  // 1. 金币：图标 + 文字
+    auto goldIcon = Sprite::create("ImageElements/coin_icon.png");
+  if (goldIcon) {
+    goldIcon->setScale(0.5f);  // 缩放到合适大小
+    goldIcon->setAnchorPoint(Vec2(1, 0.5f));  // 右对齐
+    goldIcon->setPosition(Vec2(origin.x + 70, origin.y + visibleSize.height - 30));
+    this->addChild(goldIcon);
+  }
+   
+  _goldLabel = Label::createWithTTF("0", "fonts/Marker Felt.ttf", 24);
+  _goldLabel->setAnchorPoint(Vec2(0, 0.5f));  // 左对齐
+  _goldLabel->setPosition(Vec2(origin.x + 75, origin.y + visibleSize.height - 30));
+  _goldLabel->setColor(Color3B(255, 215, 0));  // 金色
+  _goldLabel->enableOutline(Color4B::BLACK, 2);  // 黑色描边
+  _goldLabel->enableShadow(Color4B(0, 0, 0, 150), Size(2, -2));  // 阴影
   this->addChild(_goldLabel);
 
-  _elixirLabel = Label::createWithTTF("Elixir: 0", "fonts/Marker Felt.ttf", 24);
-  _elixirLabel->setPosition(Vec2(origin.x + 300, origin.y + visibleSize.height - 30));
-  _elixirLabel->setColor(Color3B(255, 0, 255));  // 紫红色（洋红）RGB(255, 0, 255)
+  // 2. 圣水：图标 + 文字
+  auto elixirIcon = Sprite::create("ImageElements/elixir_icon.png");
+  if (elixirIcon) {
+    elixirIcon->setScale(0.5f);
+    elixirIcon->setAnchorPoint(Vec2(1, 0.5f));
+    elixirIcon->setPosition(Vec2(origin.x + 270, origin.y + visibleSize.height - 30));
+    this->addChild(elixirIcon);
+  }
+
+  _elixirLabel = Label::createWithTTF("0", "fonts/Marker Felt.ttf", 24);
+  _elixirLabel->setAnchorPoint(Vec2(0, 0.5f));
+  _elixirLabel->setPosition(Vec2(origin.x + 275, origin.y + visibleSize.height - 30));
+  _elixirLabel->setColor(Color3B(255, 0, 255));  // 紫红色
+  _elixirLabel->enableOutline(Color4B::BLACK, 2);
+  _elixirLabel->enableShadow(Color4B(0, 0, 0, 150), Size(2, -2));
   this->addChild(_elixirLabel);
 
-  _gemLabel = Label::createWithTTF("Gem: 0", "fonts/Marker Felt.ttf", 24);
-  _gemLabel->setPosition(Vec2(origin.x + 500, origin.y + visibleSize.height - 30));
-  _gemLabel->setColor(Color3B(0, 255, 0));  // 绿色 RGB(0, 255, 0)
+  // 3. 宝石：图标 + 文字
+  auto gemIcon = Sprite::create("ImageElements/gem_icon.png");
+  if (gemIcon) {
+    gemIcon->setScale(0.5f);
+    gemIcon->setAnchorPoint(Vec2(1, 0.5f));
+    gemIcon->setPosition(Vec2(origin.x + 460, origin.y + visibleSize.height - 30));
+    this->addChild(gemIcon);
+  }
+
+  _gemLabel = Label::createWithTTF("0", "fonts/Marker Felt.ttf", 24);
+  _gemLabel->setAnchorPoint(Vec2(0, 0.5f));
+  _gemLabel->setPosition(Vec2(origin.x + 465, origin.y + visibleSize.height - 30));
+  _gemLabel->setColor(Color3B(0, 255, 0));  // 绿色
+  _gemLabel->enableOutline(Color4B::BLACK, 2);
+  _gemLabel->enableShadow(Color4B(0, 0, 0, 150), Size(2, -2));
   this->addChild(_gemLabel);
 
-  // ========== 工人状态显示 ==========
-  _workerLabel = Label::createWithTTF("Workers: 1/1", "fonts/Marker Felt.ttf", 24);
-  _workerLabel->setPosition(Vec2(origin.x + 700, origin.y + visibleSize.height - 30));
+  // 4. 工人：图标 + 文字
+  auto workerIcon = Sprite::create("ImageElements/worker_icon.png");
+  if (workerIcon) {
+    workerIcon->setScale(0.5f);
+    workerIcon->setAnchorPoint(Vec2(1, 0.5f));
+    workerIcon->setPosition(Vec2(origin.x + 620, origin.y + visibleSize.height - 30));
+    this->addChild(workerIcon);
+  }
+
+  _workerLabel = Label::createWithTTF("1/1", "fonts/Marker Felt.ttf", 24);
+  _workerLabel->setAnchorPoint(Vec2(0, 0.5f));
+  _workerLabel->setPosition(Vec2(origin.x + 625, origin.y + visibleSize.height - 30));
   _workerLabel->setColor(COLOR_CYAN);
+  _workerLabel->enableOutline(Color4B::BLACK, 2);
+  _workerLabel->enableShadow(Color4B(0, 0, 0, 150), Size(2, -2));
   this->addChild(_workerLabel);
+
 
   // 立即更新一次
   updateWorkerDisplay();
@@ -226,6 +273,21 @@ bool HUDLayer::init() {
   // ========== 设置键盘监听器（用于 ESC 退出）==========
   setupKeyboardListener();
 
+  // ========== 监听资源溢出事件 ==========
+  auto goldOverflowListener = EventListenerCustom::create("EVENT_GOLD_OVERFLOW",
+                                                          [this](EventCustom* event) {
+    CCLOG("HUDLayer: Gold storage overflow!");
+    showTips("金币存储已满！\n请升级储金罐", Color3B::ORANGE);
+  });
+  _eventDispatcher->addEventListenerWithSceneGraphPriority(goldOverflowListener, this);
+
+  auto elixirOverflowListener = EventListenerCustom::create("EVENT_ELIXIR_OVERFLOW",
+                                                            [this](EventCustom* event) {
+    CCLOG("HUDLayer: Elixir storage overflow!");
+    showTips("圣水存储已满！\n请升级圣水瓶", Color3B::ORANGE);
+  });
+  _eventDispatcher->addEventListenerWithSceneGraphPriority(elixirOverflowListener, this);
+
   return true;
 }
 
@@ -271,14 +333,18 @@ void HUDLayer::updateResourceDisplay(int gold, int elixir) {
   auto dataManager = VillageDataManager::getInstance();
   int gem = dataManager->getGem();
 
+  // 获取存储上限
+  int goldCap = dataManager->getGoldStorageCapacity();
+  int elixirCap = dataManager->getElixirStorageCapacity();
+
   if (_goldLabel) {
-    _goldLabel->setString(StringUtils::format("Gold: %d", gold));
+    _goldLabel->setString(StringUtils::format("%d/%d", gold, goldCap));
   }
   if (_elixirLabel) {
-    _elixirLabel->setString(StringUtils::format("Elixir: %d", elixir));
+    _elixirLabel->setString(StringUtils::format("%d/%d", elixir, elixirCap));
   }
   if (_gemLabel) {
-    _gemLabel->setString(StringUtils::format("Gem: %d", gem));
+    _gemLabel->setString(StringUtils::format("%d", gem));  // 宝石无上限
   }
 }
 
@@ -869,7 +935,7 @@ void HUDLayer::updateWorkerDisplay() {
   int total = dataManager->getTotalWorkers();
 
   // 显示格式："Workers: 空闲/总数"
-  std::string text = StringUtils::format("Workers: %d/%d", idle, total);
+  std::string text = StringUtils::format("%d/%d", idle, total);
   _workerLabel->setString(text);
 
   // 根据工人状态动态改变颜色

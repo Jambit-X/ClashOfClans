@@ -23,17 +23,6 @@ public:
   using ResourceCallback = std::function<void(int gold, int elixir)>;
   void setResourceCallback(ResourceCallback callback);
 
-  // ========== 待收集资源接口 ==========
-  int getPendingGold() const;
-  int getPendingElixir() const;
-  void collectGold();
-  void collectElixir();
-
-  int getGoldStorageCapacity() const;
-  int getElixirStorageCapacity() const;
-
-  using PendingResourceCallback = std::function<void(int pendingGold, int pendingElixir)>;
-  void setPendingResourceCallback(PendingResourceCallback callback);
   // 检查并完成所有到期的建造任务
   void checkAndFinishConstructions();
 
@@ -88,13 +77,19 @@ public:
   // 获取所有兵种数据(用于UI显示)
   const std::map<int, int>& getAllTroops() const { return _data.troops; }
 
-  // ========== 资源生产系统 ==========
-  void startResourceProduction();
-  void stopResourceProduction();
-  void updateResourceProduction(float dt);
-  int calculateGoldProductionRate() const;
-  int calculateElixirProductionRate() const;
-  void processOfflineTime();
+  // ========== 资源存储容量接口 ==========
+
+/**
+ * @brief 获取金币存储上限
+ * @return 基础容量(1000) + 所有储金罐的容量总和
+ */
+  int getGoldStorageCapacity() const;
+
+  /**
+   * @brief 获取圣水存储上限
+   * @return 基础容量(1000) + 所有圣水瓶的容量总和
+   */
+  int getElixirStorageCapacity() const;
 
   // ========== 工人系统 ==========
 
@@ -119,15 +114,12 @@ public:
    * @brief 获取空闲工人数量
    */
   int getIdleWorkerCount() const;
+
 private:
   VillageDataManager();
   ~VillageDataManager();
 
   void notifyResourceChanged();
-  void notifyPendingResourceChanged();
-
-  int calculateTotalGoldStorageCapacity() const;
-  int calculateTotalElixirStorageCapacity() const;
 
   static VillageDataManager* _instance;
   VillageData _data;
@@ -136,11 +128,4 @@ private:
   std::vector<std::vector<int>> _gridOccupancy;
 
   ResourceCallback _resourceCallback;
-
-  int _pendingGold;
-  int _pendingElixir;
-  PendingResourceCallback _pendingResourceCallback;
-
-  long long _lastOnlineTime;
-  bool _isProductionRunning;
 };

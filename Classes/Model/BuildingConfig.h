@@ -74,7 +74,8 @@ public:
    * @return 是否可以升级
    */
   bool canUpgrade(int buildingType, int currentLevel) const;
-
+  // 根据等级获取存储容量
+  int getStorageCapacityByLevel(int buildingType, int level) const;
 private:
   BuildingConfig();
   ~BuildingConfig();

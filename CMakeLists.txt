@@ -1,4 +1,4 @@
-#/****************************************************************************
+﻿#/****************************************************************************
 # Copyright (c) 2013-2014 cocos2d-x.org
 # Copyright (c) 2015-2017 Chukong Technologies Inc.
 #
@@ -65,8 +65,6 @@ list(APPEND GAME_SOURCE
      Classes/Controller/MoveBuildingController.cpp
      Classes/Controller/BuildingPlacementController.cpp
      Classes/Controller/BattleProcessController.cpp
-     Classes/Manager/Resource/ResourceCollectionSystem.cpp
-     Classes/Manager/Resource/ResourceManager.cpp
      Classes/Manager/Resource/ResourceProductionSystem.cpp
      Classes/Manager/AnimationManager.cpp
      Classes/Manager/BuildingManager.cpp
@@ -103,8 +101,6 @@ list(APPEND GAME_HEADER
      Classes/Controller/MoveBuildingController.h
      Classes/Controller/BuildingPlacementController.h
      Classes/Controller/BattleProcessController.h
-     Classes/Manager/Resource/ResourceCollectionSystem.h
-     Classes/Manager/Resource/ResourceManager.h
      Classes/Manager/Resource/ResourceProductionSystem.h
      Classes/Manager/AnimationManager.h
      Classes/Manager/BuildingSpeedupManager.h

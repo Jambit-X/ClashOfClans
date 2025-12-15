@@ -282,23 +282,23 @@ void BuildingRequirements::initializeRules() {
     addRule(rule);
   }
 
-  // 迫击炮（3级）- 大本2解锁
-  {
-    BuildingUnlockRule rule;
-    rule.buildingType = 304;
-    rule.minTownHallLevel = 2;
+  //// 迫击炮（3级）- 大本2解锁
+  //{
+  //  BuildingUnlockRule rule;
+  //  rule.buildingType = 304;
+  //  rule.minTownHallLevel = 2;
 
-    // 数量限制
-    rule.thLevelToMaxCount[2] = 1;
-    rule.thLevelToMaxCount[3] = 2;
+  //  // 数量限制
+  //  rule.thLevelToMaxCount[2] = 1;
+  //  rule.thLevelToMaxCount[3] = 2;
 
-    // 等级限制
-    rule.buildingLevelToTH[1] = 2;
-    rule.buildingLevelToTH[2] = 2;
-    rule.buildingLevelToTH[3] = 3;
+  //  // 等级限制
+  //  rule.buildingLevelToTH[1] = 2;
+  //  rule.buildingLevelToTH[2] = 2;
+  //  rule.buildingLevelToTH[3] = 3;
 
-    addRule(rule);
-  }
+  //  addRule(rule);
+  //}
 
   // ==================== 陷阱 ====================
 

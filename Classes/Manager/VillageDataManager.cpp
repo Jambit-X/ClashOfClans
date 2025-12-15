@@ -57,12 +57,42 @@ int VillageDataManager::getElixir() const {
 }
 
 void VillageDataManager::addGold(int amount) {
-  _data.gold += amount;
+  if (amount <= 0) return;
+
+  int maxCapacity = getGoldStorageCapacity();
+  int newAmount = _data.gold + amount;
+
+  if (newAmount > maxCapacity) {
+    _data.gold = maxCapacity;  // 限制在上限
+    CCLOG("VillageDataManager: Gold capacity reached! Max: %d", maxCapacity);
+
+    // 触发溢出事件，通知UI显示提示
+    EventCustom event("EVENT_GOLD_OVERFLOW");
+    Director::getInstance()->getEventDispatcher()->dispatchEvent(&event);
+  } else {
+    _data.gold = newAmount;
+  }
+
   notifyResourceChanged();
 }
 
 void VillageDataManager::addElixir(int amount) {
-  _data.elixir += amount;
+  if (amount <= 0) return;
+
+  int maxCapacity = getElixirStorageCapacity();
+  int newAmount = _data.elixir + amount;
+
+  if (newAmount > maxCapacity) {
+    _data.elixir = maxCapacity;  // 限制在上限
+    CCLOG("VillageDataManager: Elixir capacity reached! Max: %d", maxCapacity);
+
+    // 触发溢出事件，通知UI显示提示
+    EventCustom event("EVENT_ELIXIR_OVERFLOW");
+    Director::getInstance()->getEventDispatcher()->dispatchEvent(&event);
+  } else {
+    _data.elixir = newAmount;
+  }
+
   notifyResourceChanged();
 }
 
@@ -349,6 +379,12 @@ void VillageDataManager::finishNewBuildingConstruction(int id) {
 
   saveToFile("village.json");
 
+  // 如果是存储建筑建造完成，触发资源显示更新
+  if (building->type == 204 || building->type == 205) {
+    CCLOG("VillageDataManager: Storage building constructed, refreshing resource display");
+    notifyResourceChanged();
+  }
+
   Director::getInstance()->getEventDispatcher()->dispatchCustomEvent(
     "EVENT_BUILDING_CONSTRUCTED", &id);
 }
@@ -371,6 +407,11 @@ void VillageDataManager::finishUpgradeBuilding(int id) {
   if (building->type == 1) {  // 大本营 ID = 1
     CCLOG("VillageDataManager: Town Hall upgraded to level %d!", building->level);
     Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("EVENT_TOWNHALL_UPGRADED");
+  }
+  // 如果是存储建筑升级，触发资源显示更新
+  if (building->type == 204 || building->type == 205) {
+    CCLOG("VillageDataManager: Storage building upgraded, refreshing resource display");
+    notifyResourceChanged();
   }
 
   saveToFile("village.json");
@@ -751,4 +792,46 @@ int VillageDataManager::getIdleWorkerCount() const {
 
   // 防止负数
   return (idle < 0) ? 0 : idle;
+}
+
+// ========== 资源存储容量实现 ==========
+
+int VillageDataManager::getGoldStorageCapacity() const {
+  const int BASE_CAPACITY = 100000;  // 基础容量
+  int totalCapacity = BASE_CAPACITY;
+
+  auto config = BuildingConfig::getInstance();
+
+  // 统计所有已建成的储金罐（ID=204）
+  for (const auto& building : _data.buildings) {
+    if (building.type == 204 && building.state == BuildingInstance::State::BUILT) {
+      int capacity = config->getStorageCapacityByLevel(204, building.level);
+      totalCapacity += capacity;
+      CCLOG("VillageDataManager: Gold Storage (level %d) adds %d capacity",
+            building.level, capacity);
+    }
+  }
+
+  CCLOG("VillageDataManager: Total gold capacity = %d", totalCapacity);
+  return totalCapacity;
+}
+
+int VillageDataManager::getElixirStorageCapacity() const {
+  const int BASE_CAPACITY = 100000;  // 基础容量
+  int totalCapacity = BASE_CAPACITY;
+
+  auto config = BuildingConfig::getInstance();
+
+  // 统计所有已建成的圣水瓶（ID=205）
+  for (const auto& building : _data.buildings) {
+    if (building.type == 205 && building.state == BuildingInstance::State::BUILT) {
+      int capacity = config->getStorageCapacityByLevel(205, building.level);
+      totalCapacity += capacity;
+      CCLOG("VillageDataManager: Elixir Storage (level %d) adds %d capacity",
+            building.level, capacity);
+    }
+  }
+
+  CCLOG("VillageDataManager: Total elixir capacity = %d", totalCapacity);
+  return totalCapacity;
 }

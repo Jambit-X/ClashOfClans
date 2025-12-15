@@ -409,3 +409,26 @@ bool BuildingConfig::canUpgrade(int buildingType, int currentLevel) const {
 
   return currentLevel < config->maxLevel;
 }
+
+// ========== 根据等级获取存储容量 ==========
+int BuildingConfig::getStorageCapacityByLevel(int buildingType, int level) const {
+  // 储金罐（204）和圣水瓶（205）的容量表
+  static const std::map<int, int> capacityTable = {
+    {1, 5000},
+    {2, 15000},
+    {3, 50000}
+  };
+
+  if (buildingType != 204 && buildingType != 205) {
+    CCLOG("BuildingConfig: ERROR - Building type %d is not a storage building", buildingType);
+    return 0;
+  }
+
+  auto it = capacityTable.find(level);
+  if (it != capacityTable.end()) {
+    return it->second;
+  }
+
+  CCLOG("BuildingConfig: ERROR - Invalid level %d for storage building", level);
+  return 0;
+}
