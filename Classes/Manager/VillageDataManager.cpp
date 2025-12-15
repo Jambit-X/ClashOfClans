@@ -286,6 +286,8 @@ void VillageDataManager::setBuildingPosition(int id, int gridX, int gridY) {
     updateGridOccupancy();
 
     CCLOG("VillageDataManager: Building ID=%d moved to grid(%d, %d)", id, gridX, gridY);
+    
+    saveToFile("village.json");  // 立即保存位置变更
   }
 }
 

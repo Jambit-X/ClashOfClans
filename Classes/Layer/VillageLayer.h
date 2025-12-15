@@ -2,12 +2,12 @@
 #define __VILLAGE_LAYER_H__
 
 #include "cocos2d.h"
+#include "Sprite/BuildingSprite.h"
 
 // 前向声明
 class MoveMapController;
 class BuildingManager;
 class MoveBuildingController;
-class BuildingSprite;
 
 /**
  * @brief 村庄场景的主要显示层
@@ -22,6 +22,8 @@ private:
   BuildingManager* _buildingManager;
   // 建筑移动控制器
   MoveBuildingController* _moveBuildingController;
+  // 当前选中的建筑（用于选中效果）
+  BuildingSprite* _currentSelectedBuilding = nullptr;
 
 
 public:
@@ -41,7 +43,12 @@ public:
   virtual void cleanup() override;
   void removeBuildingSprite(int buildingId);
   void updateBuildingPreviewPosition(int buildingId, const cocos2d::Vec2& worldPos);
-  void updateBuildingDisplay(int buildingId);  // 新增：更新建筑显示
+  void updateBuildingDisplay(int buildingId);
+
+  // Debug functionality
+  void clearSelectedBuilding();
+  int getSelectedBuildingId() const { return _currentSelectedBuilding ? _currentSelectedBuilding->getBuildingId() : -1; }
+
 
 private:
   // ========== 初始化方法 ==========

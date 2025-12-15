@@ -30,6 +30,10 @@ bool BuildingSprite::init(const BuildingInstance& building) {
   _countdownLabel = nullptr;
   _percentLabel = nullptr;
 
+  // 初始化选中效果成员
+  _selectionGlow = nullptr;
+  _isSelected = false;
+
   loadSprite(_buildingType, _buildingLevel);
 
   // 预先创建 UI 容器（只创建一次）
@@ -293,4 +297,121 @@ void BuildingSprite::setPlacementPreview(bool isValid) {
     this->setColor(cocos2d::Color3B(255, 100, 100));
     this->setOpacity(220);
   }
+}
+
+// ========== 选中效果实现 ==========
+
+void BuildingSprite::createSelectionGlow() {
+  if (_selectionGlow) return;  // 已存在则不重复创建
+
+  _selectionGlow = DrawNode::create();
+  
+  // 获取建筑网格尺寸
+  auto config = BuildingConfig::getInstance()->getConfig(_buildingType);
+  if (!config) return;
+  
+  // [B] 放大尺寸：系数从 1.1 改为 1.4
+  const float GRID_UNIT = 28.0f;
+  float ellipseWidth = config->gridWidth * GRID_UNIT * 1.4f;
+  float ellipseHeight = config->gridHeight * GRID_UNIT * 0.7f;
+  
+  // ========== [D] 外层光晕（更大、更透明）==========
+  const int segments = 48;  // 更多分段，更平滑
+  std::vector<Vec2> outerPoints;
+  float outerWidth = ellipseWidth * 1.3f;   // 外层比内层大30%
+  float outerHeight = ellipseHeight * 1.3f;
+  for (int i = 0; i < segments; ++i) {
+    float angle = (float)i / segments * 2.0f * M_PI;
+    float x = outerWidth * 0.5f * cosf(angle);
+    float y = outerHeight * 0.5f * sinf(angle);
+    outerPoints.push_back(Vec2(x, y));
+  }
+  
+  // 外层：淡金色，更透明
+  _selectionGlow->drawPolygon(
+    outerPoints.data(),
+    segments,
+    Color4F(1.0f, 0.7f, 0.1f, 0.15f),  // 很淡的填充
+    3.0f,                               // 较粗边框
+    Color4F(1.0f, 0.8f, 0.2f, 0.4f)    // 淡边框
+  );
+  
+  // ========== 内层光圈（主体）==========
+  std::vector<Vec2> innerPoints;
+  for (int i = 0; i < segments; ++i) {
+    float angle = (float)i / segments * 2.0f * M_PI;
+    float x = ellipseWidth * 0.5f * cosf(angle);
+    float y = ellipseHeight * 0.5f * sinf(angle);
+    innerPoints.push_back(Vec2(x, y));
+  }
+  
+  // [A] 提高不透明度 + [C] 加粗边框
+  _selectionGlow->drawPolygon(
+    innerPoints.data(),
+    segments,
+    Color4F(1.0f, 0.8f, 0.2f, 0.45f),   // 填充色（更实心）
+    4.0f,                                // 边框宽度（加粗）
+    Color4F(1.0f, 0.9f, 0.3f, 0.9f)     // 边框色（更亮）
+  );
+  
+  // 定位光圈到建筑底部中心
+  auto spriteSize = this->getContentSize();
+  _selectionGlow->setPosition(Vec2(spriteSize.width / 2, ellipseHeight * 0.4f));
+  
+  // 层级低于建筑精灵本体
+  this->addChild(_selectionGlow, -1);
+  _selectionGlow->setVisible(false);
+  
+  CCLOG("BuildingSprite: Selection glow created (ID=%d, size=%.0fx%.0f)", 
+        _buildingId, ellipseWidth, ellipseHeight);
+}
+
+void BuildingSprite::showSelectionEffect() {
+  if (_isSelected) return;  // 避免重复触发
+  _isSelected = true;
+  
+  // 1. 弹跳动画
+  this->stopActionByTag(100);  // 停止之前的弹跳
+  auto bounceUp = ScaleTo::create(0.1f, 1.08f);
+  auto bounceDown = ScaleTo::create(0.1f, 1.0f);
+  auto bounce = Sequence::create(bounceUp, bounceDown, nullptr);
+  bounce->setTag(100);
+  this->runAction(bounce);
+  
+  // 2. 显示光圈（如果不存在则创建）
+  if (!_selectionGlow) {
+    createSelectionGlow();
+  }
+  
+  if (_selectionGlow) {
+    _selectionGlow->setVisible(true);
+    _selectionGlow->setOpacity(255);
+    
+    // 脉冲呼吸动画
+    _selectionGlow->stopActionByTag(101);
+    auto fadeOut = FadeTo::create(0.6f, 150);
+    auto fadeIn = FadeTo::create(0.6f, 255);
+    auto pulse = RepeatForever::create(Sequence::create(fadeOut, fadeIn, nullptr));
+    pulse->setTag(101);
+    _selectionGlow->runAction(pulse);
+  }
+  
+  CCLOG("BuildingSprite: Selection effect shown (ID=%d)", _buildingId);
+}
+
+void BuildingSprite::hideSelectionEffect() {
+  if (!_isSelected) return;
+  _isSelected = false;
+  
+  // 停止弹跳动画
+  this->stopActionByTag(100);
+  this->setScale(1.0f);
+  
+  // 隐藏光圈
+  if (_selectionGlow) {
+    _selectionGlow->stopActionByTag(101);
+    _selectionGlow->setVisible(false);
+  }
+  
+  CCLOG("BuildingSprite: Selection effect hidden (ID=%d)", _buildingId);
 }

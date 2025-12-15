@@ -59,8 +59,9 @@ list(APPEND GAME_SOURCE
      Classes/Layer/BattleMapLayer.cpp
      Classes/Layer/BattleHUDLayer.cpp
      Classes/Layer/BattleResultLayer.cpp
+     Classes/Layer/DebugLayer.cpp
      Classes/Component/ConstructionAnimation.cpp
-    Classes/Layer/TrainingLayer.cpp
+     Classes/Layer/TrainingLayer.cpp
      Classes/Controller/MoveMapController.cpp
      Classes/Controller/MoveBuildingController.cpp
      Classes/Controller/BuildingPlacementController.cpp
@@ -81,6 +82,9 @@ list(APPEND GAME_SOURCE
      Classes/UI/ResourceCollectionUI.cpp
      Classes/Util/GridMapUtils.cpp
      Classes/Util/FindPathUtil.cpp
+     Classes/Util/FindPathUtil.cpp
+     Classes/Util/DebugHelper.cpp
+     Classes/Layer/DebugLayer.cpp
      )
 list(APPEND GAME_HEADER
      ../proj.win32/Constants.h
@@ -95,6 +99,7 @@ list(APPEND GAME_HEADER
      Classes/Layer/BattleMapLayer.h
      Classes/Layer/BattleHUDLayer.h
      Classes/Layer/BattleResultLayer.h
+     Classes/Layer/DebugLayer.h
      Classes/Component/ConstructionAnimation.h
      Classes/Layer/TrainingLayer.h
      Classes/Controller/MoveMapController.h
@@ -118,6 +123,9 @@ list(APPEND GAME_HEADER
      Classes/UI/ResourceCollectionUI.h
      Classes/Util/GridMapUtils.h
      Classes/Util/FindPathUtil.h
+     Classes/Util/FindPathUtil.h
+     Classes/Util/DebugHelper.h
+     Classes/Layer/DebugLayer.h
      )
 
 if(ANDROID)

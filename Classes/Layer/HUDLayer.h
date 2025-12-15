@@ -39,6 +39,7 @@ private:
     cocos2d::Vec2 trainPos;
   };
 
+  static const ButtonLayout LAYOUT_ONE_BUTTON;
   static const ButtonLayout LAYOUT_TWO_BUTTONS;
   static const ButtonLayout LAYOUT_THREE_BUTTONS;
 

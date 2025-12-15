@@ -11,6 +11,9 @@
 #include "Layer/VillageLayer.h"
 #include "Scene/BattleScene.h" 
 
+#include "Scene/BattleScene.h" 
+#include "DebugLayer.h"
+
 USING_NS_CC;
 using namespace ui;
 
@@ -20,6 +23,12 @@ const Color3B COLOR_CYAN = Color3B(0, 255, 255);      // 青色
 const Color3B COLOR_ORANGE = Color3B(255, 165, 0);    // 橙色
 
 //  定义按钮布局配置
+const HUDLayer::ButtonLayout HUDLayer::LAYOUT_ONE_BUTTON = {
+  Vec2(0, 0),     // 信息按钮居中
+  Vec2(0, 0),     // 升级按钮不使用
+  Vec2(0, 0)      // 训练按钮不使用
+};
+
 const HUDLayer::ButtonLayout HUDLayer::LAYOUT_TWO_BUTTONS = {
   Vec2(-80, 0),   // 信息按钮在左
   Vec2(80, 0),    // 升级按钮在右
@@ -288,6 +297,66 @@ bool HUDLayer::init() {
   });
   _eventDispatcher->addEventListenerWithSceneGraphPriority(elixirOverflowListener, this);
 
+  // ========== 调试按钮 - 美化版 ==========
+  // 创建背景容器
+  auto debugBtnBg = LayerColor::create(Color4B(255, 69, 0, 230), 70, 35);  // 橙红色背景，带透明度
+  debugBtnBg->setPosition(Vec2(origin.x + visibleSize.width - 85, origin.y + visibleSize.height - 95));
+  debugBtnBg->setAnchorPoint(Vec2(0, 0));
+  this->addChild(debugBtnBg, 10);
+  
+  // 添加渐变效果
+  auto gradient = LayerGradient::create(
+    Color4B(255, 100, 0, 200),   // 顶部：亮橙色
+    Color4B(200, 30, 0, 200)     // 底部：深橙红色
+  );
+  gradient->setContentSize(Size(70, 35));
+  gradient->setPosition(Vec2::ZERO);
+  debugBtnBg->addChild(gradient);
+  
+  // 创建文字标签
+  auto debugLabel = Label::createWithTTF("DEV", "fonts/Marker Felt.ttf", 22);
+  debugLabel->setPosition(Vec2(35, 17.5));  // 居中
+  debugLabel->setColor(Color3B::WHITE);
+  debugLabel->enableOutline(Color4B(0, 0, 0, 255), 2);  // 黑色描边
+  debugLabel->enableShadow(Color4B(0, 0, 0, 180), Size(2, -2));  // 阴影
+  debugBtnBg->addChild(debugLabel, 1);
+  
+  // 直接给背景层添加触摸监听器
+  auto debugTouchListener = EventListenerTouchOneByOne::create();
+  debugTouchListener->setSwallowTouches(true);
+  
+  debugTouchListener->onTouchBegan = [debugBtnBg, this](Touch* touch, Event* event) {
+      // 检查触摸点是否在按钮范围内
+      Vec2 locationInNode = debugBtnBg->convertToNodeSpace(touch->getLocation());
+      Size size = debugBtnBg->getContentSize();
+      Rect rect = Rect(0, 0, size.width, size.height);
+      
+      if (rect.containsPoint(locationInNode)) {
+          // 点击缩放动画
+          debugBtnBg->runAction(Sequence::create(
+              ScaleTo::create(0.1f, 0.9f),
+              ScaleTo::create(0.1f, 1.0f),
+              CallFunc::create([this]() {
+                  auto debugLayer = DebugLayer::create();
+                  this->getScene()->addChild(debugLayer, 200);
+              }),
+              nullptr
+          ));
+          return true;
+      }
+      return false;
+  };
+  
+  _eventDispatcher->addEventListenerWithSceneGraphPriority(debugTouchListener, debugBtnBg);
+  
+  // 添加呼吸灯效果（循环闪烁）
+  auto breathe = Sequence::create(
+      FadeTo::create(1.0f, 180),
+      FadeTo::create(1.0f, 230),
+      nullptr
+  );
+  debugBtnBg->runAction(RepeatForever::create(breathe));
+
   return true;
 }
 
@@ -538,8 +607,13 @@ void HUDLayer::updateActionButtons(int buildingId) {
   auto config = configMgr->getConfig(buildingInstance->type);
   if (!config) return;
 
-  // 更新建筑名称
-  std::string title = config->name + " (" + std::to_string(buildingInstance->level) + "级)";
+  // 更新建筑名称（建筑工人小屋不显示等级）
+  std::string title;
+  if (buildingInstance->type == 201) {  // 建筑工人小屋
+    title = config->name;  // 不显示等级
+  } else {
+    title = config->name + " (" + std::to_string(buildingInstance->level) + "级)";
+  }
   _buildingNameLabel->setString(title);
 
   // ========== 根据状态切换按钮 ==========
@@ -599,6 +673,11 @@ void HUDLayer::updateActionButtons(int buildingId) {
         _btnUpgrade->setOpacity(255);
       }
     }
+    // ========== 建筑工人小屋特殊处理（不能升级）==========
+    else if (buildingInstance->type == 201) {
+      _btnUpgrade->setVisible(false);
+      _upgradeCostLabel->setVisible(false);
+    }
     // ========== 其他建筑的通用处理 ==========
     else {
       if (buildingInstance->level >= 3) {
@@ -654,12 +733,23 @@ void HUDLayer::updateActionButtons(int buildingId) {
   bool canTrain = (buildingInstance->type == 101 || buildingInstance->type == 102);
   _btnTrain->setVisible(canTrain);
 
-  const ButtonLayout& layout = canTrain ? LAYOUT_THREE_BUTTONS : LAYOUT_TWO_BUTTONS;
+  // ========== 选择布局模板 ==========
+  const ButtonLayout* layout;
+  if (buildingInstance->type == 201) {
+    // 建筑工人小屋：只有信息按钮，居中显示
+    layout = &LAYOUT_ONE_BUTTON;
+  } else if (canTrain) {
+    // 兵营/法术工厂：信息 + 升级 + 训练
+    layout = &LAYOUT_THREE_BUTTONS;
+  } else {
+    // 其他建筑：信息 + 升级
+    layout = &LAYOUT_TWO_BUTTONS;
+  }
 
-  _btnInfo->setPosition(layout.infoPos);
-  _btnUpgrade->setPosition(layout.upgradePos);
-  _btnSpeedup->setPosition(layout.upgradePos);
-  _btnTrain->setPosition(layout.trainPos);
+  _btnInfo->setPosition(layout->infoPos);
+  _btnUpgrade->setPosition(layout->upgradePos);
+  _btnSpeedup->setPosition(layout->upgradePos);
+  _btnTrain->setPosition(layout->trainPos);
 }
 
 //  新增：加速按钮回调

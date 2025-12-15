@@ -40,13 +40,25 @@ bool VillageLayer::init() {
   _moveBuildingController->setOnBuildingTappedCallback([this](int buildingId) {
       CCLOG("VillageLayer: Building tapped ID=%d, showing menu", buildingId);
     
+      // === 处理选中效果 ===
+      auto tappedBuilding = _buildingManager->getBuildingSprite(buildingId);
+      if (tappedBuilding) {
+          // 隐藏之前选中建筑的效果
+          if (_currentSelectedBuilding && _currentSelectedBuilding != tappedBuilding) {
+              _currentSelectedBuilding->hideSelectionEffect();
+          }
+          // 显示当前建筑选中效果
+          tappedBuilding->showSelectionEffect();
+          _currentSelectedBuilding = tappedBuilding;
+      }
+
       // 获取 HUD 层并显示菜单
-   auto scene = this->getScene();
+      auto scene = this->getScene();
       if (scene) {
           auto hudLayer = dynamic_cast<HUDLayer*>(scene->getChildByTag(100));
-   if (hudLayer) {
-        hudLayer->showBuildingActions(buildingId);
-        }
+          if (hudLayer) {
+              hudLayer->showBuildingActions(buildingId);
+          }
       }
   });
 
@@ -219,9 +231,14 @@ void VillageLayer::setupInputCallbacks() {
             return TapTarget::BUILDING;
         }
 
-        // --- 如果点击了空白处 -> 隐藏底部菜单 ---
+        // --- 如果点击了空白处 -> 隐藏底部菜单和选中效果 ---
         if (hudLayer) {
             hudLayer->hideBuildingActions();
+        }
+        // 隐藏之前选中建筑的效果
+        if (_currentSelectedBuilding) {
+            _currentSelectedBuilding->hideSelectionEffect();
+            _currentSelectedBuilding = nullptr;
         }
         // ---------------------------------------------
 
@@ -246,6 +263,15 @@ void VillageLayer::setupInputCallbacks() {
       if (building) {
         int buildingId = building->getBuildingId();
         CCLOG("VillageLayer: Building selected ID=%d", buildingId);
+
+        // === 处理选中效果 ===
+        // 隐藏之前选中建筑的效果
+        if (_currentSelectedBuilding && _currentSelectedBuilding != building) {
+            _currentSelectedBuilding->hideSelectionEffect();
+        }
+        // 显示当前建筑选中效果
+        building->showSelectionEffect();
+        _currentSelectedBuilding = building;
 
         auto dataManager = VillageDataManager::getInstance();
         auto buildingData = dataManager->getBuildingById(buildingId);
@@ -273,6 +299,14 @@ void VillageLayer::setupInputCallbacks() {
 
 void VillageLayer::removeBuildingSprite(int buildingId) {
   if (_buildingManager) {
+    // 检查是否是当前选中的建筑，如果是就清除选中状态（避免光圈残留！）
+    auto sprite = _buildingManager->getBuildingSprite(buildingId);
+    if (sprite && _currentSelectedBuilding == sprite) {
+      _currentSelectedBuilding->hideSelectionEffect();
+      _currentSelectedBuilding = nullptr;
+      CCLOG("VillageLayer: Cleared selection for deleted building ID=%d", buildingId);
+    }
+    
     _buildingManager->removeBuildingSprite(buildingId);
     CCLOG("VillageLayer: Removed building sprite ID=%d", buildingId);
   }
@@ -285,6 +319,14 @@ void VillageLayer::updateBuildingDisplay(int buildingId) {
   if (building && _buildingManager) {
     _buildingManager->updateBuilding(buildingId, *building);
     CCLOG("VillageLayer: Updated building display for ID=%d", buildingId);
+  }
+}
+
+void VillageLayer::clearSelectedBuilding() {
+  if (_currentSelectedBuilding) {
+    _currentSelectedBuilding->hideSelectionEffect();
+    _currentSelectedBuilding = nullptr;
+    CCLOG("VillageLayer: Cleared selected building");
   }
 }
 

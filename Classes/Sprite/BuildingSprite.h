@@ -32,6 +32,11 @@ public:
   void setPlacementPreview(bool isValid);
   void clearPlacementPreview();
 
+  // 选中效果
+  void showSelectionEffect();   // 显示选中效果（弹跳 + 光圈）
+  void hideSelectionEffect();   // 隐藏选中效果
+  bool isSelected() const { return _isSelected; }
+
   // Getter
   int getBuildingId() const { return _buildingId; }
   int getBuildingType() const { return _buildingType; }
@@ -48,6 +53,9 @@ private:
   void showConstructionUI();    // 显示建造 UI
   void hideConstructionUI();    // 隐藏建造 UI
 
+  // 选中效果辅助方法
+  void createSelectionGlow();   // 创建光圈
+
   int _buildingId;
   int _buildingType;
   int _buildingLevel;
@@ -63,4 +71,8 @@ private:
   cocos2d::ProgressTimer* _progressBar;     // 进度条
   cocos2d::Label* _countdownLabel;          // 倒计时
   cocos2d::Label* _percentLabel;            // 百分比标签
+
+  // 选中效果
+  cocos2d::DrawNode* _selectionGlow;        // 底部光圈
+  bool _isSelected;                          // 选中状态
 };
