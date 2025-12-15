@@ -2,7 +2,7 @@
 #define __FIND_PATH_UTIL_H__
 
 #include "cocos2d.h"
-#include "../Model/VillageData.h"  //  修正：引用 BuildingInstance 定义
+#include "../Model/VillageData.h"
 #include <vector>
 #include <unordered_map>
 
@@ -25,6 +25,9 @@ public:
     // 输出：一系列世界坐标点（路径），如果无法到达返回空
     // =============================================================
     std::vector<cocos2d::Vec2> findPathToAttackBuilding(const cocos2d::Vec2& unitWorldPos, const BuildingInstance& targetBuilding);
+
+    // 计算"破墙路径"的长度（把城墙当作可通行）
+    std::vector<cocos2d::Vec2> findPathIgnoringWalls(const cocos2d::Vec2& startWorldPos, const cocos2d::Vec2& endWorldPos);
 
     // 重新同步地图数据（当建筑位置改变时调用）
     void updatePathfindingMap();
@@ -57,7 +60,7 @@ private:
     std::vector<bool> _closedSet;       // 已访问集合
     
     // 内部 A* 算法实现
-    std::vector<cocos2d::Vec2> aStarSearch(int startX, int startY, int endX, int endY);
+    std::vector<cocos2d::Vec2> aStarSearch(int startX, int startY, int endX, int endY, bool ignoreWalls = false);
 
     // 启发式函数
     int heuristic(int x1, int y1, int x2, int y2) const;

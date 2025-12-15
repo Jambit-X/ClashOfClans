@@ -21,6 +21,10 @@ struct BuildingInstance {
 
   // 新增：是否为首次建造（用于区分新建筑和升级）
   bool isInitialConstruction;
+  
+  // ========== 战斗系统：运行时血量 ==========
+  int currentHP;  // 当前血量（战斗时使用，初始值=配置的hitPoints）
+  // =========================================
 };
 
 struct VillageData {
