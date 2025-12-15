@@ -32,7 +32,7 @@ void AnimationManager::destroyInstance() {
   }
 }
 
-// ×ÊÔ´¼ÓÔØ
+// èµ„æºåŠ è½½
 void AnimationManager::loadSpriteFrames(const std::string& plistFile) {
   auto cache = SpriteFrameCache::getInstance();
   cache->addSpriteFramesWithFile(plistFile);
@@ -43,10 +43,10 @@ void AnimationManager::loadSpriteFrames(const std::string& plistFile) {
 void AnimationManager::preloadBattleAnimations() {
   CCLOG("AnimationManager: Preloading battle animations...");
 
-  // Ô¤¼ÓÔØÒ°ÂùÈË¶¯»­
+  // é¢„åŠ è½½é‡è›®äººåŠ¨ç”»
   loadSpriteFrames("Animation/troop/barbarian/barbarian.plist");
 
-  // Ô¤¼ÓÔØ¼ÓÅ©ÅÚ¶¯»­
+  // é¢„åŠ è½½åŠ å†œç‚®åŠ¨ç”»
   // loadSpriteFrames("Animation/cannon/cannon.plist");
 
   CCLOG("AnimationManager: All battle animations preloaded");
@@ -61,7 +61,7 @@ void AnimationManager::unloadSpriteFrames(const std::string& plistFile) {
   }
 }
 
-// ¶¯»­´´½¨
+// åŠ¨ç”»åˆ›å»º
 Animation* AnimationManager::createAnimation(const std::string& unitType, AnimationType animType) {
   std::string key = getConfigKey(unitType, animType);
   auto it = _animConfigs.find(key);
@@ -73,13 +73,13 @@ Animation* AnimationManager::createAnimation(const std::string& unitType, Animat
 
   const AnimationConfig& config = it->second;
 
-  // ´´½¨Ö¡ĞòÁĞ£¨Ê¹ÓÃ startFrame ºÍ frameCount£©
+  // åˆ›å»ºå¸§åºåˆ—ï¼ˆä½¿ç”¨ startFrame å’Œ frameCountï¼‰
   Vector<SpriteFrame*> frames;
   auto cache = SpriteFrameCache::getInstance();
 
   for (int i = 0; i < config.frameCount; ++i) {
     int frameIndex = config.startFrame + i;
-    // Æ¥ÅäÊµ¼Ê¸ñÊ½£ºbarbarian25.0.png, barbarian26.0.png, ...
+    // åŒ¹é…å®é™…æ ¼å¼ï¼šbarbarian25.0.png, barbarian26.0.png, ...
     std::string frameName = config.framePrefix + StringUtils::format("%d.0.png", frameIndex);
 
     SpriteFrame* frame = cache->getSpriteFrameByName(frameName);
@@ -125,7 +125,7 @@ Animate* AnimationManager::createOnceAnimate(const std::string& unitType, Animat
   return Animate::create(animation);
 }
 
-// ÅäÖÃ¹ÜÀí
+// é…ç½®ç®¡ç†
 void AnimationManager::registerAnimationConfig(
   const std::string& unitType,
   AnimationType animType,
@@ -140,44 +140,44 @@ void AnimationManager::registerAnimationConfig(
 void AnimationManager::initializeDefaultConfigs() {
   CCLOG("AnimationManager: Initializing default animation configs...");
 
-  // Ò°ÂùÈË¶¯»­ÅäÖÃ
+  // é‡è›®äººåŠ¨ç”»é…ç½®
 
-  // ´ı»ú¶¯»­£ºÖ¡ 25-27
+  // å¾…æœºåŠ¨ç”»ï¼šå¸§ 25-27
   registerAnimationConfig("Barbarian", AnimationType::IDLE, {
       "barbarian", 25, 1, 0.3f, true
                           });
 
-  // ÏòÓÒĞĞ×ß£ºÖ¡ 9-16
+  // å‘å³è¡Œèµ°ï¼šå¸§ 9-16
   registerAnimationConfig("Barbarian", AnimationType::WALK, {
       "barbarian", 9, 8, 0.1f, true
                           });
 
-  // ÏòÓÒÉÏĞĞ×ß£ºÖ¡ 17-24
+  // å‘å³ä¸Šè¡Œèµ°ï¼šå¸§ 17-24
   registerAnimationConfig("Barbarian", AnimationType::WALK_UP, {
       "barbarian", 17, 8, 0.1f, true
                           });
 
-  // ÏòÓÒÏÂĞĞ×ß£ºÖ¡ 1-8
+  // å‘å³ä¸‹è¡Œèµ°ï¼šå¸§ 1-8
   registerAnimationConfig("Barbarian", AnimationType::WALK_DOWN, {
       "barbarian", 1, 8, 0.1f, true
                           });
 
-  // ÏòÓÒ¹¥»÷£ºÖ¡ 66-76
+  // å‘å³æ”»å‡»ï¼šå¸§ 66-76
   registerAnimationConfig("Barbarian", AnimationType::ATTACK, {
       "barbarian", 66, 10, 0.12f, false
                           });
 
-  // ÏòÓÒÉÏ¹¥»÷£ºÖ¡ 164-174
+  // å‘å³ä¸Šæ”»å‡»ï¼šå¸§ 164-174
   registerAnimationConfig("Barbarian", AnimationType::ATTACK_UP, {
       "barbarian", 164, 11, 0.12f, false
                           });
 
-  // ÏòÓÒÏÂ¹¥»÷£ºÖ¡ 142-152
+  // å‘å³ä¸‹æ”»å‡»ï¼šå¸§ 142-152
   registerAnimationConfig("Barbarian", AnimationType::ATTACK_DOWN, {
       "barbarian", 142, 11, 0.12f, false
                           });
 
-  // ËÀÍö¶¯»­£ºÖ¡ 175-176
+  // æ­»äº¡åŠ¨ç”»ï¼šå¸§ 175-176
   registerAnimationConfig("Barbarian", AnimationType::DEATH, {
       "barbarian", 175, 2, 0.5f, false
                           });

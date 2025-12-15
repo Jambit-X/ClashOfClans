@@ -3,9 +3,10 @@
 #include "Layer/BattleHUDLayer.h"
 #include "Layer/BattleResultLayer.h"
 #include "Scene/VillageScene.h"
-#include"Layer/BattleTroopLayer.h"
-#include"Util/FindPathUtil.h"
-#include"Util/GridMapUtils.h"
+#include "Layer/BattleTroopLayer.h"
+#include "Controller/BattleProcessController.h"
+#include "Util/FindPathUtil.h"
+#include "Util/GridMapUtils.h"
 
 USING_NS_CC;
 
@@ -60,9 +61,15 @@ bool BattleScene::init() {
 
     // 4. 加载敌人数据
     loadEnemyVillage();
+    
+    // ========== 关键修复：更新寻路地图 ==========
+    FindPathUtil::getInstance()->updatePathfindingMap();
+    CCLOG("BattleScene: Pathfinding map updated for battle");
+    // ===========================================
+    
     switchState(BattleState::PREPARE);
 
-    // 5. 启动时执行一次“进入动画”（延迟一下再淡出，让玩家看清搜索云层）
+    // 5. 启动时执行一次"进入动画"（延迟一下再淡出，让玩家看清搜索云层）
     float randomStartDelay = cocos2d::RandomHelper::random_real(0.5f, 1.0f);
     this->scheduleOnce([this](float) {
         performCloudTransition(nullptr, true);
@@ -267,13 +274,13 @@ void BattleScene::onTouchMoved(cocos2d::Touch* touch, cocos2d::Event* event) {
 void BattleScene::onTouchEnded(cocos2d::Touch* touch, cocos2d::Event* event) {
     // 如果没有选中兵种，不处理
     if (!_hudLayer || _hudLayer->getSelectedTroopId() == -1) {
-      return;
+        return;
     }
     
-  // 如果是拖动操作，取消兵种选择并允许地图拖动
+    // 如果是拖动操作，取消兵种选择并允许地图拖动
     if (_isTouchMoving) {
-      CCLOG("BattleScene: Drag detected, deselecting troop");
-   _hudLayer->clearTroopSelection(); // 新增方法：清除兵种选择
+        CCLOG("BattleScene: Drag detected, deselecting troop");
+        _hudLayer->clearTroopSelection();
         return;
     }
     
@@ -286,47 +293,49 @@ void BattleScene::onTouchEnded(cocos2d::Touch* touch, cocos2d::Event* event) {
         return;
     }
 
- CCLOG("BattleScene: Tap detected, spawning troop");
+    CCLOG("BattleScene: Tap detected, spawning troop");
 
     // 2. 转换坐标
     Vec2 worldPos = _mapLayer->convertToNodeSpace(touchPos);
-Vec2 gridPos = GridMapUtils::pixelToGrid(worldPos);
- int gx = (int)std::round(gridPos.x);
- int gy = (int)std::round(gridPos.y);
+    Vec2 gridPos = GridMapUtils::pixelToGrid(worldPos);
+    int gx = (int)std::round(gridPos.x);
+    int gy = (int)std::round(gridPos.y);
 
     CCLOG("BattleScene: Touch at grid(%d, %d)", gx, gy);
 
     // 3. 简单的边界检查 (红线逻辑以后再细化)
     if (!GridMapUtils::isValidGridPosition(gx, gy)) {
         CCLOG("BattleScene: Invalid grid position, ignoring");
-     return;
+        return;
     }
 
     // 4. 生成士兵并启动 AI
- auto troopLayer = dynamic_cast<BattleTroopLayer*>(_mapLayer->getChildByTag(999));
+    auto troopLayer = dynamic_cast<BattleTroopLayer*>(_mapLayer->getChildByTag(999));
     if (troopLayer) {
         int troopId = _hudLayer->getSelectedTroopId();
 
-   // 简单映射名称 (实际项目应用配置表)
- std::string name = "Barbarian";
+        // 简单映射名称 (实际项目应用配置表)
+        std::string name = "Barbarian";
         if (troopId == 1002) name = "Archer";
 
         CCLOG("BattleScene: Spawning %s at grid(%d, %d)", name.c_str(), gx, gy);
         auto unit = troopLayer->spawnUnit(name, gx, gy);
- if (unit) {
-            troopLayer->startUnitAI(unit); // 【这里直接调用AI】
+        if (unit) {
+            // 【修改】使用 BattleProcessController 启动AI
+            auto controller = BattleProcessController::getInstance();
+            controller->startUnitAI(unit, troopLayer);
 
-      // 5. 自动切换到战斗状态
+            // 5. 自动切换到战斗状态
             if (_currentState == BattleState::PREPARE) {
-     CCLOG("BattleScene: Switching from PREPARE to FIGHTING");
-        switchState(BattleState::FIGHTING);
-          }
+                CCLOG("BattleScene: Switching from PREPARE to FIGHTING");
+                switchState(BattleState::FIGHTING);
+            }
             
-         // 6. 下兵成功后，保持兵种选择状态（用户可以继续下兵）
-    // 如果想要自动取消选择，可以调用：
-         // _hudLayer->clearTroopSelection();
-    } else {
-  CCLOG("BattleScene: Failed to spawn unit");
+            // 6. 下兵成功后，保持兵种选择状态（用户可以继续下兵）
+            // 如果想要自动取消选择，可以调用：
+            // _hudLayer->clearTroopSelection();
+        } else {
+            CCLOG("BattleScene: Failed to spawn unit");
         }
     } else {
         CCLOG("BattleScene: TroopLayer not found!");
