@@ -1,4 +1,4 @@
-#ifndef __TRAINING_LAYER_H__
+﻿#ifndef __TRAINING_LAYER_H__
 #define __TRAINING_LAYER_H__
 
 #include "cocos2d.h"

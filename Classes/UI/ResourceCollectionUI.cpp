@@ -1,4 +1,4 @@
-#pragma execution_character_set("utf-8")
+ï»¿#pragma execution_character_set("utf-8")
 #include "ResourceCollectionUI.h"
 #include "Manager/Resource/ResourceProductionSystem.h"
 
@@ -22,50 +22,50 @@ bool ResourceCollectionUI::init() {
     return false;
   }
 
-  // ? ³õÊ¼»¯ÓĞĞ§±êÖ¾
+  // ? åˆå§‹åŒ–æœ‰æ•ˆæ ‡å¿—
   _isValid = std::make_shared<bool>(true);
 
   initButtons();
 
-  // ? ĞŞ¸´£º²»²¶»ñ this£¬¶øÊÇ²¶»ñ shared_ptr ²¢Í¨¹ıËüÀ´·ÃÎÊ³ÉÔ±
+  // ? ä¿®å¤ï¼šä¸æ•è· thisï¼Œè€Œæ˜¯æ•è· shared_ptr å¹¶é€šè¿‡å®ƒæ¥è®¿é—®æˆå‘˜
   auto productionSystem = ResourceProductionSystem::getInstance();
   
-  // ²¶»ñ³ÉÔ±±äÁ¿µÄ shared_ptr ÒıÓÃ£¬¶ø²»ÊÇ this
+  // æ•è·æˆå‘˜å˜é‡çš„ shared_ptr å¼•ç”¨ï¼Œè€Œä¸æ˜¯ this
   std::weak_ptr<bool> weakValid = _isValid;
-  cocos2d::Label* goldLabel = _pendingGoldLabel;  // ²¶»ñÔ­Ê¼Ö¸Õë
+  cocos2d::Label* goldLabel = _pendingGoldLabel;  // æ•è·åŸå§‹æŒ‡é’ˆ
   cocos2d::Label* elixirLabel = _pendingElixirLabel;
   cocos2d::ui::Button* goldBtn = _collectGoldBtn;
   cocos2d::ui::Button* elixirBtn = _collectElixirBtn;
   
   productionSystem->setPendingResourceCallback([weakValid, goldLabel, elixirLabel, goldBtn, elixirBtn](int gold, int elixir) {
-    // ? ¼ì²é¶ÔÏóÊÇ·ñÈÔÈ»ÓĞĞ§
+    // ? æ£€æŸ¥å¯¹è±¡æ˜¯å¦ä»ç„¶æœ‰æ•ˆ
     auto valid = weakValid.lock();
   if (!valid || !*valid) {
     CCLOG("ResourceCollectionUI: Callback ignored - object already destroyed");
     return;
     }
   
-    // ? ÔÚ·ÃÎÊ Cocos2d ¶ÔÏóÇ°¼ì²éËüÃÇÊÇ·ñ»¹´æÔÚÓÚäÖÈ¾Ê÷ÖĞ
-    // Èç¹û¶ÔÏóÒÑ¾­±» removeFromParent()£¬getReferenceCount() ¿ÉÄÜÎª 0
+    // ? åœ¨è®¿é—® Cocos2d å¯¹è±¡å‰æ£€æŸ¥å®ƒä»¬æ˜¯å¦è¿˜å­˜åœ¨äºæ¸²æŸ“æ ‘ä¸­
+    // å¦‚æœå¯¹è±¡å·²ç»è¢« removeFromParent()ï¼ŒgetReferenceCount() å¯èƒ½ä¸º 0
     if (!goldLabel || !elixirLabel || !goldBtn || !elixirBtn) {
       CCLOG("ResourceCollectionUI: Callback ignored - UI elements null");
       return;
     }
     
-    // ? ÔÙ´Î¼ì²éÒıÓÃ¼ÆÊı£¬È·±£¶ÔÏóÈÔÈ»ÓĞĞ§
+    // ? å†æ¬¡æ£€æŸ¥å¼•ç”¨è®¡æ•°ï¼Œç¡®ä¿å¯¹è±¡ä»ç„¶æœ‰æ•ˆ
     if (goldLabel->getReferenceCount() == 0 || elixirLabel->getReferenceCount() == 0) {
       CCLOG("ResourceCollectionUI: Callback ignored - UI elements released");
       return;
     }
     
-    // °²È«µØ¸üĞÂÏÔÊ¾£¨ÄÚÁª updateDisplay µÄÂß¼­ÒÔ±ÜÃâµ÷ÓÃ this£©
+    // å®‰å…¨åœ°æ›´æ–°æ˜¾ç¤ºï¼ˆå†…è” updateDisplay çš„é€»è¾‘ä»¥é¿å…è°ƒç”¨ thisï¼‰
     auto prodSystem = ResourceProductionSystem::getInstance();
     if (!prodSystem) return;
 
     int goldCapacity = prodSystem->getGoldStorageCapacity();
     int elixirCapacity = prodSystem->getElixirStorageCapacity();
 
- // ¸üĞÂ½ğ±ÒÏÔÊ¾
+ // æ›´æ–°é‡‘å¸æ˜¾ç¤º
     if (goldLabel && goldLabel->getReferenceCount() > 0) {
   goldLabel->setString(cocos2d::StringUtils::format("+%d/%d", gold, goldCapacity));
 
@@ -95,7 +95,7 @@ bool ResourceCollectionUI::init() {
       }
   }
 
-    // ¸üĞÂÊ¥Ë®ÏÔÊ¾
+    // æ›´æ–°åœ£æ°´æ˜¾ç¤º
     if (elixirLabel && elixirLabel->getReferenceCount() > 0) {
       elixirLabel->setString(cocos2d::StringUtils::format("+%d/%d", elixir, elixirCapacity));
 
@@ -126,7 +126,7 @@ bool ResourceCollectionUI::init() {
     }
   });
 
-  // ³õÊ¼»¯ÏÔÊ¾
+  // åˆå§‹åŒ–æ˜¾ç¤º
   updateDisplay(productionSystem->getPendingGold(), productionSystem->getPendingElixir());
 
   return true;
@@ -135,13 +135,13 @@ bool ResourceCollectionUI::init() {
 void ResourceCollectionUI::onExit() {
   CCLOG("ResourceCollectionUI::onExit - Cleaning up");
   
-  // ? ±ê¼Ç¶ÔÏóÒÑÎŞĞ§ - Õâ»á×èÖ¹»Øµ÷¼ÌĞøÖ´ĞĞ
+  // ? æ ‡è®°å¯¹è±¡å·²æ— æ•ˆ - è¿™ä¼šé˜»æ­¢å›è°ƒç»§ç»­æ‰§è¡Œ
   if (_isValid) {
     *_isValid = false;
     CCLOG("ResourceCollectionUI::onExit - Marked as invalid");
   }
   
-  // ? Çå³ıËùÓĞ¶¯»­£¬±ÜÃâ»Øµ÷ÔÚ¶¯»­ÖĞ´¥·¢
+  // ? æ¸…é™¤æ‰€æœ‰åŠ¨ç”»ï¼Œé¿å…å›è°ƒåœ¨åŠ¨ç”»ä¸­è§¦å‘
   if (_pendingGoldLabel) {
     _pendingGoldLabel->stopAllActions();
   }
@@ -149,13 +149,13 @@ void ResourceCollectionUI::onExit() {
     _pendingElixirLabel->stopAllActions();
   }
   
-  // ? Çå³ı»Øµ÷£¬·ÀÖ¹¶ÔÏóÏú»ÙºóÈÔ±»µ÷ÓÃ
-  // ×¢Òâ£ºÕâÀï¿ÉÄÜÓĞ¾ºÌ¬Ìõ¼ş£¬Èç¹ûĞÂµÄ ResourceCollectionUI »¹Ã»ÉèÖÃ»Øµ÷
-  // ËùÒÔÎÒÃÇÏÈ¼ì²éµ±Ç°»Øµ÷ÊÇ·ñÊÇ"ÎÒÃÇµÄ"
+  // ? æ¸…é™¤å›è°ƒï¼Œé˜²æ­¢å¯¹è±¡é”€æ¯åä»è¢«è°ƒç”¨
+  // æ³¨æ„ï¼šè¿™é‡Œå¯èƒ½æœ‰ç«æ€æ¡ä»¶ï¼Œå¦‚æœæ–°çš„ ResourceCollectionUI è¿˜æ²¡è®¾ç½®å›è°ƒ
+  // æ‰€ä»¥æˆ‘ä»¬å…ˆæ£€æŸ¥å½“å‰å›è°ƒæ˜¯å¦æ˜¯"æˆ‘ä»¬çš„"
   auto productionSystem = ResourceProductionSystem::getInstance();
   if (productionSystem) {
-    // ÎªÁË°²È«Æğ¼û£¬Ö±½ÓÉèÎª nullptr
-    // ĞÂµÄ ResourceCollectionUI »áÔÚ init() ÖĞÖØĞÂÉèÖÃ»Øµ÷
+    // ä¸ºäº†å®‰å…¨èµ·è§ï¼Œç›´æ¥è®¾ä¸º nullptr
+    // æ–°çš„ ResourceCollectionUI ä¼šåœ¨ init() ä¸­é‡æ–°è®¾ç½®å›è°ƒ
     productionSystem->setPendingResourceCallback(nullptr);
     CCLOG("ResourceCollectionUI::onExit - Cleared callback");
   }
@@ -167,9 +167,9 @@ void ResourceCollectionUI::initButtons() {
   auto visibleSize = Director::getInstance()->getVisibleSize();
   Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
-  // ½ğ±ÒÊÕ¼¯°´Å¥
+  // é‡‘å¸æ”¶é›†æŒ‰é’®
   _collectGoldBtn = Button::create();
-  _collectGoldBtn->setTitleText("ÊÕ¼¯½ğ±Ò");
+  _collectGoldBtn->setTitleText("æ”¶é›†é‡‘å¸");
   _collectGoldBtn->setTitleFontName(FONT_PATH);
   _collectGoldBtn->setTitleFontSize(18);
   _collectGoldBtn->setTitleColor(Color3B::YELLOW);
@@ -189,9 +189,9 @@ void ResourceCollectionUI::initButtons() {
   _pendingGoldLabel->setPosition(Vec2(130, visibleSize.height - 125));
   this->addChild(_pendingGoldLabel);
 
-  // Ê¥Ë®ÊÕ¼¯°´Å¥
+  // åœ£æ°´æ”¶é›†æŒ‰é’®
   _collectElixirBtn = Button::create();
-  _collectElixirBtn->setTitleText("ÊÕ¼¯Ê¥Ë®");
+  _collectElixirBtn->setTitleText("æ”¶é›†åœ£æ°´");
   _collectElixirBtn->setTitleFontName(FONT_PATH);
   _collectElixirBtn->setTitleFontSize(18);
   _collectElixirBtn->setTitleColor(Color3B::MAGENTA);
@@ -219,14 +219,14 @@ void ResourceCollectionUI::onCollectGold() {
   if (pendingGold > 0) {
     productionSystem->collectGold();
 
-    // ¶¯»­Ğ§¹û
+    // åŠ¨ç”»æ•ˆæœ
     _collectGoldBtn->runAction(Sequence::create(
       ScaleTo::create(0.1f, 1.2f),
       ScaleTo::create(0.1f, 1.0f),
       nullptr
     ));
 
-    // ? ĞŞ¸´£ºÆ®×ÖĞ§¹û - ¼ì²é¸¸½ÚµãÓĞĞ§ĞÔ
+    // ? ä¿®å¤ï¼šé£˜å­—æ•ˆæœ - æ£€æŸ¥çˆ¶èŠ‚ç‚¹æœ‰æ•ˆæ€§
     auto parent = this->getParent();
     if (!parent) {
       CCLOG("ResourceCollectionUI::onCollectGold - Parent is null, skip floating text");
@@ -239,7 +239,7 @@ void ResourceCollectionUI::onCollectGold() {
     label->setPosition(_collectGoldBtn->getPosition() + Vec2(0, 40));
     parent->addChild(label, 100);
 
-    // ? Ê¹ÓÃ retain/release ±£»¤¶¯»­Ö´ĞĞ
+    // ? ä½¿ç”¨ retain/release ä¿æŠ¤åŠ¨ç”»æ‰§è¡Œ
     label->retain();
     label->runAction(Sequence::create(
       DelayTime::create(3.0f),
@@ -250,7 +250,7 @@ void ResourceCollectionUI::onCollectGold() {
       ),
       CallFunc::create([label]() {
      label->removeFromParent();
-        label->release();  // ¡û ÊÍ·ÅÒıÓÃ
+        label->release();  // â† é‡Šæ”¾å¼•ç”¨
       }),
 nullptr
     ));
@@ -270,7 +270,7 @@ void ResourceCollectionUI::onCollectElixir() {
       nullptr
     ));
 
-    // ? ĞŞ¸´£ºÆ®×ÖĞ§¹û - ¼ì²é¸¸½ÚµãÓĞĞ§ĞÔ
+    // ? ä¿®å¤ï¼šé£˜å­—æ•ˆæœ - æ£€æŸ¥çˆ¶èŠ‚ç‚¹æœ‰æ•ˆæ€§
     auto parent = this->getParent();
     if (!parent) {
       CCLOG("ResourceCollectionUI::onCollectElixir - Parent is null, skip floating text");
@@ -283,7 +283,7 @@ void ResourceCollectionUI::onCollectElixir() {
     label->setPosition(_collectElixirBtn->getPosition() + Vec2(0, 40));
     parent->addChild(label, 100);
 
-    // ? Ê¹ÓÃ retain/release ±£»¤¶¯»­Ö´ĞĞ
+    // ? ä½¿ç”¨ retain/release ä¿æŠ¤åŠ¨ç”»æ‰§è¡Œ
     label->retain();
     label->runAction(Sequence::create(
       DelayTime::create(3.0f),
@@ -294,7 +294,7 @@ void ResourceCollectionUI::onCollectElixir() {
       ),
       CallFunc::create([label]() {
         label->removeFromParent();
-        label->release();  // ¡û ÊÍ·ÅÒıÓÃ
+        label->release();  // â† é‡Šæ”¾å¼•ç”¨
       }),
       nullptr
     ));

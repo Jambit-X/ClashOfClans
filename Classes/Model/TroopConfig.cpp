@@ -1,4 +1,4 @@
-#pragma execution_character_set("utf-8")
+ï»¿#pragma execution_character_set("utf-8")
 #include "TroopConfig.h"
 
 TroopConfig* TroopConfig::_instance = nullptr;
@@ -17,55 +17,55 @@ void TroopConfig::initConfig() {
     _troops.clear();
     std::string pathPrefix = "UI/training-camp/troop-cards/";
 
-    // 1. Ò°ÂùÈË
+    // 1. é‡Žè›®äºº
     _troops.push_back({
-        1001, "Ò°ÂùÈË", pathPrefix + "Barbarian.png", 1,
+        1001, "é‡Žè›®äºº", pathPrefix + "Barbarian.png", 1,
         1, 16, 8, 45,
-        "µ¥ÌåÉËº¦", "µØÃæÄ¿±ê", "ÎÞ", 1,
-        "ÒÀ¿¿½áÊµµÄ¼¡ÈâÔÚµÐÈËµÄ´å×¯ËÁÅ°¡£ÈÃËûÃÇ³å·æÏÝÕó°É£¡"
+        "å•ä½“ä¼¤å®³", "åœ°é¢ç›®æ ‡", "æ— ", 1,
+        "ä¾é ç»“å®žçš„è‚Œè‚‰åœ¨æ•Œäººçš„æ‘åº„è‚†è™ã€‚è®©ä»–ä»¬å†²é”‹é™·é˜µå§ï¼"
         });
 
-    // 2. ¹­¼ýÊÖ
+    // 2. å¼“ç®­æ‰‹
     _troops.push_back({
-        1002, "¹­¼ýÊÖ", pathPrefix + "Archer.png", 1,
+        1002, "å¼“ç®­æ‰‹", pathPrefix + "Archer.png", 1,
         1, 24, 7, 20,
-        "µ¥ÌåÉËº¦", "µØÃæ/¿ÕÖÐ", "ÎÞ", 1,
-        "ÕâÐ©°Ù²½´©ÑîµÄÉñÉäÊÖÔÚÕ½³¡ÉÏ×ÜÊÇÒÔ´ËÎªÈÙ¡£ËýÃÇËäÈ»ÑªÁ¿²»¸ß£¬µ«Éä³ÌÓÅÊÆ¾Þ´ó¡£"
+        "å•ä½“ä¼¤å®³", "åœ°é¢/ç©ºä¸­", "æ— ", 1,
+        "è¿™äº›ç™¾æ­¥ç©¿æ¨çš„ç¥žå°„æ‰‹åœ¨æˆ˜åœºä¸Šæ€»æ˜¯ä»¥æ­¤ä¸ºè£ã€‚å¥¹ä»¬è™½ç„¶è¡€é‡ä¸é«˜ï¼Œä½†å°„ç¨‹ä¼˜åŠ¿å·¨å¤§ã€‚"
         });
 
-    // 3. ¸ç²¼ÁÖ
+    // 3. å“¥å¸ƒæž—
     _troops.push_back({
-        1003, "¸ç²¼ÁÖ", pathPrefix + "Goblin.png", 2,
+        1003, "å“¥å¸ƒæž—", pathPrefix + "Goblin.png", 2,
         1, 32, 11, 25,
-        "µ¥ÌåÉËº¦", "µØÃæÄ¿±ê", "×ÊÔ´½¨Öþ", 1,
-        "ÕâÐ©·³ÈËµÄÐ¡ÉúÎïÑÛÀïÖ»ÓÐ×ÊÔ´¡£ËüÃÇÒÆ¶¯ËÙ¶È¼«¿ì£¬¶Ô½ð±ÒºÍÊ¥Ë®ÓÐ×ÅÎÞÇîµÄ¿ÊÍû¡£"
+        "å•ä½“ä¼¤å®³", "åœ°é¢ç›®æ ‡", "èµ„æºå»ºç­‘", 1,
+        "è¿™äº›çƒ¦äººçš„å°ç”Ÿç‰©çœ¼é‡Œåªæœ‰èµ„æºã€‚å®ƒä»¬ç§»åŠ¨é€Ÿåº¦æžå¿«ï¼Œå¯¹é‡‘å¸å’Œåœ£æ°´æœ‰ç€æ— ç©·çš„æ¸´æœ›ã€‚"
         });
 
-    // 4. ¾ÞÈË
+    // 4. å·¨äºº
     _troops.push_back({
-        1004, "¾ÞÈË", pathPrefix + "Giant.png", 2,
+        1004, "å·¨äºº", pathPrefix + "Giant.png", 2,
         5, 12, 11, 300,
-        "µ¥ÌåÉËº¦", "µØÃæÄ¿±ê", "·ÀÓù½¨Öþ", 1,
-        "ÕâÐ©´ó¼Ò»ïËäÈ»¿´ÆðÀ´±¿ÖØ£¬µ«È´ÄÜ³ÐÊÜ¾ªÈËµÄÉËº¦¡£ËüÃÇ×¨×¢ÓÚ´Ý»Ù·ÀÓù½¨Öþ¡£"
+        "å•ä½“ä¼¤å®³", "åœ°é¢ç›®æ ‡", "é˜²å¾¡å»ºç­‘", 1,
+        "è¿™äº›å¤§å®¶ä¼™è™½ç„¶çœ‹èµ·æ¥ç¬¨é‡ï¼Œä½†å´èƒ½æ‰¿å—æƒŠäººçš„ä¼¤å®³ã€‚å®ƒä»¬ä¸“æ³¨äºŽæ‘§æ¯é˜²å¾¡å»ºç­‘ã€‚"
         });
 
-    // 5. Õ¨µ¯ÈË
+    // 5. ç‚¸å¼¹äºº
     _troops.push_back({
-        1005, "Õ¨µ¯ÈË", pathPrefix + "Wall_Breaker.png", 3,
+        1005, "ç‚¸å¼¹äºº", pathPrefix + "Wall_Breaker.png", 3,
         2, 24, 12, 20,
-        "ÇøÓò½¦Éä", "µØÃæÄ¿±ê", "³ÇÇ½", 1,
-        "³ýÁËÕ¨»Ù³ÇÇ½£¬Ã»ÓÐÊ²Ã´ÄÜÈÃÕâÐ©ÍöÁé¸ü¿ªÐÄµÄÁË¡£ÎªÄãµÄµØÃæ²¿¶Ó¿ªÂ·£¡"
+        "åŒºåŸŸæº…å°„", "åœ°é¢ç›®æ ‡", "åŸŽå¢™", 1,
+        "é™¤äº†ç‚¸æ¯åŸŽå¢™ï¼Œæ²¡æœ‰ä»€ä¹ˆèƒ½è®©è¿™äº›äº¡çµæ›´å¼€å¿ƒçš„äº†ã€‚ä¸ºä½ çš„åœ°é¢éƒ¨é˜Ÿå¼€è·¯ï¼"
         });
 
-    // 6. ÆøÇò±ø
+    // 6. æ°”çƒå…µ
     _troops.push_back({
-        1006, "ÆøÇò±ø", pathPrefix + "Balloon.png", 3,
+        1006, "æ°”çƒå…µ", pathPrefix + "Balloon.png", 3,
         5, 10, 25, 150,
-        "ÇøÓò½¦Éä", "µØÃæÄ¿±ê", "·ÀÓù½¨Öþ", 1,
-        "ÕâÐ©¸ß¼¶µÄÆøÇò±øÍ¶ÖÀÕ¨µ¯Ôì³É¾Þ´óµÄ½¦ÉäÉËº¦¡£µ«ÔÚ·À¿Õ»ð¼ýÃæÇ°ËüÃÇºÜ´àÈõ¡£"
+        "åŒºåŸŸæº…å°„", "åœ°é¢ç›®æ ‡", "é˜²å¾¡å»ºç­‘", 1,
+        "è¿™äº›é«˜çº§çš„æ°”çƒå…µæŠ•æŽ·ç‚¸å¼¹é€ æˆå·¨å¤§çš„æº…å°„ä¼¤å®³ã€‚ä½†åœ¨é˜²ç©ºç«ç®­é¢å‰å®ƒä»¬å¾ˆè„†å¼±ã€‚"
         });
 
-    // ½¨Á¢Ë÷Òý
+    // å»ºç«‹ç´¢å¼•
     for (size_t i = 0; i < _troops.size(); ++i) {
         _idToIndex[_troops[i].id] = i;
     }
@@ -75,7 +75,7 @@ TroopInfo TroopConfig::getTroopById(int id) {
     if (_idToIndex.find(id) != _idToIndex.end()) {
         return _troops[_idToIndex[id]];
     }
-    return {}; // ·µ»Ø¿Õ
+    return {}; // è¿”å›žç©º
 }
 
 const std::vector<TroopInfo>& TroopConfig::getAllTroops() const {

@@ -1,10 +1,10 @@
-#include "MoveMapController.h"
+ï»¿#include "MoveMapController.h"
 #include "../proj.win32/Constants.h"
 #include <iostream>
 
 USING_NS_CC;
 
-// ¾²Ì¬³£Á¿¶¨Òå
+// é™æ€å¸¸é‡å®šä¹‰
 const float MoveMapController::MAX_SCALE = 3.0f;
 const float MoveMapController::ZOOM_SPEED = 0.05f;
 
@@ -32,12 +32,12 @@ MoveMapController::~MoveMapController() {
   cleanup();
 }
 
-#pragma region ³õÊ¼»¯ºÍÇåÀí
+#pragma region åˆå§‹åŒ–å’Œæ¸…ç†
 void MoveMapController::setupInputListeners() {
-  // ³õÊ¼»¯µØÍ¼µÄËõ·ÅºÍÎ»ÖÃ
+  // åˆå§‹åŒ–åœ°å›¾çš„ç¼©æ”¾å’Œä½ç½®
   initializeMapTransform();
   
-  // ÉèÖÃÊäÈë¼àÌı
+  // è®¾ç½®è¾“å…¥ç›‘å¬
   setupTouchHandling();
   setupMouseHandling();
   
@@ -75,10 +75,10 @@ void MoveMapController::initializeMapTransform() {
   auto mapSize = _villageLayer->getContentSize();
   auto visibleSize = Director::getInstance()->getVisibleSize();
 
-  // ÉèÖÃ³õÊ¼Ëõ·ÅÎª×îĞ¡Ëõ·Å
+  // è®¾ç½®åˆå§‹ç¼©æ”¾ä¸ºæœ€å°ç¼©æ”¾
   _villageLayer->setScale(_currentScale);
 
-  // ½«µØÍ¼ÖĞĞÄ·ÅÔÚÆÁÄ»ÖĞĞÄ
+  // å°†åœ°å›¾ä¸­å¿ƒæ”¾åœ¨å±å¹•ä¸­å¿ƒ
   float initialX = (visibleSize.width - mapSize.width * _currentScale) / 2;
   float initialY = (visibleSize.height - mapSize.height * _currentScale) / 2;
   _villageLayer->setPosition(initialX, initialY);
@@ -89,7 +89,7 @@ void MoveMapController::initializeMapTransform() {
 }
 #pragma endregion
 
-#pragma region ×´Ì¬¹ÜÀí
+#pragma region çŠ¶æ€ç®¡ç†
 void MoveMapController::changeState(InputState newState) {
   if (_currentState == newState) return;
 
@@ -98,14 +98,14 @@ void MoveMapController::changeState(InputState newState) {
 
   CCLOG("MoveMapController: State changed from %d to %d", (int)oldState, (int)newState);
 
-  // ´¥·¢×´Ì¬¸Ä±ä»Øµ÷
+  // è§¦å‘çŠ¶æ€æ”¹å˜å›è°ƒ
   if (_onStateChanged) {
     _onStateChanged(oldState, newState);
   }
 }
 #pragma endregion
 
-#pragma region ´¥ÃşÊÂ¼ş´¦Àí
+#pragma region è§¦æ‘¸äº‹ä»¶å¤„ç†
 void MoveMapController::setupTouchHandling() {
   _touchListener = EventListenerTouchOneByOne::create();
   _touchListener->setSwallowTouches(true);
@@ -121,7 +121,7 @@ void MoveMapController::setupTouchHandling() {
 bool MoveMapController::onTouchBegan(Touch* touch, Event* event) {
   CCLOG("MoveMapController::onTouchBegan - currentState=%d", (int)_currentState);
   
-  // Ö»ÔÚ MAP_DRAG ×´Ì¬´¦ÀíÊäÈë
+  // åªåœ¨ MAP_DRAG çŠ¶æ€å¤„ç†è¾“å…¥
   if (_currentState != InputState::MAP_DRAG) {
     CCLOG("MoveMapController::onTouchBegan - Rejected: not in MAP_DRAG state");
     return false;
@@ -137,7 +137,7 @@ void MoveMapController::onTouchMoved(Touch* touch, Event* event) {
     return;
   }
 
-  // Ö»ÓĞÍÏ¶¯¾àÀë³¬¹ıãĞÖµ²ÅËãÍÏ¶¯
+  // åªæœ‰æ‹–åŠ¨è·ç¦»è¶…è¿‡é˜ˆå€¼æ‰ç®—æ‹–åŠ¨
   Vec2 currentPos = touch->getLocation();
   float distance = _touchStartPos.distance(currentPos);
   
@@ -158,7 +158,7 @@ void MoveMapController::onTouchEnded(Touch* touch, Event* event) {
 
   Vec2 endPos = touch->getLocation();
 
-  // ÅĞ¶ÏÊÇ Tap »¹ÊÇ Drag
+  // åˆ¤æ–­æ˜¯ Tap è¿˜æ˜¯ Drag
   if (!_isDragging && isTapGesture(_touchStartPos, endPos)) {
     CCLOG("MoveMapController::onTouchEnded - Detected TAP gesture");
     handleTap(endPos);
@@ -189,18 +189,18 @@ void MoveMapController::handleMapDragging(Touch* touch) {
 void MoveMapController::handleTap(const Vec2& tapPosition) {
   CCLOG("Tap detected at (%.2f, %.2f)", tapPosition.x, tapPosition.y);
 
-  // Èç¹ûÓĞµã»÷¼ì²â»Øµ÷£¬µ÷ÓÃËü
+  // å¦‚æœæœ‰ç‚¹å‡»æ£€æµ‹å›è°ƒï¼Œè°ƒç”¨å®ƒ
   TapTarget target = TapTarget::NONE;
   if (_onTapDetection) {
     target = _onTapDetection(tapPosition);
   }
 
-  // ¸ù¾İµã»÷Ä¿±êÖ´ĞĞÏàÓ¦²Ù×÷
+  // æ ¹æ®ç‚¹å‡»ç›®æ ‡æ‰§è¡Œç›¸åº”æ“ä½œ
   switch (target) {
     case TapTarget::BUILDING:
       CCLOG("  -> Target: BUILDING");
       
-      // ´¥·¢½¨ÖşÑ¡ÖĞ»Øµ÷£¨²»¸Ä±ä×´Ì¬£¬±£³Ö MAP_DRAG£©
+      // è§¦å‘å»ºç­‘é€‰ä¸­å›è°ƒï¼ˆä¸æ”¹å˜çŠ¶æ€ï¼Œä¿æŒ MAP_DRAGï¼‰
       if (_onBuildingSelected) {
         _onBuildingSelected(tapPosition);
       }
@@ -216,7 +216,7 @@ void MoveMapController::handleTap(const Vec2& tapPosition) {
 
     case TapTarget::NONE:
       CCLOG("  -> Target: NONE (map blank)");
-      // µØÍ¼¿Õ°×£¬ÎŞÏìÓ¦
+      // åœ°å›¾ç©ºç™½ï¼Œæ— å“åº”
       break;
   }
 }
@@ -229,12 +229,12 @@ bool MoveMapController::isTapGesture(const Vec2& startPos, const Vec2& endPos) {
 Vec2 MoveMapController::clampMapPosition(const Vec2& position) {
   auto visibleSize = Director::getInstance()->getVisibleSize();
 
-  // Ê¹ÓÃ getBoundingBox »ñÈ¡Êµ¼ÊÏÔÊ¾´óĞ¡
+  // ä½¿ç”¨ getBoundingBox è·å–å®é™…æ˜¾ç¤ºå¤§å°
   Rect mapBounds = _villageLayer->getBoundingBox();
 
   float minX, maxX, minY, maxY;
 
-  // Èç¹ûµØÍ¼±ÈÆÁÄ»Ğ¡£¬¾ÓÖĞ
+  // å¦‚æœåœ°å›¾æ¯”å±å¹•å°ï¼Œå±…ä¸­
   if (mapBounds.size.width <= visibleSize.width) {
     float centerX = (visibleSize.width - mapBounds.size.width) / 2;
     minX = maxX = centerX;
@@ -258,7 +258,7 @@ Vec2 MoveMapController::clampMapPosition(const Vec2& position) {
 }
 #pragma endregion
 
-#pragma region Êó±êÊÂ¼ş´¦Àí£¨Ëõ·Å£©
+#pragma region é¼ æ ‡äº‹ä»¶å¤„ç†ï¼ˆç¼©æ”¾ï¼‰
 void MoveMapController::setupMouseHandling() {
   _mouseListener = EventListenerMouse::create();
   _mouseListener->onMouseScroll = CC_CALLBACK_1(MoveMapController::onMouseScroll, this);
@@ -268,7 +268,7 @@ void MoveMapController::setupMouseHandling() {
 }
 
 void MoveMapController::onMouseScroll(Event* event) {
-  // Ö»ÔÚ MAP_DRAG ×´Ì¬´¦ÀíËõ·Å
+  // åªåœ¨ MAP_DRAG çŠ¶æ€å¤„ç†ç¼©æ”¾
   if (_currentState != InputState::MAP_DRAG) {
     return;
   }
@@ -284,14 +284,14 @@ void MoveMapController::onMouseScroll(Event* event) {
 }
 
 float MoveMapController::calculateNewScale(float scrollDelta) {
-  // ÏòÉÏ¹ö¶¯ËõĞ¡£¬ÏòÏÂ¹ö¶¯·Å´ó
+  // å‘ä¸Šæ»šåŠ¨ç¼©å°ï¼Œå‘ä¸‹æ»šåŠ¨æ”¾å¤§
   float zoomFactor = powf(0.9f, scrollDelta);
   float newScale = _currentScale * zoomFactor;
 
-  // ÏŞÖÆËõ·Å·¶Î§
+  // é™åˆ¶ç¼©æ”¾èŒƒå›´
   newScale = clampf(newScale, _minScale, MAX_SCALE);
 
-  // ±ÜÃâÎ¢Ğ¡¶¶¶¯
+  // é¿å…å¾®å°æŠ–åŠ¨
   if (abs(newScale - _currentScale) < 0.01f) {
     return _currentScale;
   }
@@ -300,28 +300,28 @@ float MoveMapController::calculateNewScale(float scrollDelta) {
 }
 
 Vec2 MoveMapController::getAdjustedMousePosition(EventMouse* mouseEvent) {
-  // Ö±½ÓÊ¹ÓÃ getLocation()£¬ÎŞĞèÊÖ¶¯×ª»»
+  // ç›´æ¥ä½¿ç”¨ getLocation()ï¼Œæ— éœ€æ‰‹åŠ¨è½¬æ¢
   return mouseEvent->getLocation();
 }
 
 void MoveMapController::applyZoomAroundPoint(const Vec2& zoomPoint, float newScale) {
   float oldScale = _currentScale;
 
-  // 1. ½«ÆÁÄ»×ø±ê×ª»»Îª Layer ÄÚ²¿×ø±ê
+  // 1. å°†å±å¹•åæ ‡è½¬æ¢ä¸º Layer å†…éƒ¨åæ ‡
   Vec2 pointInLayer = _villageLayer->convertToNodeSpace(zoomPoint);
 
-  // 2. Ó¦ÓÃĞÂµÄËõ·Å
+  // 2. åº”ç”¨æ–°çš„ç¼©æ”¾
   _villageLayer->setScale(newScale);
   _currentScale = newScale;
 
-  // 3. ½«Í¬Ò»¸ö Layer ÄÚ²¿µã×ª»ØÆÁÄ»×ø±ê
+  // 3. å°†åŒä¸€ä¸ª Layer å†…éƒ¨ç‚¹è½¬å›å±å¹•åæ ‡
   Vec2 newPointOnScreen = _villageLayer->convertToWorldSpace(pointInLayer);
 
-  // 4. ¼ÆËãÎ»ÖÃÆ«ÒÆ
+  // 4. è®¡ç®—ä½ç½®åç§»
   Vec2 offset = zoomPoint - newPointOnScreen;
   Vec2 newPos = _villageLayer->getPosition() + offset;
 
-  // Ó¦ÓÃ±ß½çÏŞÖÆ
+  // åº”ç”¨è¾¹ç•Œé™åˆ¶
   newPos = clampMapPosition(newPos);
   _villageLayer->setPosition(newPos);
 

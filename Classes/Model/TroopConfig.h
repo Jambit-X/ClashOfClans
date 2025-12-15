@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #ifndef __TROOP_CONFIG_H__
 #define __TROOP_CONFIG_H__
 
@@ -8,20 +8,20 @@
 #include <vector>
 
 struct TroopInfo {
-    int id;                 // ID (Èç 1001)
-    std::string name;       // Ãû³Æ
-    std::string iconPath;   // Í¼±êÂ·¾¶
-    int unlockBarracksLvl;  // ½âËøĞèÒªµÄÑµÁ·ÓªµÈ¼¶
+    int id;                 // ID (å¦‚ 1001)
+    std::string name;       // åç§°
+    std::string iconPath;   // å›¾æ ‡è·¯å¾„
+    int unlockBarracksLvl;  // è§£é”éœ€è¦çš„è®­ç»ƒè¥ç­‰çº§
 
-    // --- Õ½¶·ÊôĞÔ ---
-    int housingSpace;       // Õ¼ÓÃÈË¿Ú
-    int moveSpeed;          // ÒÆ¶¯ËÙ¶È
-    int damagePerSecond;    // ÃëÉË
-    int hitpoints;          // ÉúÃüÖµ
-    std::string damageType; // "µ¥Ìå" »ò "½¦Éä"
-    std::string target;     // "µØÃæ" »ò "¿ÕÖĞ"
-    std::string favorite;   // Æ«ºÃ (Èç "×ÊÔ´", "·ÀÓù")
-    int level;              // µÈ¼¶ (Ä¿Ç°¹Ì¶¨Îª1)
+    // --- æˆ˜æ–—å±æ€§ ---
+    int housingSpace;       // å ç”¨äººå£
+    int moveSpeed;          // ç§»åŠ¨é€Ÿåº¦
+    int damagePerSecond;    // ç§’ä¼¤
+    int hitpoints;          // ç”Ÿå‘½å€¼
+    std::string damageType; // "å•ä½“" æˆ– "æº…å°„"
+    std::string target;     // "åœ°é¢" æˆ– "ç©ºä¸­"
+    std::string favorite;   // åå¥½ (å¦‚ "èµ„æº", "é˜²å¾¡")
+    int level;              // ç­‰çº§ (ç›®å‰å›ºå®šä¸º1)
 
     std::string description;
 };
@@ -30,13 +30,13 @@ class TroopConfig {
 public:
     static TroopConfig* getInstance();
 
-    // ³õÊ¼»¯Êı¾İ
+    // åˆå§‹åŒ–æ•°æ®
     void initConfig();
 
-    // »ñÈ¡µ¥¸ö±øÖÖÊı¾İ
+    // è·å–å•ä¸ªå…µç§æ•°æ®
     TroopInfo getTroopById(int id);
 
-    // »ñÈ¡ËùÓĞ±øÖÖÁĞ±í (ÓÃÓÚÉú³É UI)
+    // è·å–æ‰€æœ‰å…µç§åˆ—è¡¨ (ç”¨äºç”Ÿæˆ UI)
     const std::vector<TroopInfo>& getAllTroops() const;
 
 private:

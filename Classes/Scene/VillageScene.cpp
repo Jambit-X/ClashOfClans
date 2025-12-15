@@ -1,4 +1,4 @@
-#include "VillageScene.h"
+ï»¿#include "VillageScene.h"
 #include "Layer/HUDLayer.h"
 #include "Layer/BattleTroopLayer.h"
 #include "Manager/VillageDataManager.h"
@@ -16,31 +16,31 @@ bool VillageScene::init() {
 
   auto dataManager = VillageDataManager::getInstance();
 
-  // 1. ´å×¯²ã£¨µØÍ¼¡¢½¨Öş£©
+  // 1. æ‘åº„å±‚ï¼ˆåœ°å›¾ã€å»ºç­‘ï¼‰
   auto villageLayer = VillageLayer::create();
   villageLayer->setTag(1);
   this->addChild(villageLayer, 0);
 
-  // 2. ¾ü¶Ó²ã£¨Õ½¶·µ¥Î»£©
-  // ? ¹Ø¼üĞŞ¸´£º×÷Îª VillageLayer µÄ×Ó½Úµã£¬¶ø²»ÊÇ Scene µÄ×Ó½Úµã
-  // ÕâÑù¾ü¶Ó»á¸úËæµØÍ¼µÄËõ·ÅºÍÒÆ¶¯
+  // 2. å†›é˜Ÿå±‚ï¼ˆæˆ˜æ–—å•ä½ï¼‰
+  // ? å…³é”®ä¿®å¤ï¼šä½œä¸º VillageLayer çš„å­èŠ‚ç‚¹ï¼Œè€Œä¸æ˜¯ Scene çš„å­èŠ‚ç‚¹
+  // è¿™æ ·å†›é˜Ÿä¼šè·Ÿéšåœ°å›¾çš„ç¼©æ”¾å’Œç§»åŠ¨
   auto troopLayer = BattleTroopLayer::create();
   troopLayer->setTag(2);
-  villageLayer->addChild(troopLayer, 10);  // ? Ìí¼Óµ½ villageLayer£¬zOrder=10 ÔÚµØÍ¼Ö®ÉÏ
+  villageLayer->addChild(troopLayer, 10);  // ? æ·»åŠ åˆ° villageLayerï¼ŒzOrder=10 åœ¨åœ°å›¾ä¹‹ä¸Š
   
   CCLOG("========================================");
   CCLOG("BattleTroopLayer added as CHILD of VillageLayer");
   CCLOG("  This ensures troops scale with map (0.345x)");
   CCLOG("========================================");
 
-  // 3. HUD ²ã£¨UI ½çÃæ£¬ÉÌµê°´Å¥£©
+  // 3. HUD å±‚ï¼ˆUI ç•Œé¢ï¼Œå•†åº—æŒ‰é’®ï¼‰
   auto hudLayer = HUDLayer::create();
   hudLayer->setTag(100);
-  this->addChild(hudLayer, 10);  // HUD ±£³ÖÔÚ Scene ¼¶±ğ£¬²»ÊÜµØÍ¼Ëõ·ÅÓ°Ïì
+  this->addChild(hudLayer, 10);  // HUD ä¿æŒåœ¨ Scene çº§åˆ«ï¼Œä¸å—åœ°å›¾ç¼©æ”¾å½±å“
 
   CCLOG("VillageScene initialized:");
   CCLOG("  - VillageLayer (tag=1, zOrder=0)");
-  CCLOG("      ©¸©¤ BattleTroopLayer (tag=2, zOrder=10) ¡û CHILD of VillageLayer");
+  CCLOG("      â””â”€ BattleTroopLayer (tag=2, zOrder=10) â† CHILD of VillageLayer");
   CCLOG("  - HUDLayer (tag=100, zOrder=10)");
   
   return true;

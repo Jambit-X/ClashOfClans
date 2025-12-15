@@ -1,4 +1,4 @@
-// Classes/Manager/BuildingSpeedupManager.h
+ï»¿// Classes/Manager/BuildingSpeedupManager.h
 #ifndef BUILDING_SPEEDUP_MANAGER_H
 #define BUILDING_SPEEDUP_MANAGER_H
 
@@ -10,13 +10,13 @@ public:
   static BuildingSpeedupManager* getInstance();
   static void destroyInstance();
 
-  // ¼ì²éÊÇ·ñ¿ÉÒÔ¼ÓËÙ£¨ÓĞ±¦Ê¯ÇÒ½¨ÖşÕıÔÚ½¨Ôì£©
+  // æ£€æŸ¥æ˜¯å¦å¯ä»¥åŠ é€Ÿï¼ˆæœ‰å®çŸ³ä¸”å»ºç­‘æ­£åœ¨å»ºé€ ï¼‰
   bool canSpeedup(int buildingId) const;
 
-  // Ö´ĞĞ¼ÓËÙ£¨ÏûºÄ1¿Å±¦Ê¯£¬Á¢¼´Íê³É£©
+  // æ‰§è¡ŒåŠ é€Ÿï¼ˆæ¶ˆè€—1é¢—å®çŸ³ï¼Œç«‹å³å®Œæˆï¼‰
   bool speedupBuilding(int buildingId);
 
-  // »ñÈ¡¼ÓËÙÊ§°ÜµÄÔ­Òò
+  // è·å–åŠ é€Ÿå¤±è´¥çš„åŸå› 
   std::string getSpeedupFailReason(int buildingId) const;
 
 private:

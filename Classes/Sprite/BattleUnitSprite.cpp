@@ -1,7 +1,7 @@
-// BattleUnitSprite.cpp
+ï»¿// BattleUnitSprite.cpp
 #include "BattleUnitSprite.h"
 #include "Util/GridMapUtils.h"
-#include "Util/FindPathUtil.h"  // ? Ìí¼ÓÑ°Â·¹¤¾ß
+#include "Util/FindPathUtil.h"  // ? æ·»åŠ å¯»è·¯å·¥å…·
 #include <algorithm>
 #include <cmath>
 
@@ -41,7 +41,7 @@ bool BattleUnitSprite::init(const std::string& unitType) {
   return true;
 }
 
-// ===== »ù´¡¶¯»­¿ØÖÆ =====
+// ===== åŸºç¡€åŠ¨ç”»æ§åˆ¶ =====
 
 void BattleUnitSprite::playAnimation(
   AnimationType animType,
@@ -108,7 +108,7 @@ void BattleUnitSprite::playDeathAnimation(const std::function<void()>& callback)
   playAnimation(AnimationType::DEATH, false, callback);
 }
 
-// ===== ·½Ïò¼ÆËã =====
+// ===== æ–¹å‘è®¡ç®— =====
 
 float BattleUnitSprite::getAngleFromDirection(const Vec2& direction) {
   return CC_RADIANS_TO_DEGREES(atan2f(direction.y, direction.x));
@@ -184,7 +184,7 @@ void BattleUnitSprite::selectAttackAnimation(const Vec2& direction,
   }
 }
 
-// ===== ÏñËØ×ø±êĞĞ×ß =====
+// ===== åƒç´ åæ ‡è¡Œèµ° =====
 
 void BattleUnitSprite::walkToPosition(const Vec2& targetPos, float duration,
                                       const std::function<void()>& callback) {
@@ -229,7 +229,7 @@ void BattleUnitSprite::walkByOffset(const Vec2& offset, float duration,
   walkToPosition(targetPos, duration, callback);
 }
 
-// ===== Íø¸ñ×ø±êĞĞ×ß =====
+// ===== ç½‘æ ¼åæ ‡è¡Œèµ° =====
 
 void BattleUnitSprite::setGridPosition(int gridX, int gridY) {
   _currentGridPos = Vec2(gridX, gridY);
@@ -302,7 +302,7 @@ void BattleUnitSprite::walkFromGridToGrid(int startGridX, int startGridY,
         startGridX, startGridY, targetGridX, targetGridY);
 }
 
-// ===== ·½Ïò¹¥»÷£¨Õ¾¶¨²»¶¯£©=====
+// ===== æ–¹å‘æ”»å‡»ï¼ˆç«™å®šä¸åŠ¨ï¼‰=====
 
 void BattleUnitSprite::attackInDirection(const Vec2& direction,
                                          const std::function<void()>& callback) {
@@ -362,17 +362,17 @@ void BattleUnitSprite::attackTowardGrid(int targetGridX, int targetGridY,
   attackTowardPosition(targetPixelPos, callback);
 }
 
-// ===== ? ĞÂÔö£ºÑ°Â·ÒÆ¶¯ =====
+// ===== ? æ–°å¢ï¼šå¯»è·¯ç§»åŠ¨ =====
 
 void BattleUnitSprite::moveToTargetWithPathfinding(
     const Vec2& targetWorldPos,
     float speed,
     const std::function<void()>& callback) {
 
-    // 1. »ñÈ¡µ±Ç°ÊÀ½ç×ø±ê
+    // 1. è·å–å½“å‰ä¸–ç•Œåæ ‡
     Vec2 currentWorldPos = this->getPosition();
 
-    // 2. Ê¹ÓÃÑ°Â·¹¤¾ß²éÕÒÂ·¾¶
+    // 2. ä½¿ç”¨å¯»è·¯å·¥å…·æŸ¥æ‰¾è·¯å¾„
     auto pathfinder = FindPathUtil::getInstance();
     std::vector<Vec2> path = pathfinder->findPathInWorld(currentWorldPos, targetWorldPos);
 
@@ -385,7 +385,7 @@ void BattleUnitSprite::moveToTargetWithPathfinding(
 
     CCLOG("BattleUnitSprite: Path found with %lu waypoints", path.size());
 
-    // 3. ÑØÂ·¾¶ÒÆ¶¯
+    // 3. æ²¿è·¯å¾„ç§»åŠ¨
     followPath(path, speed, callback);
 }
 
@@ -395,17 +395,17 @@ void BattleUnitSprite::moveToGridWithPathfinding(
     float speed,
     const std::function<void()>& callback) {
 
-    // 1. ¼ì²éÄ¿±êºÏ·¨ĞÔ
+    // 1. æ£€æŸ¥ç›®æ ‡åˆæ³•æ€§
     if (!GridMapUtils::isValidGridPosition(targetGridX, targetGridY)) {
         CCLOG("BattleUnitSprite: Invalid target grid (%d, %d)", targetGridX, targetGridY);
         if (callback) callback();
         return;
     }
 
-    // 2. ×ª»»ÎªÊÀ½ç×ø±ê
+    // 2. è½¬æ¢ä¸ºä¸–ç•Œåæ ‡
     Vec2 targetWorldPos = GridMapUtils::gridToPixelCenter(targetGridX, targetGridY);
 
-    // 3. Ñ°Â·²¢ÒÆ¶¯
+    // 3. å¯»è·¯å¹¶ç§»åŠ¨
     moveToTargetWithPathfinding(targetWorldPos, speed, callback);
 }
 
@@ -420,37 +420,37 @@ void BattleUnitSprite::followPath(
         return;
     }
 
-    // Í£Ö¹µ±Ç°ÒÆ¶¯
+    // åœæ­¢å½“å‰ç§»åŠ¨
     this->stopActionByTag(MOVE_TAG);
 
-    // ´´½¨¶¯×÷ĞòÁĞ
+    // åˆ›å»ºåŠ¨ä½œåºåˆ—
     Vector<FiniteTimeAction*> actions;
 
     Vec2 currentPos = this->getPosition();
 
     for (const auto& waypoint : path) {
-        // ¼ÆËã·½ÏòºÍ¾àÀë
+        // è®¡ç®—æ–¹å‘å’Œè·ç¦»
         Vec2 direction = waypoint - currentPos;
         float distance = direction.length();
 
         if (distance < 0.1f) {
-            continue; // Ìø¹ıÌ«½üµÄµã
+            continue; // è·³è¿‡å¤ªè¿‘çš„ç‚¹
         }
 
         direction.normalize();
 
-        // Ñ¡Ôñ¶¯»­
+        // é€‰æ‹©åŠ¨ç”»
         AnimationType animType;
         bool flipX;
         selectWalkAnimation(direction, animType, flipX);
 
-        // ²¥·ÅĞĞ×ß¶¯»­
+        // æ’­æ”¾è¡Œèµ°åŠ¨ç”»
         auto playAnim = CallFunc::create([this, animType, flipX]() {
             this->setFlippedX(flipX);
             playAnimation(animType, true);
         });
 
-        // ÒÆ¶¯µ½Â·¾¶µã
+        // ç§»åŠ¨åˆ°è·¯å¾„ç‚¹
         float duration = distance / speed;
         auto moveAction = MoveTo::create(duration, waypoint);
 
@@ -460,7 +460,7 @@ void BattleUnitSprite::followPath(
         currentPos = waypoint;
     }
 
-    // µ½´ïºó²¥·Å´ı»ú¶¯»­
+    // åˆ°è¾¾åæ’­æ”¾å¾…æœºåŠ¨ç”»
     auto finishCallback = CallFunc::create([this, callback]() {
         this->setFlippedX(false);
         playIdleAnimation();
@@ -474,7 +474,7 @@ void BattleUnitSprite::followPath(
 
     actions.pushBack(finishCallback);
 
-    // Ö´ĞĞ¶¯×÷ĞòÁĞ
+    // æ‰§è¡ŒåŠ¨ä½œåºåˆ—
     auto sequence = Sequence::create(actions);
     sequence->setTag(MOVE_TAG);
     this->runAction(sequence);

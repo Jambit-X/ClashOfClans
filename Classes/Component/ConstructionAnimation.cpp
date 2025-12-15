@@ -1,11 +1,11 @@
-#pragma execution_character_set("utf-8")
+ï»¿#pragma execution_character_set("utf-8")
 #include "ConstructionAnimation.h"
 #include "Sprite/BuildingSprite.h"
 
 USING_NS_CC;
 
 ConstructionAnimation::ConstructionAnimation(BuildingSprite* sprite)
-  : _buildingSprite(sprite)  // ¸ÄÎª _buildingSprite
+  : _buildingSprite(sprite)  // æ”¹ä¸º _buildingSprite
   , _progressLabel(nullptr)
   , _isRunning(false) {}
 
@@ -18,9 +18,9 @@ void ConstructionAnimation::start() {
 
   _isRunning = true;
 
-  // ´´½¨½ø¶È±êÇ©£¨Ö»´´½¨Ò»´Î£©
+  // åˆ›å»ºè¿›åº¦æ ‡ç­¾ï¼ˆåªåˆ›å»ºä¸€æ¬¡ï¼‰
   if (!_progressLabel) {
-    _progressLabel = Label::createWithTTF("½¨ÔìÖÐ...0%", "fonts/simhei.ttf", 20);
+    _progressLabel = Label::createWithTTF("å»ºé€ ä¸­...0%", "fonts/simhei.ttf", 20);
     _progressLabel->setColor(Color3B::YELLOW);
     _progressLabel->enableOutline(Color4B::BLACK, 2);
 
@@ -29,7 +29,7 @@ void ConstructionAnimation::start() {
     _buildingSprite->addChild(_progressLabel, 12);
   }
 
-  // ½¨Öþ±ä°µÐ§¹û
+  // å»ºç­‘å˜æš—æ•ˆæžœ
   _buildingSprite->setColor(Color3B(100, 100, 100));
 
   CCLOG("ConstructionAnimation: Started");
@@ -40,13 +40,13 @@ void ConstructionAnimation::stop() {
 
   _isRunning = false;
 
-  // ÒÆ³ý½ø¶È±êÇ©
+  // ç§»é™¤è¿›åº¦æ ‡ç­¾
   if (_progressLabel) {
     _progressLabel->removeFromParent();
     _progressLabel = nullptr;
   }
 
-  // »Ö¸´½¨ÖþÑÕÉ«
+  // æ¢å¤å»ºç­‘é¢œè‰²
   _buildingSprite->setColor(Color3B::WHITE);
 
   CCLOG("ConstructionAnimation: Stopped");
@@ -55,9 +55,9 @@ void ConstructionAnimation::stop() {
 void ConstructionAnimation::updateProgress(float progress) {
   if (!_isRunning) return;
 
-  // Ö»¸üÐÂ½ø¶ÈÎÄ×Ö£¬²»ÖØÐÂ´´½¨
+  // åªæ›´æ–°è¿›åº¦æ–‡å­—ï¼Œä¸é‡æ–°åˆ›å»º
   if (_progressLabel) {
-    std::string progressText = StringUtils::format("½¨ÔìÖÐ...%.0f%%", progress * 100);
+    std::string progressText = StringUtils::format("å»ºé€ ä¸­...%.0f%%", progress * 100);
     _progressLabel->setString(progressText);
   }
 }

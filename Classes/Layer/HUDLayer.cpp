@@ -1,4 +1,4 @@
-#pragma execution_character_set("utf-8")
+ï»¿#pragma execution_character_set("utf-8")
 #include "HUDLayer.h"
 #include "Layer/ShopLayer.h"
 #include "Manager/VillageDataManager.h"
@@ -15,21 +15,21 @@ USING_NS_CC;
 using namespace ui;
 
 const std::string FONT_PATH = "fonts/simhei.ttf";
-// ========== ¶¨Òå×Ô¶¨ÒåÑÕÉ« ==========
-const Color3B COLOR_CYAN = Color3B(0, 255, 255);      // ÇàÉ«
-const Color3B COLOR_ORANGE = Color3B(255, 165, 0);    // ³ÈÉ«
+// ========== å®šä¹‰è‡ªå®šä¹‰é¢œè‰² ==========
+const Color3B COLOR_CYAN = Color3B(0, 255, 255);      // é’è‰²
+const Color3B COLOR_ORANGE = Color3B(255, 165, 0);    // æ©™è‰²
 
-//  ¶¨Òå°´Å¥²¼¾ÖÅäÖÃ
+//  å®šä¹‰æŒ‰é’®å¸ƒå±€é…ç½®
 const HUDLayer::ButtonLayout HUDLayer::LAYOUT_TWO_BUTTONS = {
-  Vec2(-80, 0),   // ĞÅÏ¢°´Å¥ÔÚ×ó
-  Vec2(80, 0),    // Éı¼¶°´Å¥ÔÚÓÒ
-  Vec2(0, 0)      // ÑµÁ·°´Å¥²»Ê¹ÓÃ
+  Vec2(-80, 0),   // ä¿¡æ¯æŒ‰é’®åœ¨å·¦
+  Vec2(80, 0),    // å‡çº§æŒ‰é’®åœ¨å³
+  Vec2(0, 0)      // è®­ç»ƒæŒ‰é’®ä¸ä½¿ç”¨
 };
 
 const HUDLayer::ButtonLayout HUDLayer::LAYOUT_THREE_BUTTONS = {
-  Vec2(-160, 0),  // ĞÅÏ¢°´Å¥ÔÚ×ó
-  Vec2(0, 0),     // Éı¼¶°´Å¥ÔÚÖĞ
-  Vec2(160, 0)    // ÑµÁ·°´Å¥ÔÚÓÒ
+  Vec2(-160, 0),  // ä¿¡æ¯æŒ‰é’®åœ¨å·¦
+  Vec2(0, 0),     // å‡çº§æŒ‰é’®åœ¨ä¸­
+  Vec2(160, 0)    // è®­ç»ƒæŒ‰é’®åœ¨å³
 };
 
 bool HUDLayer::init() {
@@ -37,7 +37,7 @@ bool HUDLayer::init() {
     return false;
   }
 
-  // ========== ³õÊ¼»¯Á¬Ğø½¨ÔìÄ£Ê½×´Ì¬ ==========
+  // ========== åˆå§‹åŒ–è¿ç»­å»ºé€ æ¨¡å¼çŠ¶æ€ ==========
   _isContinuousBuildMode = false;
   _continuousBuildingType = -1;
   _modeHintLabel = nullptr;
@@ -47,71 +47,71 @@ bool HUDLayer::init() {
   auto visibleSize = Director::getInstance()->getVisibleSize();
   Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
-  // 1. µ±Ç°×ÊÔ´±êÇ©
+  // 1. å½“å‰èµ„æºæ ‡ç­¾
   _goldLabel = Label::createWithTTF("Gold: 0", "fonts/Marker Felt.ttf", 24);
   _goldLabel->setPosition(Vec2(origin.x + 100, origin.y + visibleSize.height - 30));
-  _goldLabel->setColor(Color3B(255, 215, 0));  // ½ğÉ« RGB(255, 215, 0)
+  _goldLabel->setColor(Color3B(255, 215, 0));  // é‡‘è‰² RGB(255, 215, 0)
   this->addChild(_goldLabel);
 
   _elixirLabel = Label::createWithTTF("Elixir: 0", "fonts/Marker Felt.ttf", 24);
   _elixirLabel->setPosition(Vec2(origin.x + 300, origin.y + visibleSize.height - 30));
-  _elixirLabel->setColor(Color3B(255, 0, 255));  // ×ÏºìÉ«£¨Ñóºì£©RGB(255, 0, 255)
+  _elixirLabel->setColor(Color3B(255, 0, 255));  // ç´«çº¢è‰²ï¼ˆæ´‹çº¢ï¼‰RGB(255, 0, 255)
   this->addChild(_elixirLabel);
 
   _gemLabel = Label::createWithTTF("Gem: 0", "fonts/Marker Felt.ttf", 24);
   _gemLabel->setPosition(Vec2(origin.x + 500, origin.y + visibleSize.height - 30));
-  _gemLabel->setColor(Color3B(0, 255, 0));  // ÂÌÉ« RGB(0, 255, 0)
+  _gemLabel->setColor(Color3B(0, 255, 0));  // ç»¿è‰² RGB(0, 255, 0)
   this->addChild(_gemLabel);
 
-  // ========== ¹¤ÈË×´Ì¬ÏÔÊ¾ ==========
+  // ========== å·¥äººçŠ¶æ€æ˜¾ç¤º ==========
   _workerLabel = Label::createWithTTF("Workers: 1/1", "fonts/Marker Felt.ttf", 24);
   _workerLabel->setPosition(Vec2(origin.x + 700, origin.y + visibleSize.height - 30));
   _workerLabel->setColor(COLOR_CYAN);
   this->addChild(_workerLabel);
 
-  // Á¢¼´¸üĞÂÒ»´Î
+  // ç«‹å³æ›´æ–°ä¸€æ¬¡
   updateWorkerDisplay();
 
-  //  ĞÂÔö£ºÔ¤ÏÈ´´½¨ÌáÊ¾Label£¨¸´ÓÃ£©
+  //  æ–°å¢ï¼šé¢„å…ˆåˆ›å»ºæç¤ºLabelï¼ˆå¤ç”¨ï¼‰
   _tipsLabel = Label::createWithTTF("", FONT_PATH, 30);
   _tipsLabel->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2));
   _tipsLabel->enableOutline(Color4B::BLACK, 2);
-  _tipsLabel->setVisible(false);  // Ä¬ÈÏÒş²Ø
+  _tipsLabel->setVisible(false);  // é»˜è®¤éšè—
   this->addChild(_tipsLabel, 1000);
 
-  // 2. ³õÊ¼»¯×ÊÔ´ÏÔÊ¾
+  // 2. åˆå§‹åŒ–èµ„æºæ˜¾ç¤º
   updateResourceDisplay(dataManager->getGold(), dataManager->getElixir());
 
-  // 3. ÉèÖÃ×ÊÔ´»Øµ÷
+  // 3. è®¾ç½®èµ„æºå›è°ƒ
   dataManager->setResourceCallback([this](int gold, int elixir) {
     updateResourceDisplay(gold, elixir);
   });
 
-  // 4. Ê¹ÓÃ¶ÀÁ¢µÄ×ÊÔ´ÊÕ¼¯UI×é¼ş
+  // 4. ä½¿ç”¨ç‹¬ç«‹çš„èµ„æºæ”¶é›†UIç»„ä»¶
   auto resourceUI = ResourceCollectionUI::create();
   this->addChild(resourceUI, 10);
 
   this->scheduleUpdate();
 
-  // ÉÌµêÈë¿Ú°´Å¥
+  // å•†åº—å…¥å£æŒ‰é’®
   auto shopBtn = ui::Button::create("UI/Shop/Shop-button.png");
   shopBtn->setAnchorPoint(Vec2(1, 0));
   shopBtn->setPosition(Vec2(origin.x + visibleSize.width - 20, origin.y + 20));
   shopBtn->addClickEventListener([this](Ref* sender) {
-    CCLOG("µã»÷ÁËÉÌµêÍ¼±ê£¬×¼±¸´ò¿ªÉÌµê...");
+    CCLOG("ç‚¹å‡»äº†å•†åº—å›¾æ ‡ï¼Œå‡†å¤‡æ‰“å¼€å•†åº—...");
     auto shopLayer = ShopLayer::create();
     this->getScene()->addChild(shopLayer, 100);
   });
   this->addChild(shopBtn);
 
-  // ³õÊ¼»¯µ×²¿½¨Öş²Ù×÷²Ëµ¥
+  // åˆå§‹åŒ–åº•éƒ¨å»ºç­‘æ“ä½œèœå•
   initActionMenu();
 
-  // ³õÊ¼»¯·ÅÖÃUI
+  // åˆå§‹åŒ–æ”¾ç½®UI
   _placementUI = PlacementConfirmUI::create();
   this->addChild(_placementUI, 1000);
 
-  // ÉèÖÃ·ÅÖÃUIµÄ»Øµ÷
+  // è®¾ç½®æ”¾ç½®UIçš„å›è°ƒ
   _placementUI->setConfirmCallback([this]() {
     if (_placementController && _placementController->confirmPlacement()) {
       CCLOG("HUDLayer: Building placement confirmed");
@@ -120,16 +120,16 @@ bool HUDLayer::init() {
         _placementTouchListener = nullptr;
       }
 
-      // ========== ¼ì²éÊÇ·ñÔÚÁ¬Ğø½¨ÔìÄ£Ê½ ==========
+      // ========== æ£€æŸ¥æ˜¯å¦åœ¨è¿ç»­å»ºé€ æ¨¡å¼ ==========
       if (_isContinuousBuildMode) {
         CCLOG("HUDLayer: In continuous build mode, checking if can continue...");
 
-        // ¼ì²éÊÇ·ñ¿ÉÒÔ¼ÌĞø½¨Ôì
+        // æ£€æŸ¥æ˜¯å¦å¯ä»¥ç»§ç»­å»ºé€ 
         if (canContinueBuild()) {
           CCLOG("HUDLayer: Creating next wall...");
           createNextWall();
         } else {
-          exitContinuousBuildMode("×ÊÔ´²»×ã»òÊıÁ¿´ïµ½ÉÏÏŞ");
+          exitContinuousBuildMode("èµ„æºä¸è¶³æˆ–æ•°é‡è¾¾åˆ°ä¸Šé™");
         }
       }
     }
@@ -144,25 +144,25 @@ bool HUDLayer::init() {
         _placementTouchListener = nullptr;
       }
 
-      // ========== Èç¹ûÔÚÁ¬Ğø½¨ÔìÄ£Ê½£¬ÍË³öÄ£Ê½ ==========
+      // ========== å¦‚æœåœ¨è¿ç»­å»ºé€ æ¨¡å¼ï¼Œé€€å‡ºæ¨¡å¼ ==========
       if (_isContinuousBuildMode) {
-        exitContinuousBuildMode("ÓÃ»§È¡Ïû");
+        exitContinuousBuildMode("ç”¨æˆ·å–æ¶ˆ");
       }
     }
   });
 
-  // ½ø¹¥°´Å¥
+  // è¿›æ”»æŒ‰é’®
   auto battleBtn = ui::Button::create("UI/battle/battle-icon/battle-icon.png");
   if (battleBtn) {
     battleBtn->setAnchorPoint(Vec2(0, 0));
     battleBtn->setPosition(Vec2(origin.x + 20, origin.y + 20));
     battleBtn->setScale(0.8f);
     battleBtn->addClickEventListener([this](Ref* sender) {
-      CCLOG("µã»÷ÁË½ø¹¥°´Å¥£¡");
+      CCLOG("ç‚¹å‡»äº†è¿›æ”»æŒ‰é’®ï¼");
       
-      // ¹Ø¼üĞŞ¸´£ºÊ¹ÓÃÑÓ³ÙÇĞ»»³¡¾°£¬±ÜÃâÔÚÊÂ¼ş´¦ÀíÖĞÖ±½ÓÇĞ»»µ¼ÖÂ¼àÌıÆ÷³åÍ»
+      // å…³é”®ä¿®å¤ï¼šä½¿ç”¨å»¶è¿Ÿåˆ‡æ¢åœºæ™¯ï¼Œé¿å…åœ¨äº‹ä»¶å¤„ç†ä¸­ç›´æ¥åˆ‡æ¢å¯¼è‡´ç›‘å¬å™¨å†²çª
       this->getScene()->runAction(Sequence::create(
-        DelayTime::create(0.1f),  // ÑÓ³Ù0.1Ãë£¬È·±£´¥ÃşÊÂ¼şÍêÈ«½áÊø
+        DelayTime::create(0.1f),  // å»¶è¿Ÿ0.1ç§’ï¼Œç¡®ä¿è§¦æ‘¸äº‹ä»¶å®Œå…¨ç»“æŸ
         CallFunc::create([]() {
           auto battleScene = BattleScene::createScene();
           Director::getInstance()->replaceScene(TransitionFade::create(0.5f, battleScene));
@@ -173,7 +173,7 @@ bool HUDLayer::init() {
     this->addChild(battleBtn);
   }
 
-  // ³õÊ¼»¯·ÅÖÃ¿ØÖÆÆ÷
+  // åˆå§‹åŒ–æ”¾ç½®æ§åˆ¶å™¨
   _placementController = new BuildingPlacementController();
   _placementTouchListener = nullptr;
 
@@ -199,8 +199,8 @@ bool HUDLayer::init() {
     }
     hidePlacementUI();
   });
-  // ========== ¼àÌı¹¤ÈË×´Ì¬±ä»¯ÊÂ¼ş ==========
-// ¼àÌı½¨Öş½¨ÔìÍê³ÉÊÂ¼ş£¨°üÀ¨¹¤ÈËĞ¡ÎİË²¼äÍê³É£©
+  // ========== ç›‘å¬å·¥äººçŠ¶æ€å˜åŒ–äº‹ä»¶ ==========
+// ç›‘å¬å»ºç­‘å»ºé€ å®Œæˆäº‹ä»¶ï¼ˆåŒ…æ‹¬å·¥äººå°å±‹ç¬é—´å®Œæˆï¼‰
   auto buildingUpgradedListener = EventListenerCustom::create("EVENT_BUILDING_UPGRADED",
                                                               [this](EventCustom* event) {
     CCLOG("HUDLayer: Building upgraded/completed, updating worker display");
@@ -208,7 +208,7 @@ bool HUDLayer::init() {
   });
   _eventDispatcher->addEventListenerWithSceneGraphPriority(buildingUpgradedListener, this);
 
-  // ¼àÌı½¨Öş½¨ÔìÍê³ÉÊÂ¼ş£¨ĞÂ½¨ÖşÍê³É£©
+  // ç›‘å¬å»ºç­‘å»ºé€ å®Œæˆäº‹ä»¶ï¼ˆæ–°å»ºç­‘å®Œæˆï¼‰
   auto buildingConstructedListener = EventListenerCustom::create("EVENT_BUILDING_CONSTRUCTED",
                                                                  [this](EventCustom* event) {
     CCLOG("HUDLayer: Building construction completed, updating worker display");
@@ -216,14 +216,14 @@ bool HUDLayer::init() {
   });
   _eventDispatcher->addEventListenerWithSceneGraphPriority(buildingConstructedListener, this);
 
-  // ¼àÌı½¨Öş½¨Ôì¿ªÊ¼ÊÂ¼ş£¨ĞèÒªÔÚ VillageDataManager ÖĞ´¥·¢£©
+  // ç›‘å¬å»ºç­‘å»ºé€ å¼€å§‹äº‹ä»¶ï¼ˆéœ€è¦åœ¨ VillageDataManager ä¸­è§¦å‘ï¼‰
   auto constructionStartedListener = EventListenerCustom::create("EVENT_CONSTRUCTION_STARTED",
                                                                  [this](EventCustom* event) {
     CCLOG("HUDLayer: Construction started, updating worker display");
     updateWorkerDisplay();
   });
   _eventDispatcher->addEventListenerWithSceneGraphPriority(constructionStartedListener, this);
-  // ========== ÉèÖÃ¼üÅÌ¼àÌıÆ÷£¨ÓÃÓÚ ESC ÍË³ö£©==========
+  // ========== è®¾ç½®é”®ç›˜ç›‘å¬å™¨ï¼ˆç”¨äº ESC é€€å‡ºï¼‰==========
   setupKeyboardListener();
 
   return true;
@@ -232,27 +232,27 @@ bool HUDLayer::init() {
 void HUDLayer::cleanup() {
   CCLOG("HUDLayer::cleanup - Cleaning up resources");
   
-  // ÇåÀí´¥Ãş¼àÌıÆ÷
+  // æ¸…ç†è§¦æ‘¸ç›‘å¬å™¨
   if (_placementTouchListener) {
     Director::getInstance()->getEventDispatcher()->removeEventListener(_placementTouchListener);
     _placementTouchListener = nullptr;
     CCLOG("HUDLayer::cleanup - Removed placement touch listener");
   }
 
-  // ========== ÇåÀí¼üÅÌ¼àÌıÆ÷ ==========
+  // ========== æ¸…ç†é”®ç›˜ç›‘å¬å™¨ ==========
   if (_keyboardListener) {
     Director::getInstance()->getEventDispatcher()->removeEventListener(_keyboardListener);
     _keyboardListener = nullptr;
     CCLOG("HUDLayer::cleanup - Removed keyboard listener");
   }
 
-  // ÇåÀíÁ¬Ğø½¨ÔìÄ£Ê½µÄ UI
+  // æ¸…ç†è¿ç»­å»ºé€ æ¨¡å¼çš„ UI
   if (_modeHintLabel) {
     _modeHintLabel->removeFromParent();
     _modeHintLabel = nullptr;
   }
   
-  // ÇåÀí·ÅÖÃ¿ØÖÆÆ÷
+  // æ¸…ç†æ”¾ç½®æ§åˆ¶å™¨
   if (_placementController) {
     delete _placementController;
     _placementController = nullptr;
@@ -282,24 +282,24 @@ void HUDLayer::updateResourceDisplay(int gold, int elixir) {
   }
 }
 
-//  ĞÂÔö£ºÌáÊ¾ÏûÏ¢¸´ÓÃ·½·¨
+//  æ–°å¢ï¼šæç¤ºæ¶ˆæ¯å¤ç”¨æ–¹æ³•
 void HUDLayer::showTips(const std::string& text, const Color3B& color) {
   if (!_tipsLabel) return;
 
-  // Í£Ö¹Ö®Ç°µÄ¶¯»­£¬±ÜÃâ³åÍ»
+  // åœæ­¢ä¹‹å‰çš„åŠ¨ç”»ï¼Œé¿å…å†²çª
   _tipsLabel->stopAllActions();
 
-  // ÉèÖÃÎÄ×ÖºÍÑÕÉ«
+  // è®¾ç½®æ–‡å­—å’Œé¢œè‰²
   _tipsLabel->setString(text);
   _tipsLabel->setColor(color);
   _tipsLabel->setOpacity(255);
   _tipsLabel->setVisible(true);
 
-  // µ­³ö¶¯»­
+  // æ·¡å‡ºåŠ¨ç”»
   auto fadeOut = Sequence::create(
     DelayTime::create(1.5f),
     FadeOut::create(0.5f),
-    Hide::create(),  // Ö»Òş²Ø£¬²»É¾³ı
+    Hide::create(),  // åªéšè—ï¼Œä¸åˆ é™¤
     nullptr
   );
 
@@ -321,7 +321,7 @@ void HUDLayer::initActionMenu() {
   _actionMenuNode->setVisible(false);
   this->addChild(_actionMenuNode, 20);
 
-  _buildingNameLabel = Label::createWithTTF("½¨ÖşÃû³Æ", FONT_PATH, 24);
+  _buildingNameLabel = Label::createWithTTF("å»ºç­‘åç§°", FONT_PATH, 24);
   _buildingNameLabel->enableOutline(Color4B::BLACK, 2);
   _buildingNameLabel->setPosition(Vec2(0, 110));
   _actionMenuNode->addChild(_buildingNameLabel);
@@ -329,21 +329,21 @@ void HUDLayer::initActionMenu() {
   float btnSize = 140.0f;
   std::string imgPath = "UI/training-camp/building-icon/";
 
-  // ĞÅÏ¢°´Å¥
+  // ä¿¡æ¯æŒ‰é’®
   _btnInfo = Button::create(imgPath + "info.png");
   _btnInfo->ignoreContentAdaptWithSize(false);
   _btnInfo->setContentSize(Size(btnSize, btnSize));
   _btnInfo->addClickEventListener([this](Ref*) {
-    CCLOG("µã»÷ÁËĞÅÏ¢");
+    CCLOG("ç‚¹å‡»äº†ä¿¡æ¯");
   });
   _actionMenuNode->addChild(_btnInfo);
 
-  // Éı¼¶°´Å¥ - ĞŞ¸´°æ
+  // å‡çº§æŒ‰é’® - ä¿®å¤ç‰ˆ
   _btnUpgrade = Button::create(imgPath + "upgrade.png");
   _btnUpgrade->ignoreContentAdaptWithSize(false);
   _btnUpgrade->setContentSize(Size(btnSize, btnSize));
   _btnUpgrade->addClickEventListener([this](Ref*) {
-    CCLOG("µã»÷Éı¼¶");
+    CCLOG("ç‚¹å‡»å‡çº§");
 
     if (_currentSelectedBuildingId == -1) return;
 
@@ -352,35 +352,35 @@ void HUDLayer::initActionMenu() {
 
     if (!building) return;
 
-    // ========== ¼ì²é0£º¹¤ÈËÊÇ·ñ¿ÕÏĞ£¨×î¸ßÓÅÏÈ¼¶£©==========
+    // ========== æ£€æŸ¥0ï¼šå·¥äººæ˜¯å¦ç©ºé—²ï¼ˆæœ€é«˜ä¼˜å…ˆçº§ï¼‰==========
     if (!dataManager->hasIdleWorker()) {
       int idle = dataManager->getIdleWorkerCount();
       int total = dataManager->getTotalWorkers();
 
-      std::string tip = "ËùÓĞ¹¤ÈË¶¼ÔÚÃ¦Âµ£¡\n";
-      tip += "¿ÕÏĞ¹¤ÈË: " + std::to_string(idle) + "/" + std::to_string(total);
-      tip += "\nÇë¹ºÂò½¨Öş¹¤ÈËĞ¡Îİ£¨50±¦Ê¯£©";
+      std::string tip = "æ‰€æœ‰å·¥äººéƒ½åœ¨å¿™ç¢Œï¼\n";
+      tip += "ç©ºé—²å·¥äºº: " + std::to_string(idle) + "/" + std::to_string(total);
+      tip += "\nè¯·è´­ä¹°å»ºç­‘å·¥äººå°å±‹ï¼ˆ50å®çŸ³ï¼‰";
 
       showTips(tip, Color3B::ORANGE);
       return;
     }
 
-    // ========== ¼ì²é1£ºÊÇ·ñÂú¼¶ ==========
+    // ========== æ£€æŸ¥1ï¼šæ˜¯å¦æ»¡çº§ ==========
     if (building->level >= 3) {
-      showTips("½¨ÖşÒÑ´ïµ½×î´óµÈ¼¶£¡", Color3B::RED);
+      showTips("å»ºç­‘å·²è¾¾åˆ°æœ€å¤§ç­‰çº§ï¼", Color3B::RED);
       return;
     }
 
     auto requirements = BuildingRequirements::getInstance();
 
-    // ========== ¼ì²é2£º´ó±¾ÓªÌØÊâ´¦Àí ==========
-    if (building->type == 1) {  // ´ó±¾Óª
+    // ========== æ£€æŸ¥2ï¼šå¤§æœ¬è¥ç‰¹æ®Šå¤„ç† ==========
+    if (building->type == 1) {  // å¤§æœ¬è¥
       if (!requirements->canUpgradeTownHall(building->level)) {
-        showTips("´ó±¾ÓªÉı¼¶Ìõ¼şÎ´Âú×ã\nÇëÏÈ½¨ÔìËùÓĞ·ÀÓù½¨Öş£¡", Color3B::RED);
+        showTips("å¤§æœ¬è¥å‡çº§æ¡ä»¶æœªæ»¡è¶³\nè¯·å…ˆå»ºé€ æ‰€æœ‰é˜²å¾¡å»ºç­‘ï¼", Color3B::RED);
         return;
       }
     }
-    // ========== ¼ì²é3£ºÆäËû½¨ÖşµÄ´ó±¾ÓªµÈ¼¶ÏŞÖÆ ==========
+    // ========== æ£€æŸ¥3ï¼šå…¶ä»–å»ºç­‘çš„å¤§æœ¬è¥ç­‰çº§é™åˆ¶ ==========
     else {
       int currentTHLevel = dataManager->getTownHallLevel();
 
@@ -388,55 +388,55 @@ void HUDLayer::initActionMenu() {
         int targetLevel = building->level + 1;
         int requiredTH = requirements->getRequiredTHLevel(building->type, targetLevel);
 
-        std::string reason = "ĞèÒª" + std::to_string(requiredTH) + "¼¶´ó±¾Óª";
-        showTips(reason, Color3B::ORANGE);  // ³ÈÉ«¾¯¸æ
+        std::string reason = "éœ€è¦" + std::to_string(requiredTH) + "çº§å¤§æœ¬è¥";
+        showTips(reason, Color3B::ORANGE);  // æ©™è‰²è­¦å‘Š
         return;
       }
     }
 
-    // ========== ¼ì²é4£º×ÊÔ´³ä×ã²¢¿ªÊ¼Éı¼¶ ==========
+    // ========== æ£€æŸ¥4ï¼šèµ„æºå……è¶³å¹¶å¼€å§‹å‡çº§ ==========
     if (dataManager->startUpgradeBuilding(_currentSelectedBuildingId)) {
-      CCLOG("Éı¼¶¿ªÊ¼³É¹¦!");
+      CCLOG("å‡çº§å¼€å§‹æˆåŠŸ!");
       hideBuildingActions();
-      // ==========  ÏÔÊ¾Éı¼¶³É¹¦ + ¹¤ÈË×´Ì¬ ==========
+      // ==========  æ˜¾ç¤ºå‡çº§æˆåŠŸ + å·¥äººçŠ¶æ€ ==========
       int idle = dataManager->getIdleWorkerCount();
       int total = dataManager->getTotalWorkers();
 
-      std::string tip = "Éı¼¶¿ªÊ¼£¡\n";
-      tip += "Ê£Óà¹¤ÈË: " + std::to_string(idle) + "/" + std::to_string(total);
+      std::string tip = "å‡çº§å¼€å§‹ï¼\n";
+      tip += "å‰©ä½™å·¥äºº: " + std::to_string(idle) + "/" + std::to_string(total);
 
       showTips(tip, Color3B::GREEN);
     } else {
-      showTips("Éı¼¶Ê§°Ü£º×ÊÔ´²»×ã", Color3B::RED);
+      showTips("å‡çº§å¤±è´¥ï¼šèµ„æºä¸è¶³", Color3B::RED);
     }
   });
   _actionMenuNode->addChild(_btnUpgrade);
 
-  _upgradeCostLabel = Label::createWithTTF("270000 Ê¥Ë®", FONT_PATH, 20);
+  _upgradeCostLabel = Label::createWithTTF("270000 åœ£æ°´", FONT_PATH, 20);
   _upgradeCostLabel->setColor(Color3B::MAGENTA);
   _upgradeCostLabel->enableOutline(Color4B::BLACK, 2);
   _upgradeCostLabel->setAnchorPoint(Vec2(0.5f, 1.0f));
   _upgradeCostLabel->setPosition(Vec2(btnSize / 2, btnSize - 10));
   _btnUpgrade->addChild(_upgradeCostLabel);
 
-  // ÑµÁ·°´Å¥
+  // è®­ç»ƒæŒ‰é’®
   _btnTrain = Button::create(imgPath + "training.png");
   _btnTrain->ignoreContentAdaptWithSize(false);
   _btnTrain->setContentSize(Size(btnSize, btnSize));
   _btnTrain->addClickEventListener([this](Ref*) {
-    CCLOG("µã»÷ÁËÑµÁ·²¿¶Ó");
+    CCLOG("ç‚¹å‡»äº†è®­ç»ƒéƒ¨é˜Ÿ");
     auto trainLayer = TrainingLayer::create();
     this->getScene()->addChild(trainLayer, 150);
   });
   _actionMenuNode->addChild(_btnTrain);
 
-  //  ¼ÓËÙ°´Å¥
+  //  åŠ é€ŸæŒ‰é’®
   _btnSpeedup = Button::create("UI/Village/Speedup_button.png");
   _btnSpeedup->ignoreContentAdaptWithSize(false);
   _btnSpeedup->setContentSize(Size(btnSize, btnSize));
-  _btnSpeedup->setVisible(false);  // Ä¬ÈÏÒş²Ø
+  _btnSpeedup->setVisible(false);  // é»˜è®¤éšè—
   _btnSpeedup->addClickEventListener([this](Ref*) {
-    CCLOG("µã»÷ÁË¼ÓËÙ°´Å¥");
+    CCLOG("ç‚¹å‡»äº†åŠ é€ŸæŒ‰é’®");
     if (_currentSelectedBuildingId == -1) return;
     onSpeedupClicked(_currentSelectedBuildingId);
   });
@@ -472,54 +472,54 @@ void HUDLayer::updateActionButtons(int buildingId) {
   auto config = configMgr->getConfig(buildingInstance->type);
   if (!config) return;
 
-  // ¸üĞÂ½¨ÖşÃû³Æ
-  std::string title = config->name + " (" + std::to_string(buildingInstance->level) + "¼¶)";
+  // æ›´æ–°å»ºç­‘åç§°
+  std::string title = config->name + " (" + std::to_string(buildingInstance->level) + "çº§)";
   _buildingNameLabel->setString(title);
 
-  // ========== ¸ù¾İ×´Ì¬ÇĞ»»°´Å¥ ==========
+  // ========== æ ¹æ®çŠ¶æ€åˆ‡æ¢æŒ‰é’® ==========
   bool isConstructing = (buildingInstance->state == BuildingInstance::State::CONSTRUCTING);
 
   _btnUpgrade->setVisible(!isConstructing);
   _btnSpeedup->setVisible(isConstructing);
 
   if (isConstructing) {
-    // ½¨ÔìÖĞ£ºÏÔÊ¾¼ÓËÙ°´Å¥
+    // å»ºé€ ä¸­ï¼šæ˜¾ç¤ºåŠ é€ŸæŒ‰é’®
     bool hasGem = (dataManager->getGem() >= 1);
     _btnSpeedup->setTouchEnabled(hasGem);
     _btnSpeedup->setOpacity(hasGem ? 255 : 128);
   } else {
-    // ÒÑÍê³É£º¸ù¾İ½¨ÖşÀàĞÍ·Ö±ğ´¦Àí
+    // å·²å®Œæˆï¼šæ ¹æ®å»ºç­‘ç±»å‹åˆ†åˆ«å¤„ç†
     auto requirements = BuildingRequirements::getInstance();
     int currentTHLevel = dataManager->getTownHallLevel();
 
-    // ========== ´ó±¾ÓªÌØÊâ´¦Àí ==========
+    // ========== å¤§æœ¬è¥ç‰¹æ®Šå¤„ç† ==========
     if (buildingInstance->type == 1) {
       if (buildingInstance->level >= 3) {
-        _upgradeCostLabel->setString("ÒÑÂú¼¶");
+        _upgradeCostLabel->setString("å·²æ»¡çº§");
         _upgradeCostLabel->setColor(Color3B::RED);
         _btnUpgrade->setTouchEnabled(false);
         _btnUpgrade->setOpacity(128);
       } else if (!requirements->canUpgradeTownHall(buildingInstance->level)) {
-        _upgradeCostLabel->setString("Ğè½¨ÔìËùÓĞ·ÀÓù");
+        _upgradeCostLabel->setString("éœ€å»ºé€ æ‰€æœ‰é˜²å¾¡");
         _upgradeCostLabel->setColor(Color3B::ORANGE);
         _btnUpgrade->setTouchEnabled(false);
         _btnUpgrade->setOpacity(128);
       } else {
-        // ¿ÉÒÔÉı¼¶ - ·­Òë costType
+        // å¯ä»¥å‡çº§ - ç¿»è¯‘ costType
         int cost = configMgr->getUpgradeCost(buildingInstance->type, buildingInstance->level);
 
-        // ·­ÒëÎªÖĞÎÄ
+        // ç¿»è¯‘ä¸ºä¸­æ–‡
         std::string costTypeCN;
         if (config->costType == "gold") {
-          costTypeCN = "½ğ±Ò";
+          costTypeCN = "é‡‘å¸";
         } else if (config->costType == "elixir") {
-          costTypeCN = "Ê¥Ë®";
+          costTypeCN = "åœ£æ°´";
         } else if (config->costType == "gem") {
-          costTypeCN = "±¦Ê¯";
+          costTypeCN = "å®çŸ³";
         }
         _upgradeCostLabel->setString(std::to_string(cost) + " " + costTypeCN);
 
-        // Ê¹ÓÃÓ¢ÎÄÅĞ¶Ï
+        // ä½¿ç”¨è‹±æ–‡åˆ¤æ–­
         if (config->costType == "gold") {
           _upgradeCostLabel->setColor(Color3B::YELLOW);
         } else if (config->costType == "elixir") {
@@ -533,10 +533,10 @@ void HUDLayer::updateActionButtons(int buildingId) {
         _btnUpgrade->setOpacity(255);
       }
     }
-    // ========== ÆäËû½¨ÖşµÄÍ¨ÓÃ´¦Àí ==========
+    // ========== å…¶ä»–å»ºç­‘çš„é€šç”¨å¤„ç† ==========
     else {
       if (buildingInstance->level >= 3) {
-        _upgradeCostLabel->setString("ÒÑÂú¼¶");
+        _upgradeCostLabel->setString("å·²æ»¡çº§");
         _upgradeCostLabel->setColor(Color3B::RED);
         _btnUpgrade->setTouchEnabled(false);
         _btnUpgrade->setOpacity(128);
@@ -544,26 +544,26 @@ void HUDLayer::updateActionButtons(int buildingId) {
         int targetLevel = buildingInstance->level + 1;
         int requiredTH = requirements->getRequiredTHLevel(buildingInstance->type, targetLevel);
 
-        _upgradeCostLabel->setString("ĞèÒª" + std::to_string(requiredTH) + "¼¶´ó±¾Óª");
+        _upgradeCostLabel->setString("éœ€è¦" + std::to_string(requiredTH) + "çº§å¤§æœ¬è¥");
         _upgradeCostLabel->setColor(Color3B::ORANGE);
         _btnUpgrade->setTouchEnabled(false);
         _btnUpgrade->setOpacity(128);
       } else if (configMgr->canUpgrade(buildingInstance->type, buildingInstance->level)) {
-        // ¿ÉÒÔÉı¼¶ - ·­Òë costType
+        // å¯ä»¥å‡çº§ - ç¿»è¯‘ costType
         int cost = configMgr->getUpgradeCost(buildingInstance->type, buildingInstance->level);
 
-        // ·­ÒëÎªÖĞÎÄ
+        // ç¿»è¯‘ä¸ºä¸­æ–‡
         std::string costTypeCN;
         if (config->costType == "gold") {
-          costTypeCN = "½ğ±Ò";
+          costTypeCN = "é‡‘å¸";
         } else if (config->costType == "elixir") {
-          costTypeCN = "Ê¥Ë®";
+          costTypeCN = "åœ£æ°´";
         } else if (config->costType == "gem") {
-          costTypeCN = "±¦Ê¯";
+          costTypeCN = "å®çŸ³";
         }
         _upgradeCostLabel->setString(std::to_string(cost) + " " + costTypeCN);
 
-        // Ê¹ÓÃÓ¢ÎÄÅĞ¶Ï
+        // ä½¿ç”¨è‹±æ–‡åˆ¤æ–­
         if (config->costType == "gold") {
           _upgradeCostLabel->setColor(Color3B::YELLOW);
         } else if (config->costType == "elixir") {
@@ -576,7 +576,7 @@ void HUDLayer::updateActionButtons(int buildingId) {
         _btnUpgrade->setTouchEnabled(true);
         _btnUpgrade->setOpacity(255);
       } else {
-        _upgradeCostLabel->setString("ÒÑÂú¼¶");
+        _upgradeCostLabel->setString("å·²æ»¡çº§");
         _upgradeCostLabel->setColor(Color3B::RED);
         _btnUpgrade->setTouchEnabled(false);
         _btnUpgrade->setOpacity(128);
@@ -584,7 +584,7 @@ void HUDLayer::updateActionButtons(int buildingId) {
     }
   }
 
-  // ========== ÑµÁ·°´Å¥ÏÔÊ¾Âß¼­ ==========
+  // ========== è®­ç»ƒæŒ‰é’®æ˜¾ç¤ºé€»è¾‘ ==========
   bool canTrain = (buildingInstance->type == 101 || buildingInstance->type == 102);
   _btnTrain->setVisible(canTrain);
 
@@ -596,7 +596,7 @@ void HUDLayer::updateActionButtons(int buildingId) {
   _btnTrain->setPosition(layout.trainPos);
 }
 
-//  ĞÂÔö£º¼ÓËÙ°´Å¥»Øµ÷
+//  æ–°å¢ï¼šåŠ é€ŸæŒ‰é’®å›è°ƒ
 void HUDLayer::onSpeedupClicked(int buildingId) {
   auto speedupManager = BuildingSpeedupManager::getInstance();
 
@@ -604,18 +604,18 @@ void HUDLayer::onSpeedupClicked(int buildingId) {
     CCLOG("HUDLayer: Building %d speedup successful", buildingId);
     hideBuildingActions();
 
-    //  Ê¹ÓÃ¸´ÓÃµÄÌáÊ¾Label
-    showTips("½¨ÔìÍê³É£¡£¨ÏûºÄ1±¦Ê¯£©", Color3B::GREEN);
+    //  ä½¿ç”¨å¤ç”¨çš„æç¤ºLabel
+    showTips("å»ºé€ å®Œæˆï¼ï¼ˆæ¶ˆè€—1å®çŸ³ï¼‰", Color3B::GREEN);
   } else {
     std::string reason = speedupManager->getSpeedupFailReason(buildingId);
     CCLOG("HUDLayer: Speedup failed: %s", reason.c_str());
 
-    //  Ê¹ÓÃ¸´ÓÃµÄÌáÊ¾Label
+    //  ä½¿ç”¨å¤ç”¨çš„æç¤ºLabel
     showTips(reason, Color3B::RED);
   }
 }
 
-// =========½¨Öş·ÅÖÃ==========
+// =========å»ºç­‘æ”¾ç½®==========
 void HUDLayer::showPlacementUI(int buildingId) {
   _placementUI->show();
   updatePlacementUIState(false);
@@ -666,53 +666,53 @@ void HUDLayer::startBuildingPlacement(int buildingId) {
     _placementTouchListener, this);
 }
 
-// ========== ½øÈëÁ¬Ğø½¨ÔìÄ£Ê½ ==========
+// ========== è¿›å…¥è¿ç»­å»ºé€ æ¨¡å¼ ==========
 void HUDLayer::enterContinuousBuildMode(int buildingType) {
   CCLOG("HUDLayer: Entering continuous build mode for type %d", buildingType);
 
   _isContinuousBuildMode = true;
   _continuousBuildingType = buildingType;
 
-  // ========== ºËĞÄĞŞ¸´£º½«ÌáÊ¾±êÇ©ÒÆµ½È·ÈÏ°´Å¥ÉÏ·½ ==========
+  // ========== æ ¸å¿ƒä¿®å¤ï¼šå°†æç¤ºæ ‡ç­¾ç§»åˆ°ç¡®è®¤æŒ‰é’®ä¸Šæ–¹ ==========
   auto visibleSize = Director::getInstance()->getVisibleSize();
 
   _modeHintLabel = Label::createWithTTF(
-    "Á¬Ğø½¨ÔìÄ£Ê½ | °´ESCÍË³ö",
+    "è¿ç»­å»ºé€ æ¨¡å¼ | æŒ‰ESCé€€å‡º",
     FONT_PATH,
-    20  // ×ÖÌåÉÔÎ¢Ğ¡Ò»µã£¬¸ü½ô´Õ
+    20  // å­—ä½“ç¨å¾®å°ä¸€ç‚¹ï¼Œæ›´ç´§å‡‘
   );
 
-  // Î»ÖÃ£ºY=180£¬ÕıºÃÔÚÈ·ÈÏ°´Å¥£¨Y=100£©ÉÏ·½ 80 ÏñËØ
+  // ä½ç½®ï¼šY=180ï¼Œæ­£å¥½åœ¨ç¡®è®¤æŒ‰é’®ï¼ˆY=100ï¼‰ä¸Šæ–¹ 80 åƒç´ 
   _modeHintLabel->setPosition(visibleSize.width / 2, 180.0f);
   _modeHintLabel->setColor(Color3B::YELLOW);
   _modeHintLabel->enableOutline(Color4B::BLACK, 2);
-  this->addChild(_modeHintLabel, 999);  // ZOrder 999£¬µÍÓÚ PlacementConfirmUI
+  this->addChild(_modeHintLabel, 999);  // ZOrder 999ï¼Œä½äº PlacementConfirmUI
   // ==================================================================
 
-  // ¸üĞÂ UI ÏÔÊ¾Ê£Óà×ÊÔ´
+  // æ›´æ–° UI æ˜¾ç¤ºå‰©ä½™èµ„æº
   updateContinuousModeUI();
 
-  // ´´½¨µÚÒ»¸ö³ÇÇ½
+  // åˆ›å»ºç¬¬ä¸€ä¸ªåŸå¢™
   createNextWall();
 }
 
-// ========== ÍË³öÁ¬Ğø½¨ÔìÄ£Ê½ ==========
+// ========== é€€å‡ºè¿ç»­å»ºé€ æ¨¡å¼ ==========
 void HUDLayer::exitContinuousBuildMode(const std::string& reason) {
   CCLOG("HUDLayer: Exiting continuous build mode - Reason: %s", reason.c_str());
 
   _isContinuousBuildMode = false;
   _continuousBuildingType = -1;
 
-  // ÒÆ³ıÌáÊ¾±êÇ©
+  // ç§»é™¤æç¤ºæ ‡ç­¾
   if (_modeHintLabel) {
     _modeHintLabel->removeFromParent();
     _modeHintLabel = nullptr;
   }
 
-  // ÏÔÊ¾ÍË³öÔ­Òò£¨¿ÉÑ¡£©
+  // æ˜¾ç¤ºé€€å‡ºåŸå› ï¼ˆå¯é€‰ï¼‰
   auto visibleSize = Director::getInstance()->getVisibleSize();
   auto exitLabel = Label::createWithTTF(
-    "ÒÑÍË³öÁ¬Ğø½¨ÔìÄ£Ê½: " + reason,
+    "å·²é€€å‡ºè¿ç»­å»ºé€ æ¨¡å¼: " + reason,
     FONT_PATH,
     20
   );
@@ -721,7 +721,7 @@ void HUDLayer::exitContinuousBuildMode(const std::string& reason) {
   exitLabel->enableOutline(Color4B::BLACK, 2);
   this->addChild(exitLabel, 1000);
 
-  // 2Ãëºó×Ô¶¯ÏûÊ§
+  // 2ç§’åè‡ªåŠ¨æ¶ˆå¤±
   exitLabel->runAction(Sequence::create(
     DelayTime::create(2.0f),
     RemoveSelf::create(),
@@ -729,42 +729,42 @@ void HUDLayer::exitContinuousBuildMode(const std::string& reason) {
   ));
 }
 
-// ========== ´´½¨ÏÂÒ»¸ö³ÇÇ½ ==========
+// ========== åˆ›å»ºä¸‹ä¸€ä¸ªåŸå¢™ ==========
 void HUDLayer::createNextWall() {
   auto dataManager = VillageDataManager::getInstance();
   auto config = BuildingConfig::getInstance()->getConfig(_continuousBuildingType);
 
   if (!config) {
-    exitContinuousBuildMode("ÅäÖÃ´íÎó");
+    exitContinuousBuildMode("é…ç½®é”™è¯¯");
     return;
   }
 
-  // 1. ¿Û³ı×ÊÔ´
+  // 1. æ‰£é™¤èµ„æº
   int cost = config->initialCost;
   if (config->costType == "gold") {
     if (dataManager->getGold() < cost) {
-      exitContinuousBuildMode("½ğ±Ò²»×ã");
+      exitContinuousBuildMode("é‡‘å¸ä¸è¶³");
       return;
     }
     dataManager->spendGold(cost);
   } else if (config->costType == "elixir") {
     if (dataManager->getElixir() < cost) {
-      exitContinuousBuildMode("Ê¥Ë®²»×ã");
+      exitContinuousBuildMode("åœ£æ°´ä¸è¶³");
       return;
     }
     dataManager->spendElixir(cost);
   }
 
-  // 2. ´´½¨½¨ÖşÊı¾İ£¨PLACING ×´Ì¬£©
+  // 2. åˆ›å»ºå»ºç­‘æ•°æ®ï¼ˆPLACING çŠ¶æ€ï¼‰
   int buildingId = dataManager->addBuilding(
     _continuousBuildingType, 0, 0, 1, BuildingInstance::State::PLACING
   );
   if (buildingId < 0) {
-    exitContinuousBuildMode("´´½¨Ê§°Ü");
+    exitContinuousBuildMode("åˆ›å»ºå¤±è´¥");
     return;
   }
 
-  // 3. Í¨Öª VillageLayer ´´½¨¾«Áé²¢Æô¶¯·ÅÖÃÁ÷³Ì
+  // 3. é€šçŸ¥ VillageLayer åˆ›å»ºç²¾çµå¹¶å¯åŠ¨æ”¾ç½®æµç¨‹
   auto scene = this->getScene();
   if (scene) {
     auto villageLayer = dynamic_cast<VillageLayer*>(scene->getChildByTag(1));
@@ -773,13 +773,13 @@ void HUDLayer::createNextWall() {
     }
   }
 
-  // Ö±½Ó¸üĞÂ UI ¼´¿É
+  // ç›´æ¥æ›´æ–° UI å³å¯
   updateContinuousModeUI();
 
   CCLOG("HUDLayer: Created next wall (ID=%d)", buildingId);
 }
 
-// ========== ¼ì²éÊÇ·ñ¿ÉÒÔ¼ÌĞø½¨Ôì ==========
+// ========== æ£€æŸ¥æ˜¯å¦å¯ä»¥ç»§ç»­å»ºé€  ==========
 bool HUDLayer::canContinueBuild() {
   auto dataManager = VillageDataManager::getInstance();
   auto requirements = BuildingRequirements::getInstance();
@@ -787,7 +787,7 @@ bool HUDLayer::canContinueBuild() {
 
   if (!config) return false;
 
-  // ¼ì²é1£º×ÊÔ´ÊÇ·ñ×ã¹»
+  // æ£€æŸ¥1ï¼šèµ„æºæ˜¯å¦è¶³å¤Ÿ
   int cost = config->initialCost;
   if (config->costType == "gold" && dataManager->getGold() < cost) {
     CCLOG("HUDLayer: Not enough gold (%d < %d)", dataManager->getGold(), cost);
@@ -798,7 +798,7 @@ bool HUDLayer::canContinueBuild() {
     return false;
   }
 
-  // ¼ì²é2£ºÊıÁ¿ÊÇ·ñ´ïµ½ÉÏÏŞ
+  // æ£€æŸ¥2ï¼šæ•°é‡æ˜¯å¦è¾¾åˆ°ä¸Šé™
   int currentTHLevel = dataManager->getTownHallLevel();
   int maxCount = requirements->getMaxCount(_continuousBuildingType, currentTHLevel);
 
@@ -818,7 +818,7 @@ bool HUDLayer::canContinueBuild() {
   return true;
 }
 
-// ========== ¸üĞÂÁ¬ĞøÄ£Ê½ UI ==========
+// ========== æ›´æ–°è¿ç»­æ¨¡å¼ UI ==========
 void HUDLayer::updateContinuousModeUI() {
   if (!_modeHintLabel) return;
 
@@ -827,13 +827,13 @@ void HUDLayer::updateContinuousModeUI() {
 
   if (!config) return;
 
-  // ¼ò»¯ºóµÄÌáÊ¾ÎÄ×Ö
-  std::string text = "Á¬Ğø½¨ÔìÄ£Ê½: " + config->name + " | °´ESCÍË³ö";
+  // ç®€åŒ–åçš„æç¤ºæ–‡å­—
+  std::string text = "è¿ç»­å»ºé€ æ¨¡å¼: " + config->name + " | æŒ‰ESCé€€å‡º";
 
   _modeHintLabel->setString(text);
 }
 
-// ========== ÉèÖÃ¼üÅÌ¼àÌıÆ÷ ==========
+// ========== è®¾ç½®é”®ç›˜ç›‘å¬å™¨ ==========
 void HUDLayer::setupKeyboardListener() {
   _keyboardListener = EventListenerKeyboard::create();
 
@@ -844,22 +844,22 @@ void HUDLayer::setupKeyboardListener() {
   CCLOG("HUDLayer: Keyboard listener set up");
 }
 
-// ========== ¼üÅÌÊÂ¼ş´¦Àí ==========
+// ========== é”®ç›˜äº‹ä»¶å¤„ç† ==========
 void HUDLayer::onKeyPressed(EventKeyboard::KeyCode keyCode, Event* event) {
   if (keyCode == EventKeyboard::KeyCode::KEY_ESCAPE) {
     CCLOG("HUDLayer: ESC key pressed");
 
     if (_isContinuousBuildMode) {
-      // Èç¹ûÕıÔÚ·ÅÖÃ½¨Öş£¬ÏÈÈ¡Ïûµ±Ç°½¨Öş
+      // å¦‚æœæ­£åœ¨æ”¾ç½®å»ºç­‘ï¼Œå…ˆå–æ¶ˆå½“å‰å»ºç­‘
       if (_placementController && _placementController->isPlacing()) {
         _placementController->cancelPlacement();
       }
-      exitContinuousBuildMode("ÓÃ»§°´ESCÍË³ö");
+      exitContinuousBuildMode("ç”¨æˆ·æŒ‰ESCé€€å‡º");
     }
   }
 }
 
-// ========== ¹¤ÈË×´Ì¬ÏÔÊ¾¸üĞÂ ==========
+// ========== å·¥äººçŠ¶æ€æ˜¾ç¤ºæ›´æ–° ==========
 void HUDLayer::updateWorkerDisplay() {
   if (!_workerLabel) return;
 
@@ -868,16 +868,16 @@ void HUDLayer::updateWorkerDisplay() {
   int idle = dataManager->getIdleWorkerCount();
   int total = dataManager->getTotalWorkers();
 
-  // ÏÔÊ¾¸ñÊ½£º"Workers: ¿ÕÏĞ/×ÜÊı"
+  // æ˜¾ç¤ºæ ¼å¼ï¼š"Workers: ç©ºé—²/æ€»æ•°"
   std::string text = StringUtils::format("Workers: %d/%d", idle, total);
   _workerLabel->setString(text);
 
-  // ¸ù¾İ¹¤ÈË×´Ì¬¶¯Ì¬¸Ä±äÑÕÉ«
+  // æ ¹æ®å·¥äººçŠ¶æ€åŠ¨æ€æ”¹å˜é¢œè‰²
   if (idle == 0) {
-    _workerLabel->setColor(Color3B::RED);     // È«²¿Ã¦Âµ - ºìÉ«¾¯¸æ
+    _workerLabel->setColor(Color3B::RED);     // å…¨éƒ¨å¿™ç¢Œ - çº¢è‰²è­¦å‘Š
   } else if (idle < total) {
-    _workerLabel->setColor(Color3B::ORANGE);  // ²¿·ÖÃ¦Âµ - ³ÈÉ«
+    _workerLabel->setColor(Color3B::ORANGE);  // éƒ¨åˆ†å¿™ç¢Œ - æ©™è‰²
   } else {
-    _workerLabel->setColor(COLOR_CYAN);    // È«²¿¿ÕÏĞ - ÇàÉ«
+    _workerLabel->setColor(COLOR_CYAN);    // å…¨éƒ¨ç©ºé—² - é’è‰²
   }
 }

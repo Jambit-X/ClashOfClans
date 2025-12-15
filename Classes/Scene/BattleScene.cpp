@@ -1,4 +1,4 @@
-#include "BattleScene.h"
+ï»¿#include "BattleScene.h"
 #include "Layer/BattleMapLayer.h"
 #include "Layer/BattleHUDLayer.h"
 #include "Layer/BattleResultLayer.h"
@@ -22,54 +22,54 @@ bool BattleScene::init() {
     _currentState = BattleState::PREPARE;
     _isSearching = false;
 
-    // 1. µØÍ¼²ã
+    // 1. åœ°å›¾å±‚
     _mapLayer = BattleMapLayer::create();
     if (_mapLayer) {
         this->addChild(_mapLayer, 0);
 
-        // ¡¾ĞÂÔö¡¿°Ñ TroopLayer ¼ÓÎª MapLayer µÄ×Ó½Úµã£¬Tag ÉèÎª 999
+        // ã€æ–°å¢ã€‘æŠŠ TroopLayer åŠ ä¸º MapLayer çš„å­èŠ‚ç‚¹ï¼ŒTag è®¾ä¸º 999
         auto troopLayer = BattleTroopLayer::create();
         troopLayer->setTag(999);
-        _mapLayer->addChild(troopLayer, 10); // Z=10 ¸ÇÔÚ½¨ÖşÉÏÃæ
+        _mapLayer->addChild(troopLayer, 10); // Z=10 ç›–åœ¨å»ºç­‘ä¸Šé¢
     }
 
 
 
-    // 2. UI ²ã (Z=10)
+    // 2. UI å±‚ (Z=10)
     _hudLayer = BattleHUDLayer::create();
     if (_hudLayer) this->addChild(_hudLayer, 10);
 
-    // 3. ³õÊ¼»¯ÔÆ²ãÕÚÕÖ (Z=100, ·ÅÔÚ×î¸ß²ãÒÔÕÚµ²Ò»ÇĞ)
-    // Â·¾¶: Resources/UI/battle/battle-prepare/cloud.jpg
+    // 3. åˆå§‹åŒ–äº‘å±‚é®ç½© (Z=100, æ”¾åœ¨æœ€é«˜å±‚ä»¥é®æŒ¡ä¸€åˆ‡)
+    // è·¯å¾„: Resources/UI/battle/battle-prepare/cloud.jpg
     _cloudSprite = Sprite::create("UI/battle/battle-prepare/cloud.jpg");
     if (_cloudSprite) {
         auto visibleSize = Director::getInstance()->getVisibleSize();
         _cloudSprite->setPosition(visibleSize.width / 2, visibleSize.height / 2);
 
-        // ¼ÆËãËõ·ÅÒÔ¸²¸ÇÈ«ÆÁ (scale ÉÔÎ¢´óÒ»µã·ÀÖ¹ºÚ±ß)
+        // è®¡ç®—ç¼©æ”¾ä»¥è¦†ç›–å…¨å± (scale ç¨å¾®å¤§ä¸€ç‚¹é˜²æ­¢é»‘è¾¹)
         float scaleX = visibleSize.width / _cloudSprite->getContentSize().width;
         float scaleY = visibleSize.height / _cloudSprite->getContentSize().height;
         float finalScale = std::max(scaleX, scaleY) * 1.1f;
         _cloudSprite->setScale(finalScale);
 
-        // ³õÊ¼×´Ì¬£ºÍêÈ«²»Í¸Ã÷ (Ä£Äâ¸Õµã½øÕ½¶·Ê±µÄËÑË÷×´Ì¬)
+        // åˆå§‹çŠ¶æ€ï¼šå®Œå…¨ä¸é€æ˜ (æ¨¡æ‹Ÿåˆšç‚¹è¿›æˆ˜æ–—æ—¶çš„æœç´¢çŠ¶æ€)
         _cloudSprite->setOpacity(255);
         _cloudSprite->setVisible(true);
 
         this->addChild(_cloudSprite, 100);
     }
 
-    // 4. ¼ÓÔØµĞÈËÊı¾İ
+    // 4. åŠ è½½æ•Œäººæ•°æ®
     loadEnemyVillage();
     
-    // ========== ¹Ø¼üĞŞ¸´£º¸üĞÂÑ°Â·µØÍ¼ ==========
+    // ========== å…³é”®ä¿®å¤ï¼šæ›´æ–°å¯»è·¯åœ°å›¾ ==========
     FindPathUtil::getInstance()->updatePathfindingMap();
     CCLOG("BattleScene: Pathfinding map updated for battle");
     // ===========================================
     
     switchState(BattleState::PREPARE);
 
-    // 5. Æô¶¯Ê±Ö´ĞĞÒ»´Î"½øÈë¶¯»­"£¨ÑÓ³ÙÒ»ÏÂÔÙµ­³ö£¬ÈÃÍæ¼Ò¿´ÇåËÑË÷ÔÆ²ã£©
+    // 5. å¯åŠ¨æ—¶æ‰§è¡Œä¸€æ¬¡"è¿›å…¥åŠ¨ç”»"ï¼ˆå»¶è¿Ÿä¸€ä¸‹å†æ·¡å‡ºï¼Œè®©ç©å®¶çœ‹æ¸…æœç´¢äº‘å±‚ï¼‰
     float randomStartDelay = cocos2d::RandomHelper::random_real(0.5f, 1.0f);
     this->scheduleOnce([this](float) {
         performCloudTransition(nullptr, true);
@@ -77,7 +77,7 @@ bool BattleScene::init() {
 
     this->scheduleUpdate();
    
-    // ¡¾ĞÂÔö¡¿×îºó¿ªÆô´¥Ãş¼àÌı
+    // ã€æ–°å¢ã€‘æœ€åå¼€å¯è§¦æ‘¸ç›‘å¬
     setupTouchListener();
     return true;
 }
@@ -89,10 +89,10 @@ void BattleScene::update(float dt) {
 
         if (_stateTimer <= 0) {
             if (_currentState == BattleState::PREPARE) {
-                onReturnHomeClicked(); // Õì²éÊ±¼äµ½»ØÓª
+                onReturnHomeClicked(); // ä¾¦æŸ¥æ—¶é—´åˆ°å›è¥
             }
             else if (_currentState == BattleState::FIGHTING) {
-                onEndBattleClicked(); // Õ½¶·Ê±¼äµ½
+                onEndBattleClicked(); // æˆ˜æ–—æ—¶é—´åˆ°
             }
         }
     }
@@ -121,20 +121,20 @@ void BattleScene::switchState(BattleState newState) {
 
 void BattleScene::loadEnemyVillage() {
     if (_mapLayer) {
-        // ÕâÀïÖ´ĞĞË¢ĞÂµØÍ¼µÄÂß¼­
+        // è¿™é‡Œæ‰§è¡Œåˆ·æ–°åœ°å›¾çš„é€»è¾‘
         _mapLayer->reloadMap();
     }
 }
 
 void BattleScene::onNextOpponentClicked() {
-    if (_isSearching) return; // ·ÀÖ¹ÖØ¸´µã»÷
+    if (_isSearching) return; // é˜²æ­¢é‡å¤ç‚¹å‡»
 
-    // Ö´ĞĞÍêÕûµÄÔÆ²ã¹ı¶É¶¯»­
+    // æ‰§è¡Œå®Œæ•´çš„äº‘å±‚è¿‡æ¸¡åŠ¨ç”»
     performCloudTransition([this]() {
-        // ÕâÀïµÄ´úÂë»áÔÚÔÆ²ãÍêÈ«±ä°×£¨ÕÚ×¡ÆÁÄ»£©Ê±Ö´ĞĞ
+        // è¿™é‡Œçš„ä»£ç ä¼šåœ¨äº‘å±‚å®Œå…¨å˜ç™½ï¼ˆé®ä½å±å¹•ï¼‰æ—¶æ‰§è¡Œ
         this->loadEnemyVillage();
 
-        // ÖØÖÃÕì²éµ¹¼ÆÊ±
+        // é‡ç½®ä¾¦æŸ¥å€’è®¡æ—¶
         _stateTimer = 30.0f;
         }, false);
 }
@@ -148,27 +148,27 @@ void BattleScene::onReturnHomeClicked() {
     Director::getInstance()->replaceScene(TransitionFade::create(0.5f, homeScene));
 }
 
-// --- ºËĞÄ£ºÔÆ²ã¹ı¶ÉÂß¼­ ---
+// --- æ ¸å¿ƒï¼šäº‘å±‚è¿‡æ¸¡é€»è¾‘ ---
 void BattleScene::performCloudTransition(std::function<void()> onMapReloadCallback, bool isInitialEntry) {
     if (!_cloudSprite) {
-        // Èç¹ûÃ»ÓĞÔÆ²ãÍ¼Æ¬£¬Ö±½ÓÖ´ĞĞ»Øµ÷£¬·ÀÖ¹¿¨ËÀ
+        // å¦‚æœæ²¡æœ‰äº‘å±‚å›¾ç‰‡ï¼Œç›´æ¥æ‰§è¡Œå›è°ƒï¼Œé˜²æ­¢å¡æ­»
         if (onMapReloadCallback) onMapReloadCallback();
         return;
     }
 
     _isSearching = true;
-    if (_hudLayer) _hudLayer->setButtonsEnabled(false); // ½ûÓÃ°´Å¥·ÀÖ¹ÂÒµã
+    if (_hudLayer) _hudLayer->setButtonsEnabled(false); // ç¦ç”¨æŒ‰é’®é˜²æ­¢ä¹±ç‚¹
 
-    // Ëæ»úµÈ´ıÊ±¼ä (0.1s - 2.0s)
+    // éšæœºç­‰å¾…æ—¶é—´ (0.1s - 2.0s)
     float randomWait = cocos2d::RandomHelper::random_real(0.1f, 2.0f);
 
     if (isInitialEntry) {
-        // Çé¿öA£º¸Õ½øÈë³¡¾°£¬ÔÆÒÑ¾­ÔÚÁË£¬Ö»ĞèÒªÖ´ĞĞµ­³ö
+        // æƒ…å†µAï¼šåˆšè¿›å…¥åœºæ™¯ï¼Œäº‘å·²ç»åœ¨äº†ï¼Œåªéœ€è¦æ‰§è¡Œæ·¡å‡º
         _cloudSprite->setOpacity(255);
         _cloudSprite->setVisible(true);
 
         _cloudSprite->runAction(Sequence::create(
-            FadeOut::create(0.5f),   // µ­³ö
+            FadeOut::create(0.5f),   // æ·¡å‡º
             CallFunc::create([this]() {
                 _cloudSprite->setVisible(false);
                 _isSearching = false;
@@ -178,18 +178,18 @@ void BattleScene::performCloudTransition(std::function<void()> onMapReloadCallba
         ));
     }
     else {
-        // Çé¿öB£ºµã»÷¡°ÏÂÒ»¸ö¡±£¬ĞèÒª µ­Èë -> Ëæ»úµÈ´ı -> »Øµ÷(Ë¢ĞÂµØÍ¼) -> µ­³ö
+        // æƒ…å†µBï¼šç‚¹å‡»â€œä¸‹ä¸€ä¸ªâ€ï¼Œéœ€è¦ æ·¡å…¥ -> éšæœºç­‰å¾… -> å›è°ƒ(åˆ·æ–°åœ°å›¾) -> æ·¡å‡º
         _cloudSprite->setVisible(true);
         _cloudSprite->setOpacity(0);
 
         _cloudSprite->runAction(Sequence::create(
-            FadeIn::create(0.2f), // 1. ¿ìËÙµ­Èë±ä°×
+            FadeIn::create(0.2f), // 1. å¿«é€Ÿæ·¡å…¥å˜ç™½
             CallFunc::create([=]() {
-                // ÔÆ²ãÍêÈ«ÕÚµ²Ê±£¬Ë¢ĞÂµØÍ¼Êı¾İ£¬Íæ¼Ò¿´²»¼ûÍ»±ä
+                // äº‘å±‚å®Œå…¨é®æŒ¡æ—¶ï¼Œåˆ·æ–°åœ°å›¾æ•°æ®ï¼Œç©å®¶çœ‹ä¸è§çªå˜
                 if (onMapReloadCallback) onMapReloadCallback();
                 }),
-            DelayTime::create(randomWait), // 2. Ä£ÄâËÑË÷µÄËæ»úµÈ´ı (0.1s - 2.0s)
-            FadeOut::create(0.4f),         // 3. µ­³öÏÔÊ¾ĞÂµØÍ¼
+            DelayTime::create(randomWait), // 2. æ¨¡æ‹Ÿæœç´¢çš„éšæœºç­‰å¾… (0.1s - 2.0s)
+            FadeOut::create(0.4f),         // 3. æ·¡å‡ºæ˜¾ç¤ºæ–°åœ°å›¾
             CallFunc::create([this]() {
                 _cloudSprite->setVisible(false);
                 _isSearching = false;
@@ -200,24 +200,24 @@ void BattleScene::performCloudTransition(std::function<void()> onMapReloadCallba
     }
 }
 void BattleScene::setupTouchListener() {
-    // Èç¹ûÒÑ¾­ÓĞ¼àÌıÆ÷£¬ÏÈÇåÀí
+    // å¦‚æœå·²ç»æœ‰ç›‘å¬å™¨ï¼Œå…ˆæ¸…ç†
     cleanupTouchListener();
     
     _touchListener = EventListenerTouchOneByOne::create();
     
-    // ¹Ø¼üĞŞ¸Ä£º²»ÒªÈ«¾ÖÍÌÊÉ£¬ÈÃ UI ²ã¿ÉÒÔ½ÓÊÕÊÂ¼ş
+    // å…³é”®ä¿®æ”¹ï¼šä¸è¦å…¨å±€åå™¬ï¼Œè®© UI å±‚å¯ä»¥æ¥æ”¶äº‹ä»¶
     _touchListener->setSwallowTouches(false);
     
     _touchListener->onTouchBegan = CC_CALLBACK_2(BattleScene::onTouchBegan, this);
     _touchListener->onTouchMoved = CC_CALLBACK_2(BattleScene::onTouchMoved, this);
     _touchListener->onTouchEnded = CC_CALLBACK_2(BattleScene::onTouchEnded, this);
     
-    // Ê¹ÓÃ¹Ì¶¨ÓÅÏÈ¼¶£¨Êı×ÖÔ½Ğ¡ÓÅÏÈ¼¶Ô½¸ß£©£¬È·±£±È MoveMapController ¸üÔç´¦Àí
+    // ä½¿ç”¨å›ºå®šä¼˜å…ˆçº§ï¼ˆæ•°å­—è¶Šå°ä¼˜å…ˆçº§è¶Šé«˜ï¼‰ï¼Œç¡®ä¿æ¯” MoveMapController æ›´æ—©å¤„ç†
     _eventDispatcher->addEventListenerWithFixedPriority(_touchListener, -1);
   
     CCLOG("BattleScene: Touch listener setup with fixed priority -1");
     
-    // ³õÊ¼»¯´¥Ãş×´Ì¬
+    // åˆå§‹åŒ–è§¦æ‘¸çŠ¶æ€
     _touchStartPos = Vec2::ZERO;
     _isTouchMoving = false;
 }
@@ -233,10 +233,10 @@ void BattleScene::cleanupTouchListener() {
 void BattleScene::onExit() {
 CCLOG("BattleScene::onExit - Cleaning up resources");
     
-    // ÇåÀí´¥Ãş¼àÌıÆ÷
+    // æ¸…ç†è§¦æ‘¸ç›‘å¬å™¨
     cleanupTouchListener();
     
-    // µ÷ÓÃ¸¸ÀàµÄ onExit
+    // è°ƒç”¨çˆ¶ç±»çš„ onExit
   Scene::onExit();
 }
 
@@ -244,27 +244,27 @@ bool BattleScene::onTouchBegan(cocos2d::Touch* touch, cocos2d::Event* event) {
     _touchStartPos = touch->getLocation();
     _isTouchMoving = false;
     
-    // 1. ¼ì²éÓĞÃ»ÓĞÑ¡ÖĞ±øÖÖ
+    // 1. æ£€æŸ¥æœ‰æ²¡æœ‰é€‰ä¸­å…µç§
     if (!_hudLayer || _hudLayer->getSelectedTroopId() == -1) {
     CCLOG("BattleScene: No troop selected, passing event to map controller");
-  return false; // Ã»Ñ¡±ø£¬°ÑÊÂ¼şÁô¸øµØÍ¼ÍÏ¶¯ºÍ UI
+  return false; // æ²¡é€‰å…µï¼ŒæŠŠäº‹ä»¶ç•™ç»™åœ°å›¾æ‹–åŠ¨å’Œ UI
     }
 
-    // 2. Èç¹ûÑ¡ÖĞÁË±øÖÖ£¬¼ì²éÊÇ·ñµã»÷ÔÚ UI ÇøÓòÉÏ
+    // 2. å¦‚æœé€‰ä¸­äº†å…µç§ï¼Œæ£€æŸ¥æ˜¯å¦ç‚¹å‡»åœ¨ UI åŒºåŸŸä¸Š
     if (isTouchOnUI(touch->getLocation())) {
      CCLOG("BattleScene: Touch on UI, passing event");
-   return false; // ÈÃ UI ´¦Àí£¨±ÈÈçµã»÷±øÖÖ¿¨Æ¬È¡ÏûÑ¡Ôñ£©
+   return false; // è®© UI å¤„ç†ï¼ˆæ¯”å¦‚ç‚¹å‡»å…µç§å¡ç‰‡å–æ¶ˆé€‰æ‹©ï¼‰
     }
 
  CCLOG("BattleScene: Troop selected (ID=%d), handling touch event", _hudLayer->getSelectedTroopId());
-  return true; // ¿ªÊ¼¸ú×Ù´¥Ãş£¬µÈ´ıÅĞ¶ÏÊÇµã»÷»¹ÊÇÍÏ¶¯
+  return true; // å¼€å§‹è·Ÿè¸ªè§¦æ‘¸ï¼Œç­‰å¾…åˆ¤æ–­æ˜¯ç‚¹å‡»è¿˜æ˜¯æ‹–åŠ¨
 }
 
 void BattleScene::onTouchMoved(cocos2d::Touch* touch, cocos2d::Event* event) {
     Vec2 currentPos = touch->getLocation();
     float distance = _touchStartPos.distance(currentPos);
     
-    // Èç¹ûÒÆ¶¯¾àÀë³¬¹ıãĞÖµ£¬ÅĞ¶¨ÎªÍÏ¶¯µØÍ¼
+    // å¦‚æœç§»åŠ¨è·ç¦»è¶…è¿‡é˜ˆå€¼ï¼Œåˆ¤å®šä¸ºæ‹–åŠ¨åœ°å›¾
     const float DRAG_THRESHOLD = 15.0f;
     if (distance > DRAG_THRESHOLD) {
         _isTouchMoving = true;
@@ -272,22 +272,22 @@ void BattleScene::onTouchMoved(cocos2d::Touch* touch, cocos2d::Event* event) {
 }
 
 void BattleScene::onTouchEnded(cocos2d::Touch* touch, cocos2d::Event* event) {
-    // Èç¹ûÃ»ÓĞÑ¡ÖĞ±øÖÖ£¬²»´¦Àí
+    // å¦‚æœæ²¡æœ‰é€‰ä¸­å…µç§ï¼Œä¸å¤„ç†
     if (!_hudLayer || _hudLayer->getSelectedTroopId() == -1) {
         return;
     }
     
-    // Èç¹ûÊÇÍÏ¶¯²Ù×÷£¬È¡Ïû±øÖÖÑ¡Ôñ²¢ÔÊĞíµØÍ¼ÍÏ¶¯
+    // å¦‚æœæ˜¯æ‹–åŠ¨æ“ä½œï¼Œå–æ¶ˆå…µç§é€‰æ‹©å¹¶å…è®¸åœ°å›¾æ‹–åŠ¨
     if (_isTouchMoving) {
         CCLOG("BattleScene: Drag detected, deselecting troop");
         _hudLayer->clearTroopSelection();
         return;
     }
     
-    // µ½ÕâÀïËµÃ÷ÊÇµã»÷²Ù×÷£¬´¦ÀíÏÂ±øÂß¼­
+    // åˆ°è¿™é‡Œè¯´æ˜æ˜¯ç‚¹å‡»æ“ä½œï¼Œå¤„ç†ä¸‹å…µé€»è¾‘
     Vec2 touchPos = touch->getLocation();
     
-    // ÔÙ´Î¼ì²éÊÇ·ñÔÚ UI ÇøÓò£¨¿ÉÄÜÊÇ¿ìËÙµã»÷£©
+    // å†æ¬¡æ£€æŸ¥æ˜¯å¦åœ¨ UI åŒºåŸŸï¼ˆå¯èƒ½æ˜¯å¿«é€Ÿç‚¹å‡»ï¼‰
     if (isTouchOnUI(touchPos)) {
         CCLOG("BattleScene: Touch ended on UI, ignoring");
         return;
@@ -295,7 +295,7 @@ void BattleScene::onTouchEnded(cocos2d::Touch* touch, cocos2d::Event* event) {
 
     CCLOG("BattleScene: Tap detected, spawning troop");
 
-    // 2. ×ª»»×ø±ê
+    // 2. è½¬æ¢åæ ‡
     Vec2 worldPos = _mapLayer->convertToNodeSpace(touchPos);
     Vec2 gridPos = GridMapUtils::pixelToGrid(worldPos);
     int gx = (int)std::round(gridPos.x);
@@ -303,36 +303,36 @@ void BattleScene::onTouchEnded(cocos2d::Touch* touch, cocos2d::Event* event) {
 
     CCLOG("BattleScene: Touch at grid(%d, %d)", gx, gy);
 
-    // 3. ¼òµ¥µÄ±ß½ç¼ì²é (ºìÏßÂß¼­ÒÔºóÔÙÏ¸»¯)
+    // 3. ç®€å•çš„è¾¹ç•Œæ£€æŸ¥ (çº¢çº¿é€»è¾‘ä»¥åå†ç»†åŒ–)
     if (!GridMapUtils::isValidGridPosition(gx, gy)) {
         CCLOG("BattleScene: Invalid grid position, ignoring");
         return;
     }
 
-    // 4. Éú³ÉÊ¿±ø²¢Æô¶¯ AI
+    // 4. ç”Ÿæˆå£«å…µå¹¶å¯åŠ¨ AI
     auto troopLayer = dynamic_cast<BattleTroopLayer*>(_mapLayer->getChildByTag(999));
     if (troopLayer) {
         int troopId = _hudLayer->getSelectedTroopId();
 
-        // ¼òµ¥Ó³ÉäÃû³Æ (Êµ¼ÊÏîÄ¿Ó¦ÓÃÅäÖÃ±í)
+        // ç®€å•æ˜ å°„åç§° (å®é™…é¡¹ç›®åº”ç”¨é…ç½®è¡¨)
         std::string name = "Barbarian";
         if (troopId == 1002) name = "Archer";
 
         CCLOG("BattleScene: Spawning %s at grid(%d, %d)", name.c_str(), gx, gy);
         auto unit = troopLayer->spawnUnit(name, gx, gy);
         if (unit) {
-            // ¡¾ĞŞ¸Ä¡¿Ê¹ÓÃ BattleProcessController Æô¶¯AI
+            // ã€ä¿®æ”¹ã€‘ä½¿ç”¨ BattleProcessController å¯åŠ¨AI
             auto controller = BattleProcessController::getInstance();
             controller->startUnitAI(unit, troopLayer);
 
-            // 5. ×Ô¶¯ÇĞ»»µ½Õ½¶·×´Ì¬
+            // 5. è‡ªåŠ¨åˆ‡æ¢åˆ°æˆ˜æ–—çŠ¶æ€
             if (_currentState == BattleState::PREPARE) {
                 CCLOG("BattleScene: Switching from PREPARE to FIGHTING");
                 switchState(BattleState::FIGHTING);
             }
             
-            // 6. ÏÂ±ø³É¹¦ºó£¬±£³Ö±øÖÖÑ¡Ôñ×´Ì¬£¨ÓÃ»§¿ÉÒÔ¼ÌĞøÏÂ±ø£©
-            // Èç¹ûÏëÒª×Ô¶¯È¡ÏûÑ¡Ôñ£¬¿ÉÒÔµ÷ÓÃ£º
+            // 6. ä¸‹å…µæˆåŠŸåï¼Œä¿æŒå…µç§é€‰æ‹©çŠ¶æ€ï¼ˆç”¨æˆ·å¯ä»¥ç»§ç»­ä¸‹å…µï¼‰
+            // å¦‚æœæƒ³è¦è‡ªåŠ¨å–æ¶ˆé€‰æ‹©ï¼Œå¯ä»¥è°ƒç”¨ï¼š
             // _hudLayer->clearTroopSelection();
         } else {
             CCLOG("BattleScene: Failed to spawn unit");
@@ -347,20 +347,20 @@ bool BattleScene::isTouchOnUI(const Vec2& touchPos) {
     
     auto visibleSize = Director::getInstance()->getVisibleSize();
     
-    // ¶¨Òå UI ÇøÓò£¨¸ù¾İÄãµÄ²¼¾Öµ÷Õû£©
-    // 1. ¶¥²¿ÇøÓò£¨µ¹¼ÆÊ±µÈ£©
+    // å®šä¹‰ UI åŒºåŸŸï¼ˆæ ¹æ®ä½ çš„å¸ƒå±€è°ƒæ•´ï¼‰
+    // 1. é¡¶éƒ¨åŒºåŸŸï¼ˆå€’è®¡æ—¶ç­‰ï¼‰
     const float TOP_UI_HEIGHT = 100.0f;
     if (touchPos.y > visibleSize.height - TOP_UI_HEIGHT) {
       return true;
     }
     
-    // 2. µ×²¿ÇøÓò£¨±øÖÖÀ¸ºÍ°´Å¥£©
+    // 2. åº•éƒ¨åŒºåŸŸï¼ˆå…µç§æ å’ŒæŒ‰é’®ï¼‰
  const float BOTTOM_UI_HEIGHT = 150.0f;
     if (touchPos.y < BOTTOM_UI_HEIGHT) {
         return true;
     }
     
-    // 3. ÓÒÏÂ½Ç°´Å¥ÇøÓò£¨"ÏÂÒ»¸ö"°´Å¥£©
+    // 3. å³ä¸‹è§’æŒ‰é’®åŒºåŸŸï¼ˆ"ä¸‹ä¸€ä¸ª"æŒ‰é’®ï¼‰
     const float RIGHT_BUTTON_WIDTH = 100.0f;
     const float RIGHT_BUTTON_HEIGHT = 100.0f;
     if (touchPos.x > visibleSize.width - RIGHT_BUTTON_WIDTH && 

@@ -1,4 +1,4 @@
-#include "StartupScene.h"
+ï»¿#include "StartupScene.h"
 #include "VillageScene.h"
 
 USING_NS_CC;
@@ -14,10 +14,10 @@ bool StartupScene::init() {
     auto visibleSize = Director::getInstance()->getVisibleSize();
 
     // ==========================================
-    // 1. Ô¤ÏÈ³õÊ¼»¯"¼ÓÔØ½×¶Î"µÄÔªËØ (ÏÈÉèÎª²»¿É¼û)
+    // 1. é¢„å…ˆåˆå§‹åŒ–"åŠ è½½é˜¶æ®µ"çš„å…ƒç´  (å…ˆè®¾ä¸ºä¸å¯è§)
     // ==========================================
 
-    // --- ±³¾°Í¼ ---
+    // --- èƒŒæ™¯å›¾ ---
     _loadingBg = Sprite::create("Scene/StartupScene.png");
     _loadingBg->setPosition(visibleSize / 2);
     float scaleX = visibleSize.width / _loadingBg->getContentSize().width;
@@ -26,7 +26,7 @@ bool StartupScene::init() {
     _loadingBg->setOpacity(0);
     this->addChild(_loadingBg, 0);
 
-    // --- ½ø¶ÈÌõ ---
+    // --- è¿›åº¦æ¡ ---
     _progressBar = LoadingBar::create("ImageElements/loading_bar.png");
     _progressBar->setPosition(Vec2(visibleSize.width / 2, visibleSize.height * 0.2f));
     _progressBar->setPercent(0);
@@ -34,7 +34,7 @@ bool StartupScene::init() {
     this->addChild(_progressBar, 1);
 
     // ==========================================
-    // 2. ³õÊ¼»¯"Supercell Splash"½×¶Î
+    // 2. åˆå§‹åŒ–"Supercell Splash"é˜¶æ®µ
     // ==========================================
     showSplashPhase();
 
@@ -44,36 +44,36 @@ bool StartupScene::init() {
 void StartupScene::showSplashPhase() {
     auto visibleSize = Director::getInstance()->getVisibleSize();
 
-    // 1. ºÚÉ«±³¾°²ã
+    // 1. é»‘è‰²èƒŒæ™¯å±‚
     _splashLayer = LayerColor::create(Color4B::BLACK);
     this->addChild(_splashLayer, 10);
 
-    // 2. Supercell Logo - µ÷ÕûÎª¸üÐ¡³ß´ç
+    // 2. Supercell Logo - è°ƒæ•´ä¸ºæ›´å°å°ºå¯¸
     _logo = Sprite::create("Scene/supercell_logo.png");
     _logo->setPosition(Vec2(visibleSize.width / 2, visibleSize.height * 0.6f));
 
-    float targetScale = 0.6f; // ½øÒ»²½ËõÐ¡µ½0.6±¶
+    float targetScale = 0.6f; // è¿›ä¸€æ­¥ç¼©å°åˆ°0.6å€
     if (_logo->getContentSize().width * targetScale > visibleSize.width * 0.25f) {
-        // Èç¹û·Å´óºóÌ«¿í£¬µ÷Õûµ½ÆÁÄ»¿í¶ÈµÄ25%
+        // å¦‚æžœæ”¾å¤§åŽå¤ªå®½ï¼Œè°ƒæ•´åˆ°å±å¹•å®½åº¦çš„25%
         targetScale = (visibleSize.width * 0.25f) / _logo->getContentSize().width;
     }
-    targetScale = std::max(targetScale, 0.4f); // È·±£×îÐ¡Ëõ·Å²»Ð¡ÓÚ0.4±¶
+    targetScale = std::max(targetScale, 0.4f); // ç¡®ä¿æœ€å°ç¼©æ”¾ä¸å°äºŽ0.4å€
 
-    // ³õÊ¼×´Ì¬£ºÍêÈ«Í¸Ã÷£¬´ÓÐ¡¿ªÊ¼
+    // åˆå§‹çŠ¶æ€ï¼šå®Œå…¨é€æ˜Žï¼Œä»Žå°å¼€å§‹
     _logo->setOpacity(0);
     _logo->setScale(targetScale * 0.7f);
     _splashLayer->addChild(_logo);
 
-    // Logo¼ò»¯¶¯»­£ºµ­Èë + Ëõ·Åµ½Ä¿±ê´óÐ¡
+    // Logoç®€åŒ–åŠ¨ç”»ï¼šæ·¡å…¥ + ç¼©æ”¾åˆ°ç›®æ ‡å¤§å°
     auto fadeIn = FadeIn::create(0.8f);
     auto scaleUp = ScaleTo::create(0.8f, targetScale);
 
-    // Í¬Ê±Ö´ÐÐµ­ÈëºÍËõ·Å¶¯»­
+    // åŒæ—¶æ‰§è¡Œæ·¡å…¥å’Œç¼©æ”¾åŠ¨ç”»
     auto logoAnimation = Spawn::create(fadeIn, scaleUp, nullptr);
     _logo->runAction(logoAnimation);
 
-    // 3. ·¨ÂÉÎÄ±¾ - Ö±½ÓÏÔÊ¾£¬ÎÞ¶¯»­
-    std::string textContent = u8"±¾¹«Ë¾»ý¼«ÂÄÐÐ¡¶ÍøÂçÓÎÏ·ÐÐÒµ·À³ÁÃÔ×ÔÂÉ¹«Ô¼¡·\n¸ù¾Ý¹ú¼ÒÐÂÎÅ³ö°æÊð¡¶¹ØÓÚ·ÀÖ¹Î´³ÉÄêÈË³ÁÃÔÍøÂçÓÎÏ·µÄÍ¨Öª¡·\nËùÓÐÓÃ»§¾ùÐèÊ¹ÓÃÓÐÐ§Éí·ÝÐÅÏ¢Íê³ÉÕËºÅÊµÃû×¢²áºó·½¿É½øÈëÓÎÏ·";
+    // 3. æ³•å¾‹æ–‡æœ¬ - ç›´æŽ¥æ˜¾ç¤ºï¼Œæ— åŠ¨ç”»
+    std::string textContent = u8"æœ¬å…¬å¸ç§¯æžå±¥è¡Œã€Šç½‘ç»œæ¸¸æˆè¡Œä¸šé˜²æ²‰è¿·è‡ªå¾‹å…¬çº¦ã€‹\næ ¹æ®å›½å®¶æ–°é—»å‡ºç‰ˆç½²ã€Šå…³äºŽé˜²æ­¢æœªæˆå¹´äººæ²‰è¿·ç½‘ç»œæ¸¸æˆçš„é€šçŸ¥ã€‹\næ‰€æœ‰ç”¨æˆ·å‡éœ€ä½¿ç”¨æœ‰æ•ˆèº«ä»½ä¿¡æ¯å®Œæˆè´¦å·å®žåæ³¨å†ŒåŽæ–¹å¯è¿›å…¥æ¸¸æˆ";
 
     _legalTextLabel = Label::createWithSystemFont(textContent, "Microsoft YaHei UI", 22);
     _legalTextLabel->setAlignment(TextHAlignment::CENTER);
@@ -83,15 +83,15 @@ void StartupScene::showSplashPhase() {
     _legalTextLabel->enableShadow(Color4B(0, 0, 0, 100), Size(1, -1));
     _legalTextLabel->setLineSpacing(4);
 
-    // ·¨ÂÉÎÄ±¾Ö±½ÓÏÔÊ¾£¬ÎÞµ­Èë¶¯»­
+    // æ³•å¾‹æ–‡æœ¬ç›´æŽ¥æ˜¾ç¤ºï¼Œæ— æ·¡å…¥åŠ¨ç”»
     _splashLayer->addChild(_legalTextLabel);
 
-    // 4. ¶¨Ê±µ÷¶È
+    // 4. å®šæ—¶è°ƒåº¦
     this->scheduleOnce(CC_SCHEDULE_SELECTOR(StartupScene::showLoadingPhase), 0.3f);
 }
 
 void StartupScene::showLoadingPhase(float dt) {
-    // ÈÃlogoºÍÎÄ±¾Ò²½¥½¥µ­³ö£¬¶ø²»ÊÇÍ»È»ÏûÊ§
+    // è®©logoå’Œæ–‡æœ¬ä¹Ÿæ¸æ¸æ·¡å‡ºï¼Œè€Œä¸æ˜¯çªç„¶æ¶ˆå¤±
     if (_logo) {
         _logo->runAction(FadeOut::create(0.5f));
     }
@@ -99,7 +99,7 @@ void StartupScene::showLoadingPhase(float dt) {
         _legalTextLabel->runAction(FadeOut::create(0.5f));
     }
 
-    // splash²ã±³¾°Ò²µ­³ö£¬È»ºóÒÆ³ý
+    // splashå±‚èƒŒæ™¯ä¹Ÿæ·¡å‡ºï¼Œç„¶åŽç§»é™¤
     if (_splashLayer) {
         _splashLayer->runAction(Sequence::create(
             FadeOut::create(0.5f),
@@ -108,11 +108,11 @@ void StartupScene::showLoadingPhase(float dt) {
         ));
     }
 
-    // Á¢¼´¿ªÊ¼loadingÔªËØµÄµ­Èë£¬Óësplashµ­³öÍ¬²½
+    // ç«‹å³å¼€å§‹loadingå…ƒç´ çš„æ·¡å…¥ï¼Œä¸Žsplashæ·¡å‡ºåŒæ­¥
     if (_loadingBg) _loadingBg->runAction(FadeIn::create(0.5f));
     if (_progressBar) _progressBar->runAction(FadeIn::create(0.5f));
 
-    // ÑÓ³Ù0.5Ãëºó¿ªÊ¼½ø¶ÈÌõ¸üÐÂ£¬µÈ´ýµ­ÈëÍê³É
+    // å»¶è¿Ÿ0.5ç§’åŽå¼€å§‹è¿›åº¦æ¡æ›´æ–°ï¼Œç­‰å¾…æ·¡å…¥å®Œæˆ
     this->scheduleOnce([this](float) {
         this->schedule(CC_SCHEDULE_SELECTOR(StartupScene::updateLoadingBar), 0.05f);
         }, 0.05f, "start_progress");

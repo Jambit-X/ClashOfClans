@@ -1,4 +1,4 @@
-#pragma execution_character_set("utf-8")
+ï»¿#pragma execution_character_set("utf-8")
 #include "BattleHUDLayer.h"
 #include "Manager/VillageDataManager.h"
 #include "Model/TroopConfig.h"
@@ -21,7 +21,7 @@ bool BattleHUDLayer::init() {
 void BattleHUDLayer::initTopInfo() {
     auto visibleSize = Director::getInstance()->getVisibleSize();
 
-    // µ¹¼ÆÊ±±³¾°
+    // å€’è®¡æ—¶èƒŒæ™¯
     auto timerBg = LayerColor::create(Color4B(0, 0, 0, 100), 120, 40);
     timerBg->setPosition(visibleSize.width / 2 - 60, visibleSize.height - 50);
     this->addChild(timerBg);
@@ -30,8 +30,8 @@ void BattleHUDLayer::initTopInfo() {
     _timerLabel->setPosition(60, 20);
     timerBg->addChild(_timerLabel);
 
-    // ×ÊÔ´ÂÓ¶áĞÅÏ¢
-    auto lootLabel = Label::createWithTTF("¿ÉÂÓ¶á: ½ğ±Ò 1000  Ê¥Ë® 1000", FONT_PATH, 20);
+    // èµ„æºæ å¤ºä¿¡æ¯
+    auto lootLabel = Label::createWithTTF("å¯æ å¤º: é‡‘å¸ 1000  åœ£æ°´ 1000", FONT_PATH, 20);
     lootLabel->setAnchorPoint(Vec2(0, 1));
     lootLabel->setPosition(20, visibleSize.height - 20);
     lootLabel->enableOutline(Color4B::BLACK, 1);
@@ -41,13 +41,13 @@ void BattleHUDLayer::initTopInfo() {
 void BattleHUDLayer::initBottomButtons() {
     auto visibleSize = Director::getInstance()->getVisibleSize();
 
-    // [Ñ°ÕÒ¶ÔÊÖ] °´Å¥ - Ê¹ÓÃÄúÌá¹©µÄÍ¼Æ¬
+    // [å¯»æ‰¾å¯¹æ‰‹] æŒ‰é’® - ä½¿ç”¨æ‚¨æä¾›çš„å›¾ç‰‡
     _btnNext = Button::create("UI/battle/battle-prepare/next-icon.png");
     _btnNext->setScale(0.6f);
-    // ·ÅÔÚÓÒÏÂ½Ç
+    // æ”¾åœ¨å³ä¸‹è§’
     _btnNext->setAnchorPoint(Vec2(1, 0));
     _btnNext->setPosition(Vec2(visibleSize.width - 20, 20));
-    _btnNext->setZoomScale(-0.05f); // µã»÷Ê±µÄËõ·ÅĞ§¹û
+    _btnNext->setZoomScale(-0.05f); // ç‚¹å‡»æ—¶çš„ç¼©æ”¾æ•ˆæœ
 
     _btnNext->addClickEventListener([this](Ref*) {
         if (auto scene = getBattleScene()) {
@@ -56,29 +56,29 @@ void BattleHUDLayer::initBottomButtons() {
         });
     this->addChild(_btnNext);
 
-    // 2. [»ØÓª] °´Å¥ (ÂÌÉ« back.png) - ÓÃÓÚÕì²é½×¶Î
-    // ·ÅÔÚ×óÏÂ½Ç
+    // 2. [å›è¥] æŒ‰é’® (ç»¿è‰² back.png) - ç”¨äºä¾¦æŸ¥é˜¶æ®µ
+    // æ”¾åœ¨å·¦ä¸‹è§’
     _btnReturn = Button::create("UI/battle/battle-prepare/back.png");
-    _btnReturn->setScale(0.5f); // ÊÊµ±Ëõ·Å
+    _btnReturn->setScale(0.5f); // é€‚å½“ç¼©æ”¾
     _btnReturn->setAnchorPoint(Vec2(0, 0));
     _btnReturn->setPosition(Vec2(20, 20));
 
     _btnReturn->addClickEventListener([this](Ref*) {
-        // µ÷ÓÃ Scene µÄ»ØÓªÂß¼­
+        // è°ƒç”¨ Scene çš„å›è¥é€»è¾‘
         if (auto scene = getBattleScene()) scene->onReturnHomeClicked();
         });
     this->addChild(_btnReturn);
 
-    // 3. [½áÊøÕ½¶·] °´Å¥ (ºìÉ« finishbattle.png) - ÓÃÓÚÕ½¶·½×¶Î
-    // Í¬Ñù·ÅÔÚ×óÏÂ½Ç£¬³õÊ¼Òş²Ø
+    // 3. [ç»“æŸæˆ˜æ–—] æŒ‰é’® (çº¢è‰² finishbattle.png) - ç”¨äºæˆ˜æ–—é˜¶æ®µ
+    // åŒæ ·æ”¾åœ¨å·¦ä¸‹è§’ï¼Œåˆå§‹éšè—
     _btnEnd = Button::create("UI/battle/battle-prepare/finishbattle.png");
     _btnEnd->setScale(0.3f);
     _btnEnd->setAnchorPoint(Vec2(0, 0));
-    _btnEnd->setPosition(Vec2(20, 20)); // Î»ÖÃÓë»ØÓª°´Å¥ÖØµş
-    _btnEnd->setVisible(false); // Ä¬ÈÏÒş²Ø
+    _btnEnd->setPosition(Vec2(20, 20)); // ä½ç½®ä¸å›è¥æŒ‰é’®é‡å 
+    _btnEnd->setVisible(false); // é»˜è®¤éšè—
 
     _btnEnd->addClickEventListener([this](Ref*) {
-        // µ÷ÓÃ Scene µÄ½áÊøÕ½¶·Âß¼­ (µ¯³ö½áËã)
+        // è°ƒç”¨ Scene çš„ç»“æŸæˆ˜æ–—é€»è¾‘ (å¼¹å‡ºç»“ç®—)
         if (auto scene = getBattleScene()) scene->onEndBattleClicked();
         });
     this->addChild(_btnEnd);
@@ -93,7 +93,7 @@ void BattleHUDLayer::initTroopBar() {
     auto dataManager = VillageDataManager::getInstance();
     auto troops = dataManager->getAllTroops();
     
-    // ¼ÆËã×Ü¿í¶ÈÒÔ±ã¾ÓÖĞ
+    // è®¡ç®—æ€»å®½åº¦ä»¥ä¾¿å±…ä¸­
     const float CARD_SPACING = 80.0f;
     int validTroopCount = 0;
     for (auto& pair : troops) {
@@ -101,7 +101,7 @@ void BattleHUDLayer::initTroopBar() {
     }
     
     float totalWidth = validTroopCount * CARD_SPACING;
-    float startX = (visibleSize.width - totalWidth) / 2.0f + CARD_SPACING / 2.0f; // ¾ÓÖĞÆğÊ¼Î»ÖÃ
+    float startX = (visibleSize.width - totalWidth) / 2.0f + CARD_SPACING / 2.0f; // å±…ä¸­èµ·å§‹ä½ç½®
 
     for (auto& pair : troops) {
         int troopId = pair.first;
@@ -110,20 +110,20 @@ void BattleHUDLayer::initTroopBar() {
 
         auto info = TroopConfig::getInstance()->getTroopById(troopId);
 
-        // ¸ÄÓÃ Button
+        // æ”¹ç”¨ Button
         auto btn = ui::Button::create(info.iconPath);
         if (btn) {
             btn->setScale(0.5f);
   btn->setPosition(Vec2(startX, 60));
-            // Ìí¼Óµã»÷ÊÂ¼ş
+            // æ·»åŠ ç‚¹å‡»äº‹ä»¶
      btn->addClickEventListener([this, troopId](Ref*) {
          this->onTroopSelected(troopId);
                 });
 
           _troopBarNode->addChild(btn);
-    _troopButtons[troopId] = btn; // ´æÈë Map
+    _troopButtons[troopId] = btn; // å­˜å…¥ Map
 
-      // ÊıÁ¿±êÇ© - ·ÅÔÚ¿¨Æ¬ÉÏ·½£¬Ê¹ÓÃ°×É«´ó×ÖÌå
+      // æ•°é‡æ ‡ç­¾ - æ”¾åœ¨å¡ç‰‡ä¸Šæ–¹ï¼Œä½¿ç”¨ç™½è‰²å¤§å­—ä½“
    auto numLabel = Label::createWithTTF(StringUtils::format("x%d", count), "fonts/simhei.ttf", 28);
        numLabel->setPosition(Vec2(btn->getContentSize().width / 2, btn->getContentSize().height + 15));
    numLabel->setColor(Color3B::WHITE);
@@ -135,36 +135,36 @@ void BattleHUDLayer::initTroopBar() {
     }
 }
 
-// ĞÂÔö·½·¨ÊµÏÖ
+// æ–°å¢æ–¹æ³•å®ç°
 void BattleHUDLayer::onTroopSelected(int troopId) {
-    // 1. Èç¹ûµã»÷ÒÑÑ¡ÖĞµÄ£¬ÔòÈ¡ÏûÑ¡ÖĞ
+    // 1. å¦‚æœç‚¹å‡»å·²é€‰ä¸­çš„ï¼Œåˆ™å–æ¶ˆé€‰ä¸­
     if (_selectedTroopId == troopId) {
         _selectedTroopId = -1;
         if (_troopButtons.count(troopId)) {
-            _troopButtons[troopId]->runAction(ScaleTo::create(0.1f, 0.5f)); // »Ö¸´´óĞ¡
-            _troopButtons[troopId]->setColor(Color3B::WHITE); // »Ö¸´ÑÕÉ«
+            _troopButtons[troopId]->runAction(ScaleTo::create(0.1f, 0.5f)); // æ¢å¤å¤§å°
+            _troopButtons[troopId]->setColor(Color3B::WHITE); // æ¢å¤é¢œè‰²
         }
         return;
     }
 
-    // 2. »¹Ô­Ö®Ç°µÄÑ¡ÖĞ×´Ì¬
+    // 2. è¿˜åŸä¹‹å‰çš„é€‰ä¸­çŠ¶æ€
     if (_selectedTroopId != -1 && _troopButtons.count(_selectedTroopId)) {
         _troopButtons[_selectedTroopId]->runAction(ScaleTo::create(0.1f, 0.5f));
         _troopButtons[_selectedTroopId]->setColor(Color3B::WHITE);
     }
 
-    // 3. ¸ßÁÁµ±Ç°Ñ¡ÖĞµÄ
+    // 3. é«˜äº®å½“å‰é€‰ä¸­çš„
     _selectedTroopId = troopId;
     if (_troopButtons.count(troopId)) {
-        _troopButtons[troopId]->runAction(ScaleTo::create(0.1f, 0.6f)); // ·Å´ó
-        _troopButtons[troopId]->setColor(Color3B(200, 255, 200)); // ±äÂÌ¸ßÁÁ
+        _troopButtons[troopId]->runAction(ScaleTo::create(0.1f, 0.6f)); // æ”¾å¤§
+        _troopButtons[troopId]->setColor(Color3B(200, 255, 200)); // å˜ç»¿é«˜äº®
     }
 }
 
-// ¡¾ĞÂÔö¡¿Çå³ı±øÖÖÑ¡Ôñ×´Ì¬
+// ã€æ–°å¢ã€‘æ¸…é™¤å…µç§é€‰æ‹©çŠ¶æ€
 void BattleHUDLayer::clearTroopSelection() {
     if (_selectedTroopId != -1 && _troopButtons.count(_selectedTroopId)) {
-        // »Ö¸´Ö®Ç°Ñ¡ÖĞµÄ°´Å¥×´Ì¬
+        // æ¢å¤ä¹‹å‰é€‰ä¸­çš„æŒ‰é’®çŠ¶æ€
         _troopButtons[_selectedTroopId]->runAction(ScaleTo::create(0.1f, 0.5f));
         _troopButtons[_selectedTroopId]->setColor(Color3B::WHITE);
     }
@@ -174,34 +174,34 @@ void BattleHUDLayer::clearTroopSelection() {
 
 void BattleHUDLayer::updatePhase(BattleScene::BattleState state) {
     if (state == BattleScene::BattleState::PREPARE) {
-        // --- Õì²é½×¶Î ---
-        // ÏÔÊ¾ [ÏÂÒ»¸ö]
+        // --- ä¾¦æŸ¥é˜¶æ®µ ---
+        // æ˜¾ç¤º [ä¸‹ä¸€ä¸ª]
         if (_btnNext) _btnNext->setVisible(true);
 
-        // ÏÔÊ¾ÂÌÉ« [»ØÓª]
+        // æ˜¾ç¤ºç»¿è‰² [å›è¥]
         if (_btnReturn) _btnReturn->setVisible(true);
-        // Òş²ØºìÉ« [½áÊøÕ½¶·]
+        // éšè—çº¢è‰² [ç»“æŸæˆ˜æ–—]
         if (_btnEnd) _btnEnd->setVisible(false);
 
-        // µ¹¼ÆÊ±°×É«
+        // å€’è®¡æ—¶ç™½è‰²
         if (_timerLabel) _timerLabel->setColor(Color3B::WHITE);
     }
     else if (state == BattleScene::BattleState::FIGHTING) {
-        // --- Õ½¶·½×¶Î ---
-        // Òş²Ø [ÏÂÒ»¸ö] (²»ÄÜ»»ÈËÁË)
+        // --- æˆ˜æ–—é˜¶æ®µ ---
+        // éšè— [ä¸‹ä¸€ä¸ª] (ä¸èƒ½æ¢äººäº†)
         if (_btnNext) _btnNext->setVisible(false);
 
-        // Òş²ØÂÌÉ« [»ØÓª]
+        // éšè—ç»¿è‰² [å›è¥]
         if (_btnReturn) _btnReturn->setVisible(false);
-        // ÏÔÊ¾ºìÉ« [½áÊøÕ½¶·]
+        // æ˜¾ç¤ºçº¢è‰² [ç»“æŸæˆ˜æ–—]
         if (_btnEnd) _btnEnd->setVisible(true);
 
-        // µ¹¼ÆÊ±±äºì
+        // å€’è®¡æ—¶å˜çº¢
         if (_timerLabel) _timerLabel->setColor(Color3B::RED);
     }
     else if (state == BattleScene::BattleState::RESULT) {
-        // --- ½áËã½×¶Î ---
-        // È«²¿Òş²Ø£¬½»¸ø½áËã½çÃæ´¦Àí
+        // --- ç»“ç®—é˜¶æ®µ ---
+        // å…¨éƒ¨éšè—ï¼Œäº¤ç»™ç»“ç®—ç•Œé¢å¤„ç†
         if (_btnNext) _btnNext->setVisible(false);
         if (_btnReturn) _btnReturn->setVisible(false);
         if (_btnEnd) _btnEnd->setVisible(false);
@@ -210,12 +210,12 @@ void BattleHUDLayer::updatePhase(BattleScene::BattleState state) {
     }
 }
 
-//  ¿ØÖÆËùÓĞ°´Å¥µÄµã»÷×´Ì¬ (·ÀÖ¹ÔÆ²ã¶¯»­Ê±Îó´¥)
+//  æ§åˆ¶æ‰€æœ‰æŒ‰é’®çš„ç‚¹å‡»çŠ¶æ€ (é˜²æ­¢äº‘å±‚åŠ¨ç”»æ—¶è¯¯è§¦)
 void BattleHUDLayer::setButtonsEnabled(bool enabled) {
     if (_btnNext) _btnNext->setEnabled(enabled);
     if (_btnEnd) _btnEnd->setEnabled(enabled);
 
-    // ¡¾ÖØÒª¡¿±ğÍüÁË°ÑĞÂ¼ÓµÄ _btnReturn Ò²¼ÓÉÏ
+    // ã€é‡è¦ã€‘åˆ«å¿˜äº†æŠŠæ–°åŠ çš„ _btnReturn ä¹ŸåŠ ä¸Š
     if (_btnReturn) _btnReturn->setEnabled(enabled);
 }
 

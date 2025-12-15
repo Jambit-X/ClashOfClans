@@ -1,4 +1,4 @@
-#ifndef __STARTUP_SCENE_H__
+ï»¿#ifndef __STARTUP_SCENE_H__
 #define __STARTUP_SCENE_H__
 
 #include "cocos2d.h"
@@ -11,20 +11,20 @@ public:
     CREATE_FUNC(StartupScene);
 
 private:
-    // --- ½×¶ÎÒ»£ºSupercell Splash ÔªËØ ---
-    cocos2d::LayerColor* _splashLayer; // ºÚÉ«±³¾°²ã
+    // --- é˜¶æ®µä¸€ï¼šSupercell Splash å…ƒç´  ---
+    cocos2d::LayerColor* _splashLayer; // é»‘è‰²èƒŒæ™¯å±‚
     cocos2d::Sprite* _logo;            // Supercell Logo
-    cocos2d::Label* _legalTextLabel;   // ¶¯Ì¬·¨ÂÉÎÄ±¾
+    cocos2d::Label* _legalTextLabel;   // åŠ¨æ€æ³•å¾‹æ–‡æœ¬
 
-    // --- ½×¶Î¶ş£ºLoading ÔªËØ ---
-    cocos2d::Sprite* _loadingBg;       // ÓÎÏ·¼ÓÔØÍ¼
-    cocos2d::ui::LoadingBar* _progressBar; // ½ø¶ÈÌõ
+    // --- é˜¶æ®µäºŒï¼šLoading å…ƒç´  ---
+    cocos2d::Sprite* _loadingBg;       // æ¸¸æˆåŠ è½½å›¾
+    cocos2d::ui::LoadingBar* _progressBar; // è¿›åº¦æ¡
 
-    // --- Âß¼­º¯Êı ---
-    void showSplashPhase();       // ÏÔÊ¾ Logo ºÍÎÄ×Ö
-    void showLoadingPhase(float dt); // ÇĞ»»µ½¼ÓÔØÌõ½×¶Î
-    void updateLoadingBar(float dt); // ÅÜ½ø¶ÈÌõÂß¼­
-    void goToVillageScene(float dt); // Ìø×ª³¡¾°
+    // --- é€»è¾‘å‡½æ•° ---
+    void showSplashPhase();       // æ˜¾ç¤º Logo å’Œæ–‡å­—
+    void showLoadingPhase(float dt); // åˆ‡æ¢åˆ°åŠ è½½æ¡é˜¶æ®µ
+    void updateLoadingBar(float dt); // è·‘è¿›åº¦æ¡é€»è¾‘
+    void goToVillageScene(float dt); // è·³è½¬åœºæ™¯
 };
 
 #endif // __STARTUP_SCENE_H__

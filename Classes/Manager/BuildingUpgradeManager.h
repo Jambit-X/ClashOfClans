@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #pragma once
 #include "cocos2d.h"
 #include <vector>
@@ -8,13 +8,13 @@ public:
   static BuildingUpgradeManager* getInstance();
   static void destroyInstance();
 
-  // ¸üĞÂËùÓĞÉı¼¶ÖĞµÄ½¨Öş(Ã¿Ö¡µ÷ÓÃ)
+  // æ›´æ–°æ‰€æœ‰å‡çº§ä¸­çš„å»ºç­‘(æ¯å¸§è°ƒç”¨)
   void update(float dt);
 
-  // ¼ì²é²¢Íê³ÉËùÓĞµ½ÆÚµÄÉı¼¶
+  // æ£€æŸ¥å¹¶å®Œæˆæ‰€æœ‰åˆ°æœŸçš„å‡çº§
   void checkFinishedUpgrades();
 
-  // ¼ì²éÖ¸¶¨½¨ÖşÊÇ·ñ¿ÉÒÔÉı¼¶
+  // æ£€æŸ¥æŒ‡å®šå»ºç­‘æ˜¯å¦å¯ä»¥å‡çº§
   bool canUpgrade(int buildingId);
 
   std::string getUpgradeFailReason(int buildingId) const;

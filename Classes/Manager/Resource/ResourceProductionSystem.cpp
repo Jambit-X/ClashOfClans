@@ -1,4 +1,4 @@
-#include "ResourceProductionSystem.h"
+ï»¿#include "ResourceProductionSystem.h"
 #include "Manager/VillageDataManager.h"
 #include "Model/BuildingConfig.h"
 #include <algorithm>
@@ -98,7 +98,7 @@ int ResourceProductionSystem::calculateGoldProductionRate() const {
 
   for (const auto& building : dataManager->getAllBuildings()) {
     if (building.state != BuildingInstance::State::BUILT) continue;
-    if (building.type != 202) continue; // ½ð¿ó
+    if (building.type != 202) continue; // é‡‘çŸ¿
 
     auto buildingConfig = config->getConfig(building.type);
     if (buildingConfig && buildingConfig->productionRate > 0) {
@@ -118,7 +118,7 @@ int ResourceProductionSystem::calculateElixirProductionRate() const {
 
   for (const auto& building : dataManager->getAllBuildings()) {
     if (building.state != BuildingInstance::State::BUILT) continue;
-    if (building.type != 203) continue; // Ê¥Ë®ÊÕ¼¯Æ÷
+    if (building.type != 203) continue; // åœ£æ°´æ”¶é›†å™¨
 
     auto buildingConfig = config->getConfig(building.type);
     if (buildingConfig && buildingConfig->productionRate > 0) {

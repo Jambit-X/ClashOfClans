@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include "cocos2d.h"
 #include "../Sprite/BattleUnitSprite.h"
@@ -7,12 +7,12 @@
 USING_NS_CC;
 
 /**
- * @brief Õ½¶·µ¥Î»²ã - ¹ÜÀíËùÓĞ¾ü¶Óµ¥Î»µÄÏÔÊ¾
+ * @brief æˆ˜æ–—å•ä½å±‚ - ç®¡ç†æ‰€æœ‰å†›é˜Ÿå•ä½çš„æ˜¾ç¤º
  * 
- * Ö°Ôğ£º
- * 1. ¹ÜÀíËùÓĞÕ½¶·µ¥Î»µÄÉúÃüÖÜÆÚ
- * 2. Ìá¹©µ¥Î»Éú³É¡¢ÒÆ³ı½Ó¿Ú
- * 3. ´¿´âµÄÏÔÊ¾²ã£¬²»°üº¬¿ØÖÆÂß¼­
+ * èŒè´£ï¼š
+ * 1. ç®¡ç†æ‰€æœ‰æˆ˜æ–—å•ä½çš„ç”Ÿå‘½å‘¨æœŸ
+ * 2. æä¾›å•ä½ç”Ÿæˆã€ç§»é™¤æ¥å£
+ * 3. çº¯ç²¹çš„æ˜¾ç¤ºå±‚ï¼Œä¸åŒ…å«æ§åˆ¶é€»è¾‘
  */
 class BattleTroopLayer : public Layer {
 public:
@@ -21,36 +21,36 @@ public:
     virtual bool init() override;
     
     /**
-     * @brief ÔÚÖ¸¶¨Íø¸ñÎ»ÖÃÉú³Éµ¥Î»
-     * @param unitType µ¥Î»ÀàĞÍ£¬Èç "Barbarian"
-     * @param gridX Íø¸ñX×ø±ê
-     * @param gridY Íø¸ñY×ø±ê
-     * @return Éú³ÉµÄµ¥Î»¾«Áé
+     * @brief åœ¨æŒ‡å®šç½‘æ ¼ä½ç½®ç”Ÿæˆå•ä½
+     * @param unitType å•ä½ç±»å‹ï¼Œå¦‚ "Barbarian"
+     * @param gridX ç½‘æ ¼Xåæ ‡
+     * @param gridY ç½‘æ ¼Yåæ ‡
+     * @return ç”Ÿæˆçš„å•ä½ç²¾çµ
      */
     BattleUnitSprite* spawnUnit(const std::string& unitType, int gridX, int gridY);
     
     /**
-     * @brief ÅúÁ¿Éú³Éµ¥Î»£¨ÓÃÓÚ²âÊÔ/¿ìËÙ³õÊ¼»¯£©
-     * @param unitType µ¥Î»ÀàĞÍ
-     * @param spacing Íø¸ñ¼ä¸ô¾àÀë
+     * @brief æ‰¹é‡ç”Ÿæˆå•ä½ï¼ˆç”¨äºæµ‹è¯•/å¿«é€Ÿåˆå§‹åŒ–ï¼‰
+     * @param unitType å•ä½ç±»å‹
+     * @param spacing ç½‘æ ¼é—´éš”è·ç¦»
      */
     void spawnUnitsGrid(const std::string& unitType, int spacing = 3);
     
     /**
-     * @brief ÒÆ³ıËùÓĞµ¥Î»
+     * @brief ç§»é™¤æ‰€æœ‰å•ä½
      */
     void removeAllUnits();
     
     /**
-     * @brief »ñÈ¡ËùÓĞµ¥Î»
+     * @brief è·å–æ‰€æœ‰å•ä½
      */
     const std::vector<BattleUnitSprite*>& getAllUnits() const { return _units; }
     
 private:
-    // ËùÓĞµ¥Î»ÁĞ±í
+    // æ‰€æœ‰å•ä½åˆ—è¡¨
     std::vector<BattleUnitSprite*> _units;
     
-    // Íø¸ñ³£Á¿£¨´Ó GridMapUtils »ñÈ¡£©
+    // ç½‘æ ¼å¸¸é‡ï¼ˆä» GridMapUtils è·å–ï¼‰
     static const int GRID_WIDTH = 44;
     static const int GRID_HEIGHT = 44;
 };

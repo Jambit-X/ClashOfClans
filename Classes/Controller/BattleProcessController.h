@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include "cocos2d.h"
 #include "../Sprite/BattleUnitSprite.h"
@@ -11,29 +11,29 @@ USING_NS_CC;
 struct BuildingInstance;
 
 /**
- * @brief Õ½¶·Á÷³Ì¿ØÖÆÆ÷ - ¹ÜÀíÕ½¶·ÖĞµÄµ¥Î»AIºÍĞĞÎªÂß¼­
+ * @brief æˆ˜æ–—æµç¨‹æ§åˆ¶å™¨ - ç®¡ç†æˆ˜æ–—ä¸­çš„å•ä½AIå’Œè¡Œä¸ºé€»è¾‘
  * 
- * Ö°Ôğ£º
- * 1. ¿ØÖÆµ¥Î»µÄAIĞĞÎª£¨Ñ°Â·¡¢¹¥»÷¡¢Ä¿±êÑ¡Ôñ£©
- * 2. ¹ÜÀíÕ½¶·Âß¼­£¨ÉËº¦¼ÆËã¡¢Õ½¶·×´Ì¬µÈ£©
- * 3. ·ÖÀë¿ØÖÆÂß¼­ÓëÏÔÊ¾²ã
+ * èŒè´£ï¼š
+ * 1. æ§åˆ¶å•ä½çš„AIè¡Œä¸ºï¼ˆå¯»è·¯ã€æ”»å‡»ã€ç›®æ ‡é€‰æ‹©ï¼‰
+ * 2. ç®¡ç†æˆ˜æ–—é€»è¾‘ï¼ˆä¼¤å®³è®¡ç®—ã€æˆ˜æ–—çŠ¶æ€ç­‰ï¼‰
+ * 3. åˆ†ç¦»æ§åˆ¶é€»è¾‘ä¸æ˜¾ç¤ºå±‚
  */
 class BattleProcessController {
 public:
     /**
-     * @brief »ñÈ¡µ¥Àı
+     * @brief è·å–å•ä¾‹
      */
     static BattleProcessController* getInstance();
     
     /**
-     * @brief Ïú»Ùµ¥Àı
+     * @brief é”€æ¯å•ä¾‹
      */
     static void destroyInstance();
     
     /**
-     * @brief Æô¶¯µ¥Î»AI£¨Ñ°Â·+¹¥»÷£©
-     * @param unit Òª¿ØÖÆµÄµ¥Î»
-     * @param troopLayer µ¥Î»ËùÔÚµÄ²ã£¨ÓÃÓÚ»ñÈ¡×ø±êÏµ£©
+     * @brief å¯åŠ¨å•ä½AIï¼ˆå¯»è·¯+æ”»å‡»ï¼‰
+     * @param unit è¦æ§åˆ¶çš„å•ä½
+     * @param troopLayer å•ä½æ‰€åœ¨çš„å±‚ï¼ˆç”¨äºè·å–åæ ‡ç³»ï¼‰
      */
     void startUnitAI(BattleUnitSprite* unit, BattleTroopLayer* troopLayer);
     
@@ -41,34 +41,34 @@ private:
     BattleProcessController() = default;
     ~BattleProcessController() = default;
     
-    // ½ûÖ¹¿½±´ºÍ¸³Öµ
+    // ç¦æ­¢æ‹·è´å’Œèµ‹å€¼
     BattleProcessController(const BattleProcessController&) = delete;
     BattleProcessController& operator=(const BattleProcessController&) = delete;
     
     static BattleProcessController* _instance;
 
-    // ========== ÖÇÄÜÄ¿±êÑ¡Ôñ ==========
+    // ========== æ™ºèƒ½ç›®æ ‡é€‰æ‹© ==========
     struct TargetCandidate {
         const BuildingInstance* building;
-        float directDistance;      // Ö±Ïß¾àÀë
-        int pathLength;            // Êµ¼ÊÂ·¾¶³¤¶È
-        bool needsBreakingWalls;   // ÊÇ·ñĞèÒªÆÆÇ½
-        float score;               // ×ÛºÏÆÀ·Ö
+        float directDistance;      // ç›´çº¿è·ç¦»
+        int pathLength;            // å®é™…è·¯å¾„é•¿åº¦
+        bool needsBreakingWalls;   // æ˜¯å¦éœ€è¦ç ´å¢™
+        float score;               // ç»¼åˆè¯„åˆ†
     };
 
-    // Ñ°ÕÒ×î¼Ñ¹¥»÷Ä¿±ê£¨¿¼ÂÇ¾àÀëºÍ³ÇÇ½£©
+    // å¯»æ‰¾æœ€ä½³æ”»å‡»ç›®æ ‡ï¼ˆè€ƒè™‘è·ç¦»å’ŒåŸå¢™ï¼‰
     const BuildingInstance* findBestTargetBuilding(const cocos2d::Vec2& unitWorldPos);
     
-    // ¼ÆËã½¨ÖşÆÀ·Ö£¨¾àÀë + ³ÇÇ½³Í·££©
+    // è®¡ç®—å»ºç­‘è¯„åˆ†ï¼ˆè·ç¦» + åŸå¢™æƒ©ç½šï¼‰
     float calculateBuildingScore(float directDist, int pathLength, bool needsBreakingWalls);
     
-    // ¾É·½·¨£¨±£Áô¼æÈİĞÔ£©
+    // æ—§æ–¹æ³•ï¼ˆä¿ç•™å…¼å®¹æ€§ï¼‰
     const BuildingInstance* findNearestBuilding(const cocos2d::Vec2& unitWorldPos);
     
-    // ÈÆÂ·ãĞÖµ£ºÔÊĞíÈÆ¶àÉÙ¸ñÀ´±ÜÃâÆÆÇ½
+    // ç»•è·¯é˜ˆå€¼ï¼šå…è®¸ç»•å¤šå°‘æ ¼æ¥é¿å…ç ´å¢™
     static constexpr int WALL_DETOUR_THRESHOLD = 2;
     
-    // ËÑË÷·¶Î§À©Õ¹£º»ù´¡5¸ö + ãĞÖµ2¸ö = 7¸öºòÑ¡½¨Öş
+    // æœç´¢èŒƒå›´æ‰©å±•ï¼šåŸºç¡€5ä¸ª + é˜ˆå€¼2ä¸ª = 7ä¸ªå€™é€‰å»ºç­‘
     static constexpr int BASE_SEARCH_COUNT = 5;
     static constexpr int EXPANDED_SEARCH_COUNT = BASE_SEARCH_COUNT + WALL_DETOUR_THRESHOLD;
 };

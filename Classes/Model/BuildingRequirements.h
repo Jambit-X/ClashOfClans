@@ -1,4 +1,4 @@
-// Classes/Model/BuildingRequirements.h
+ï»¿// Classes/Model/BuildingRequirements.h
 #ifndef BUILDING_REQUIREMENTS_H
 #define BUILDING_REQUIREMENTS_H
 
@@ -6,62 +6,62 @@
 #include <vector>
 #include <string>
 
-// ½¨Öş½âËø¹æÔòÊı¾İ½á¹¹
+// å»ºç­‘è§£é”è§„åˆ™æ•°æ®ç»“æ„
 struct BuildingUnlockRule {
-  int buildingType;                       // ½¨ÖşÀàĞÍID
-  int minTownHallLevel;                   // ×îµÍ½âËø´ó±¾ÓªµÈ¼¶
-  std::map<int, int> thLevelToMaxCount;   // ´ó±¾ÓªµÈ¼¶ -> ×î´óÊıÁ¿
-  std::map<int, int> buildingLevelToTH;   // ½¨ÖşµÈ¼¶ -> ĞèÒªµÄ´ó±¾ÓªµÈ¼¶
+  int buildingType;                       // å»ºç­‘ç±»å‹ID
+  int minTownHallLevel;                   // æœ€ä½è§£é”å¤§æœ¬è¥ç­‰çº§
+  std::map<int, int> thLevelToMaxCount;   // å¤§æœ¬è¥ç­‰çº§ -> æœ€å¤§æ•°é‡
+  std::map<int, int> buildingLevelToTH;   // å»ºç­‘ç­‰çº§ -> éœ€è¦çš„å¤§æœ¬è¥ç­‰çº§
 
   BuildingUnlockRule()
     : buildingType(0)
     , minTownHallLevel(1) {}
 };
 
-// ½¨ÖşĞèÇó¹ÜÀíÆ÷£¨µ¥ÀıÄ£Ê½£©
+// å»ºç­‘éœ€æ±‚ç®¡ç†å™¨ï¼ˆå•ä¾‹æ¨¡å¼ï¼‰
 class BuildingRequirements {
 public:
   static BuildingRequirements* getInstance();
   static void destroyInstance();
 
-  // ========== ºËĞÄ²éÑ¯½Ó¿Ú ==========
+  // ========== æ ¸å¿ƒæŸ¥è¯¢æ¥å£ ==========
 
-  // ¼ì²éÊÇ·ñ¿ÉÒÔ¹ºÂò½¨Öş£¨¼ì²é½âËøµÈ¼¶ºÍÊıÁ¿ÏŞÖÆ£©
+  // æ£€æŸ¥æ˜¯å¦å¯ä»¥è´­ä¹°å»ºç­‘ï¼ˆæ£€æŸ¥è§£é”ç­‰çº§å’Œæ•°é‡é™åˆ¶ï¼‰
   bool canPurchase(int buildingType, int currentTHLevel, int currentCount) const;
 
-  // ¼ì²éÊÇ·ñ¿ÉÒÔÉı¼¶½¨Öş£¨¼ì²é´ó±¾ÓªµÈ¼¶ÏŞÖÆ£©
+  // æ£€æŸ¥æ˜¯å¦å¯ä»¥å‡çº§å»ºç­‘ï¼ˆæ£€æŸ¥å¤§æœ¬è¥ç­‰çº§é™åˆ¶ï¼‰
   bool canUpgrade(int buildingType, int currentBuildingLevel, int currentTHLevel) const;
 
-  // »ñÈ¡½¨ÖşÔÚÖ¸¶¨´ó±¾ÓªµÈ¼¶ÏÂµÄ×î´óÊıÁ¿
+  // è·å–å»ºç­‘åœ¨æŒ‡å®šå¤§æœ¬è¥ç­‰çº§ä¸‹çš„æœ€å¤§æ•°é‡
   int getMaxCount(int buildingType, int townHallLevel) const;
 
-  // »ñÈ¡½¨ÖşÉı¼¶µ½Ä¿±êµÈ¼¶ËùĞèµÄ´ó±¾ÓªµÈ¼¶
+  // è·å–å»ºç­‘å‡çº§åˆ°ç›®æ ‡ç­‰çº§æ‰€éœ€çš„å¤§æœ¬è¥ç­‰çº§
   int getRequiredTHLevel(int buildingType, int targetBuildingLevel) const;
 
-  // »ñÈ¡½¨ÖşµÄ×îĞ¡½âËø´ó±¾ÓªµÈ¼¶
+  // è·å–å»ºç­‘çš„æœ€å°è§£é”å¤§æœ¬è¥ç­‰çº§
   int getMinTHLevel(int buildingType) const;
 
-  // »ñÈ¡ÏŞÖÆÊ§°ÜµÄÔ­Òò£¨ÓÃÓÚUIÌáÊ¾£©
+  // è·å–é™åˆ¶å¤±è´¥çš„åŸå› ï¼ˆç”¨äºUIæç¤ºï¼‰
   std::string getRestrictionReason(int buildingType, int currentLevel, int currentTHLevel, int currentCount) const;
 
-  // ¼ì²éÊÇ·ñ¿ÉÒÔÉı¼¶½¨Öş£¨º¬ÌØÊâ¹æÔò£©
+  // æ£€æŸ¥æ˜¯å¦å¯ä»¥å‡çº§å»ºç­‘ï¼ˆå«ç‰¹æ®Šè§„åˆ™ï¼‰
   bool canUpgradeBuilding(int buildingType, int currentLevel, int townHallLevel) const;
 
-  // ¼ì²é´ó±¾ÓªÊÇ·ñÂú×ãÉı¼¶Ìõ¼ş£¨ËùÓĞ·ÀÓù½¨ÖşÒÑ½¨Íê£©
+  // æ£€æŸ¥å¤§æœ¬è¥æ˜¯å¦æ»¡è¶³å‡çº§æ¡ä»¶ï¼ˆæ‰€æœ‰é˜²å¾¡å»ºç­‘å·²å»ºå®Œï¼‰
   bool canUpgradeTownHall(int currentTownHallLevel) const;
 
-  // »ñÈ¡µ±Ç°´ó±¾ÓªµÈ¼¶ÒªÇóµÄ·ÀÓù½¨ÖşÀàĞÍ
+  // è·å–å½“å‰å¤§æœ¬è¥ç­‰çº§è¦æ±‚çš„é˜²å¾¡å»ºç­‘ç±»å‹
   std::vector<int> getRequiredDefenseTypes(int townHallLevel) const;
 
 private:
   BuildingRequirements();
   ~BuildingRequirements();
 
-  void initializeRules();                 // ³õÊ¼»¯ËùÓĞ½¨Öş¹æÔò
-  void addRule(const BuildingUnlockRule& rule);  // Ìí¼Óµ¥Ìõ¹æÔò
+  void initializeRules();                 // åˆå§‹åŒ–æ‰€æœ‰å»ºç­‘è§„åˆ™
+  void addRule(const BuildingUnlockRule& rule);  // æ·»åŠ å•æ¡è§„åˆ™
 
   static BuildingRequirements* instance;
-  std::map<int, BuildingUnlockRule> rules;  // ½¨ÖşÀàĞÍ -> ½âËø¹æÔò
+  std::map<int, BuildingUnlockRule> rules;  // å»ºç­‘ç±»å‹ -> è§£é”è§„åˆ™
 };
 
 #endif

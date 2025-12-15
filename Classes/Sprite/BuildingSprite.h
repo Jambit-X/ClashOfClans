@@ -1,8 +1,8 @@
-#pragma once
+ï»¿#pragma once
 #include "cocos2d.h"
 #include "../Model/VillageData.h"
 
-//  ²»ÔÙĞèÒª ConstructionAnimation Àà
+//  ä¸å†éœ€è¦ ConstructionAnimation ç±»
 // class ConstructionAnimation;
 
 class BuildingSprite : public cocos2d::Sprite {
@@ -22,12 +22,12 @@ public:
   void hideConstructionProgress();
   void showCountdown(int seconds);
 
-  // Íø¸ñÏà¹Ø·½·¨
+  // ç½‘æ ¼ç›¸å…³æ–¹æ³•
   cocos2d::Size getGridSize() const;
   cocos2d::Vec2 getGridPos() const { return _gridPos; }
   void setGridPos(const cocos2d::Vec2& pos) { _gridPos = pos; }
 
-  // ÍÏ¶¯ºÍ·ÅÖÃÔ¤ÀÀ
+  // æ‹–åŠ¨å’Œæ”¾ç½®é¢„è§ˆ
   void setDraggingMode(bool isDragging);
   void setPlacementPreview(bool isValid);
   void clearPlacementPreview();
@@ -43,10 +43,10 @@ private:
   void loadSprite(int type, int level);
   void updateVisuals();
 
-  //  ĞÂÔö£ºUI ¹ÜÀí·½·¨
-  void initConstructionUI();    // ´´½¨ UI ÈİÆ÷£¨Ö»µ÷ÓÃÒ»´Î£©
-  void showConstructionUI();    // ÏÔÊ¾½¨Ôì UI
-  void hideConstructionUI();    // Òş²Ø½¨Ôì UI
+  //  æ–°å¢ï¼šUI ç®¡ç†æ–¹æ³•
+  void initConstructionUI();    // åˆ›å»º UI å®¹å™¨ï¼ˆåªè°ƒç”¨ä¸€æ¬¡ï¼‰
+  void showConstructionUI();    // æ˜¾ç¤ºå»ºé€  UI
+  void hideConstructionUI();    // éšè—å»ºé€  UI
 
   int _buildingId;
   int _buildingType;
@@ -55,12 +55,12 @@ private:
   cocos2d::Vec2 _visualOffset;
   cocos2d::Vec2 _gridPos;
 
-  //  ĞÂµÄ UI ÈİÆ÷½á¹¹
-  cocos2d::Node* _constructionUIContainer;  // UI ÈİÆ÷
+  //  æ–°çš„ UI å®¹å™¨ç»“æ„
+  cocos2d::Node* _constructionUIContainer;  // UI å®¹å™¨
 
-  //  ×ÓÔªËØÖ¸Õë£¨±ãÓÚ·ÃÎÊ£©
-  cocos2d::Sprite* _progressBg;            // ½ø¶ÈÌõ±³¾°
-  cocos2d::ProgressTimer* _progressBar;     // ½ø¶ÈÌõ
-  cocos2d::Label* _countdownLabel;          // µ¹¼ÆÊ±
-  cocos2d::Label* _percentLabel;            // °Ù·Ö±È±êÇ©
+  //  å­å…ƒç´ æŒ‡é’ˆï¼ˆä¾¿äºè®¿é—®ï¼‰
+  cocos2d::Sprite* _progressBg;            // è¿›åº¦æ¡èƒŒæ™¯
+  cocos2d::ProgressTimer* _progressBar;     // è¿›åº¦æ¡
+  cocos2d::Label* _countdownLabel;          // å€’è®¡æ—¶
+  cocos2d::Label* _percentLabel;            // ç™¾åˆ†æ¯”æ ‡ç­¾
 };

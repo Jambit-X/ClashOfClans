@@ -1,98 +1,98 @@
-#ifndef __MOVE_MAP_CONTROLLER_H__
+ï»¿#ifndef __MOVE_MAP_CONTROLLER_H__
 #define __MOVE_MAP_CONTROLLER_H__
 
 #include "cocos2d.h"
 #include <functional>
 
-// ÊäÈë×´Ì¬Ã¶¾Ù
+// è¾“å…¥çŠ¶æ€æšä¸¾
 enum class InputState {
-  MAP_DRAG,           // Ä¬ÈÏ×´Ì¬£ºµØÍ¼ÍÏ¶¯
-  BUILDING_SELECTED,  // ½¨ÖşÑ¡ÖĞÄ£Ê½
-  SHOP_MODE          // ÉÌµêÄ£Ê½
+  MAP_DRAG,           // é»˜è®¤çŠ¶æ€ï¼šåœ°å›¾æ‹–åŠ¨
+  BUILDING_SELECTED,  // å»ºç­‘é€‰ä¸­æ¨¡å¼
+  SHOP_MODE          // å•†åº—æ¨¡å¼
 };
 
-// µã»÷Ä¿±êÀàĞÍ
+// ç‚¹å‡»ç›®æ ‡ç±»å‹
 enum class TapTarget {
-  NONE,      // ÎŞÄ¿±ê£¨µØÍ¼¿Õ°×£©
-  BUILDING,  // ½¨Öş
-  SHOP       // ÉÌµêÍ¼±ê
+  NONE,      // æ— ç›®æ ‡ï¼ˆåœ°å›¾ç©ºç™½ï¼‰
+  BUILDING,  // å»ºç­‘
+  SHOP       // å•†åº—å›¾æ ‡
 };
 
 class MoveMapController {
 public:
-  // ¹¹Ôìº¯Êı£¬ĞèÒª´«Èë VillageLayer
+  // æ„é€ å‡½æ•°ï¼Œéœ€è¦ä¼ å…¥ VillageLayer
   MoveMapController(cocos2d::Layer* villageLayer);
   ~MoveMapController();
 
-  // ³õÊ¼»¯ÊäÈë¼àÌı
+  // åˆå§‹åŒ–è¾“å…¥ç›‘å¬
   void setupInputListeners();
 
-  // ÇåÀíÊäÈë¼àÌı
+  // æ¸…ç†è¾“å…¥ç›‘å¬
   void cleanup();
 
-  // »ñÈ¡µ±Ç°ÊäÈë×´Ì¬
+  // è·å–å½“å‰è¾“å…¥çŠ¶æ€
   InputState getCurrentState() const { return _currentState; }
 
-  // ÉèÖÃ×´Ì¬ÇĞ»»»Øµ÷
+  // è®¾ç½®çŠ¶æ€åˆ‡æ¢å›è°ƒ
   void setOnStateChangedCallback(std::function<void(InputState, InputState)> callback) {
     _onStateChanged = callback;
   }
 
-  // ÉèÖÃµã»÷¼ì²â»Øµ÷
+  // è®¾ç½®ç‚¹å‡»æ£€æµ‹å›è°ƒ
   void setOnTapCallback(std::function<TapTarget(const cocos2d::Vec2&)> callback) {
     _onTapDetection = callback;
   }
 
-  // ÉèÖÃ½¨ÖşÑ¡ÖĞ»Øµ÷
+  // è®¾ç½®å»ºç­‘é€‰ä¸­å›è°ƒ
   void setOnBuildingSelectedCallback(std::function<void(const cocos2d::Vec2&)> callback) {
     _onBuildingSelected = callback;
   }
 
-  // ÉèÖÃÉÌµê´ò¿ª»Øµ÷
+  // è®¾ç½®å•†åº—æ‰“å¼€å›è°ƒ
   void setOnShopOpenedCallback(std::function<void(const cocos2d::Vec2&)> callback) {
     _onShopOpened = callback;
   }
 
-  // ÉèÖÃ½¨Öşµã»÷»Øµ÷£¨ÓÃÓÚ´¥·¢ÒÆ¶¯£©
+  // è®¾ç½®å»ºç­‘ç‚¹å‡»å›è°ƒï¼ˆç”¨äºè§¦å‘ç§»åŠ¨ï¼‰
   void setOnBuildingClickedCallback(std::function<void(int)> callback) {
     _onBuildingClicked = callback;
   }
 
 private:
-  // ========== ºËĞÄÊôĞÔ ========= =
-  cocos2d::Layer* _villageLayer;  // ´å×¯µØÍ¼²ã
-  InputState _currentState;       // µ±Ç°ÊäÈë×´Ì¬
+  // ========== æ ¸å¿ƒå±æ€§ ========= =
+  cocos2d::Layer* _villageLayer;  // æ‘åº„åœ°å›¾å±‚
+  InputState _currentState;       // å½“å‰è¾“å…¥çŠ¶æ€
 
-  // Ëõ·Å²ÎÊı
+  // ç¼©æ”¾å‚æ•°
   float _minScale;
   static const float MAX_SCALE;
   static const float ZOOM_SPEED;
   float _currentScale;
 
-  // ÍÏ¶¯×´Ì¬
-  cocos2d::Vec2 _touchStartPos;   // ´¥Ãş¿ªÊ¼Î»ÖÃ
-  cocos2d::Vec2 _layerStartPos;   // Layer ÆğÊ¼Î»ÖÃ
-  bool _isDragging;               // ÊÇ·ñÕıÔÚÍÏ¶¯
+  // æ‹–åŠ¨çŠ¶æ€
+  cocos2d::Vec2 _touchStartPos;   // è§¦æ‘¸å¼€å§‹ä½ç½®
+  cocos2d::Vec2 _layerStartPos;   // Layer èµ·å§‹ä½ç½®
+  bool _isDragging;               // æ˜¯å¦æ­£åœ¨æ‹–åŠ¨
 
-  // ÊÂ¼ş¼àÌıÆ÷
+  // äº‹ä»¶ç›‘å¬å™¨
   cocos2d::EventListenerTouchOneByOne* _touchListener;
   cocos2d::EventListenerMouse* _mouseListener;
 
-  // »Øµ÷º¯Êı
-  std::function<void(InputState, InputState)> _onStateChanged;  // ×´Ì¬¸Ä±ä»Øµ÷£¨¾É×´Ì¬£¬ĞÂ×´Ì¬£©
-  std::function<TapTarget(const cocos2d::Vec2&)> _onTapDetection;  // µã»÷¼ì²â»Øµ÷
-  std::function<void(const cocos2d::Vec2&)> _onBuildingSelected;   // ½¨ÖşÑ¡ÖĞ»Øµ÷
-  std::function<void(const cocos2d::Vec2&)> _onShopOpened;         // ÉÌµê´ò¿ª»Øµ÷
-  std::function<void(int)> _onBuildingClicked;                     // ½¨Öşµã»÷»Øµ÷£¨´«Èë½¨ÖşID£©
+  // å›è°ƒå‡½æ•°
+  std::function<void(InputState, InputState)> _onStateChanged;  // çŠ¶æ€æ”¹å˜å›è°ƒï¼ˆæ—§çŠ¶æ€ï¼Œæ–°çŠ¶æ€ï¼‰
+  std::function<TapTarget(const cocos2d::Vec2&)> _onTapDetection;  // ç‚¹å‡»æ£€æµ‹å›è°ƒ
+  std::function<void(const cocos2d::Vec2&)> _onBuildingSelected;   // å»ºç­‘é€‰ä¸­å›è°ƒ
+  std::function<void(const cocos2d::Vec2&)> _onShopOpened;         // å•†åº—æ‰“å¼€å›è°ƒ
+  std::function<void(int)> _onBuildingClicked;                     // å»ºç­‘ç‚¹å‡»å›è°ƒï¼ˆä¼ å…¥å»ºç­‘IDï¼‰
 
-  // ========== ×´Ì¬¹ÜÀí ========= =
+  // ========== çŠ¶æ€ç®¡ç† ========= =
   void changeState(InputState newState);
 
-  // ========== ³õÊ¼»¯·½·¨ ========= =
+  // ========== åˆå§‹åŒ–æ–¹æ³• ========= =
   void calculateMinScale();
   void initializeMapTransform();
 
-  // ========== ´¥ÃşÊÂ¼ş´¦Àí ========= =
+  // ========== è§¦æ‘¸äº‹ä»¶å¤„ç† ========= =
   void setupTouchHandling();
   bool onTouchBegan(cocos2d::Touch* touch, cocos2d::Event* event);
   void onTouchMoved(cocos2d::Touch* touch, cocos2d::Event* event);
@@ -102,7 +102,7 @@ private:
   void handleMapDragging(cocos2d::Touch* touch);
   void handleTap(const cocos2d::Vec2& tapPosition);
 
-  // ========== Êó±êÊÂ¼ş´¦Àí£¨Ëõ·Å£©==========
+  // ========== é¼ æ ‡äº‹ä»¶å¤„ç†ï¼ˆç¼©æ”¾ï¼‰==========
   void setupMouseHandling();
   void onMouseScroll(cocos2d::Event* event);
 
@@ -110,7 +110,7 @@ private:
   cocos2d::Vec2 getAdjustedMousePosition(cocos2d::EventMouse* mouseEvent);
   void applyZoomAroundPoint(const cocos2d::Vec2& zoomPoint, float newScale);
 
-  // ========== ¸¨Öú·½·¨ ========= =
+  // ========== è¾…åŠ©æ–¹æ³• ========= =
   cocos2d::Vec2 clampMapPosition(const cocos2d::Vec2& position);
   bool isTapGesture(const cocos2d::Vec2& startPos, const cocos2d::Vec2& endPos);
 };

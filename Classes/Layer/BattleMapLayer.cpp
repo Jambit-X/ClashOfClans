@@ -1,17 +1,17 @@
-#include "BattleMapLayer.h"
+ï»¿#include "BattleMapLayer.h"
 #include "Manager/BuildingManager.h"
 #include "Controller/MoveMapController.h"
 
 USING_NS_CC;
 
 BattleMapLayer::~BattleMapLayer() {
-    // ÇåÀí MoveMapController£¨Ëü»á×Ô¶¯ÇåÀíÊÂ¼ş¼àÌıÆ÷£©
+    // æ¸…ç† MoveMapControllerï¼ˆå®ƒä¼šè‡ªåŠ¨æ¸…ç†äº‹ä»¶ç›‘å¬å™¨ï¼‰
     if (_inputController) {
         delete _inputController;
         _inputController = nullptr;
     }
     
-    // ÇåÀí BuildingManager
+    // æ¸…ç† BuildingManager
     if (_buildingManager) {
         delete _buildingManager;
         _buildingManager = nullptr;
@@ -23,41 +23,41 @@ BattleMapLayer::~BattleMapLayer() {
 bool BattleMapLayer::init() {
     if (!Layer::init()) return false;
 
-    // 1. ´´½¨µØÍ¼±³¾°
+    // 1. åˆ›å»ºåœ°å›¾èƒŒæ™¯
     _mapSprite = createMapSprite();
     this->addChild(_mapSprite);
 
-    // ÉèÖÃ Layer ´óĞ¡ÓëµØÍ¼Ò»ÖÂ
+    // è®¾ç½® Layer å¤§å°ä¸åœ°å›¾ä¸€è‡´
     if (_mapSprite) {
         this->setContentSize(_mapSprite->getContentSize());
         this->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
     }
 
-    // 2. ³õÊ¼»¯½¨Öş¹ÜÀíÆ÷ (Ö»¶ÁÄ£Ê½£¬²»´«µİ Layer ½øĞĞ½»»¥)
+    // 2. åˆå§‹åŒ–å»ºç­‘ç®¡ç†å™¨ (åªè¯»æ¨¡å¼ï¼Œä¸ä¼ é€’ Layer è¿›è¡Œäº¤äº’)
     _buildingManager = new BuildingManager(this);
-    // ×¢Òâ£ºBuildingManager µÄ¹¹Ôìº¯ÊıÒÑ¾­µ÷ÓÃÁË loadBuildingsFromData()£¬²»ÒªÖØ¸´µ÷ÓÃ
+    // æ³¨æ„ï¼šBuildingManager çš„æ„é€ å‡½æ•°å·²ç»è°ƒç”¨äº† loadBuildingsFromData()ï¼Œä¸è¦é‡å¤è°ƒç”¨
 
-    // 3. ³õÊ¼»¯µØÍ¼ÒÆ¶¯¿ØÖÆÆ÷ (½öÍÏ×§Ëõ·Å)
+    // 3. åˆå§‹åŒ–åœ°å›¾ç§»åŠ¨æ§åˆ¶å™¨ (ä»…æ‹–æ‹½ç¼©æ”¾)
     _inputController = new MoveMapController(this);
     _inputController->setupInputListeners();
-    // ×¢Òâ£ºÕâÀïÎÒÃÇ¹ÊÒâ²»ÉèÖÃ"½¨Öşµã»÷»Øµ÷"£¬Ò²²»´´½¨ MoveBuildingController
-    // ´Ó¶øÊµÏÖ"Ö»¶Á"Ğ§¹û
+    // æ³¨æ„ï¼šè¿™é‡Œæˆ‘ä»¬æ•…æ„ä¸è®¾ç½®"å»ºç­‘ç‚¹å‡»å›è°ƒ"ï¼Œä¹Ÿä¸åˆ›å»º MoveBuildingController
+    // ä»è€Œå®ç°"åªè¯»"æ•ˆæœ
 
     return true;
 }
 
 void BattleMapLayer::reloadMap() {
-    // ¼òµ¥µÄË¢ĞÂÂß¼­£ºÇå³ıÏÖÓĞ½¨Öş£¬ÖØĞÂ¼ÓÔØ
-    // ÔÚÕæÊµÂß¼­ÖĞ£¬ÕâÀïÓ¦¸ÃÏÈÈ¥ VillageDataManager ÇĞ»»µĞ·½Êı¾İÔ´
+    // ç®€å•çš„åˆ·æ–°é€»è¾‘ï¼šæ¸…é™¤ç°æœ‰å»ºç­‘ï¼Œé‡æ–°åŠ è½½
+    // åœ¨çœŸå®é€»è¾‘ä¸­ï¼Œè¿™é‡Œåº”è¯¥å…ˆå» VillageDataManager åˆ‡æ¢æ•Œæ–¹æ•°æ®æº
     if (_buildingManager) {
-        // ÏÈ¼òµ¥µØË¢ĞÂÒ»ÏÂÈÕÖ¾
+        // å…ˆç®€å•åœ°åˆ·æ–°ä¸€ä¸‹æ—¥å¿—
         CCLOG("BattleMapLayer: Reloading map data...");
-        // Êµ¼ÊÏîÄ¿ÖĞĞèÒª: _buildingManager->reloadFromData(newEnemyData);
+        // å®é™…é¡¹ç›®ä¸­éœ€è¦: _buildingManager->reloadFromData(newEnemyData);
     }
 }
 
 Sprite* BattleMapLayer::createMapSprite() {
-    // ¸´ÓÃÔ­À´µÄµØÍ¼Í¼Æ¬
+    // å¤ç”¨åŸæ¥çš„åœ°å›¾å›¾ç‰‡
     auto mapSprite = Sprite::create("Scene/LinedVillageScene.jpg");
     if (!mapSprite) {
         CCLOG("Error: Failed to load map image");

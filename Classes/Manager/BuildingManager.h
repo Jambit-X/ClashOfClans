@@ -1,4 +1,4 @@
-#ifndef __BUILDING_MANAGER_H__
+ï»¿#ifndef __BUILDING_MANAGER_H__
 #define __BUILDING_MANAGER_H__
 
 #include "cocos2d.h"
@@ -8,48 +8,48 @@
 
 USING_NS_CC;
 
-// ½¨Öş¹ÜÀíÆ÷£¨¸ºÔğ½¨Öş¾«ÁéµÄ´´½¨¡¢¸üĞÂ¡¢É¾³ı£©
+// å»ºç­‘ç®¡ç†å™¨ï¼ˆè´Ÿè´£å»ºç­‘ç²¾çµçš„åˆ›å»ºã€æ›´æ–°ã€åˆ é™¤ï¼‰
 class BuildingManager {
 public:
   BuildingManager(Layer* parentLayer);
   ~BuildingManager();
 
-  // ´ÓÊı¾İ´´½¨ËùÓĞ½¨Öş
+  // ä»æ•°æ®åˆ›å»ºæ‰€æœ‰å»ºç­‘
   void loadBuildingsFromData();
 
-  // Ìí¼Ó½¨Öş¾«Áé
+  // æ·»åŠ å»ºç­‘ç²¾çµ
   BuildingSprite* addBuilding(const BuildingInstance& building);
 
-  // ÒÆ³ı½¨Öş¾«Áé
+  // ç§»é™¤å»ºç­‘ç²¾çµ
   void removeBuilding(int buildingId);
 
-  // ¸üĞÂ½¨Öş×´Ì¬
+  // æ›´æ–°å»ºç­‘çŠ¶æ€
   void updateBuilding(int buildingId, const BuildingInstance& building);
 
-  // ¸ù¾İID»ñÈ¡½¨Öş¾«Áé
+  // æ ¹æ®IDè·å–å»ºç­‘ç²¾çµ
   BuildingSprite* getBuildingSprite(int buildingId) const;
 
-  // ¸ù¾İÍø¸ñ×ø±ê»ñÈ¡½¨Öş
+  // æ ¹æ®ç½‘æ ¼åæ ‡è·å–å»ºç­‘
   BuildingSprite* getBuildingAtGrid(int gridX, int gridY) const;
 
-  // ¸ù¾İÊÀ½ç×ø±ê»ñÈ¡½¨Öş£¨ÓÃÓÚµã»÷¼ì²â£©
+  // æ ¹æ®ä¸–ç•Œåæ ‡è·å–å»ºç­‘ï¼ˆç”¨äºç‚¹å‡»æ£€æµ‹ï¼‰
   BuildingSprite* getBuildingAtWorldPos(const cocos2d::Vec2& worldPos) const;
 
-  // ¸üĞÂËùÓĞ½¨Öş£¨ÓÃÓÚ¶¨Ê±¼ì²é½¨ÔìÍê³É£©
+  // æ›´æ–°æ‰€æœ‰å»ºç­‘ï¼ˆç”¨äºå®šæ—¶æ£€æŸ¥å»ºé€ å®Œæˆï¼‰
   void update(float dt);
 
-  // Íø¸ñ×ø±ê×ªÊÀ½ç×ø±ê£¨Ê¹ÓÃ GridMapUtils£©
+  // ç½‘æ ¼åæ ‡è½¬ä¸–ç•Œåæ ‡ï¼ˆä½¿ç”¨ GridMapUtilsï¼‰
   Vec2 gridToWorld(int gridX, int gridY) const;
   Vec2 gridToWorld(const Vec2& gridPos) const;
 
-  // ÊÀ½ç×ø±ê×ªÍø¸ñ×ø±ê£¨Ê¹ÓÃ GridMapUtils£©
+  // ä¸–ç•Œåæ ‡è½¬ç½‘æ ¼åæ ‡ï¼ˆä½¿ç”¨ GridMapUtilsï¼‰
   Vec2 worldToGrid(const Vec2& worldPos) const;
-  // ÔÚ BuildingManager ÀàÖĞÌí¼Ó
+  // åœ¨ BuildingManager ç±»ä¸­æ·»åŠ 
   void removeBuildingSprite(int buildingId);
 private:
-  Layer* _parentLayer;                                      // ¸¸²ã
-  std::unordered_map<int, BuildingSprite*> _buildings;    // ½¨ÖşÓ³Éä±í <buildingId, sprite>
-  // Í³Ò»µÄ Z-Order ¼ÆËãº¯Êı
+  Layer* _parentLayer;                                      // çˆ¶å±‚
+  std::unordered_map<int, BuildingSprite*> _buildings;    // å»ºç­‘æ˜ å°„è¡¨ <buildingId, sprite>
+  // ç»Ÿä¸€çš„ Z-Order è®¡ç®—å‡½æ•°
   static int calculateZOrder(int gridX, int gridY) {
     return gridX - gridY + 45;
   }

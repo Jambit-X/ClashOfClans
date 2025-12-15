@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #ifndef __BATTLE_HUD_LAYER_H__
 #define __BATTLE_HUD_LAYER_H__
 
@@ -11,37 +11,37 @@ public:
     virtual bool init() override;
     CREATE_FUNC(BattleHUDLayer);
 
-    // ¸ù¾İÕ½¶·½×¶Î¸üĞÂ UI
+    // æ ¹æ®æˆ˜æ–—é˜¶æ®µæ›´æ–° UI
     void updatePhase(BattleScene::BattleState state);
 
-    // ¸üĞÂµ¹¼ÆÊ±ÎÄ×Ö
+    // æ›´æ–°å€’è®¡æ—¶æ–‡å­—
     void updateTimer(int seconds);
 
-    // ¡¾ĞÂÔö¡¿ÉèÖÃ°´Å¥½»»¥×´Ì¬ (ÓÃÓÚÔÆ²ã¶¯»­Ê±½ûÓÃµã»÷)
+    // ã€æ–°å¢ã€‘è®¾ç½®æŒ‰é’®äº¤äº’çŠ¶æ€ (ç”¨äºäº‘å±‚åŠ¨ç”»æ—¶ç¦ç”¨ç‚¹å‡»)
     void setButtonsEnabled(bool enabled);
 
     int getSelectedTroopId() const { return _selectedTroopId; }
     
-    // ¡¾ĞÂÔö¡¿Çå³ı±øÖÖÑ¡Ôñ×´Ì¬
+    // ã€æ–°å¢ã€‘æ¸…é™¤å…µç§é€‰æ‹©çŠ¶æ€
     void clearTroopSelection();
 
 private:
-    // UI ÔªËØ
+    // UI å…ƒç´ 
     cocos2d::Label* _timerLabel;
-    cocos2d::ui::Button* _btnNext;     // Ñ°ÕÒ¶ÔÊÖ
-    cocos2d::ui::Button* _btnEnd;      // ºìÉ«½áÊøÕ½¶· (back.png)
-    cocos2d::ui::Button* _btnReturn;   // ÂÌÉ«»ØÓª (finishbattle.png)
-    cocos2d::Node* _troopBarNode;      // µ×²¿±øÖÖÌõÈİÆ÷
+    cocos2d::ui::Button* _btnNext;     // å¯»æ‰¾å¯¹æ‰‹
+    cocos2d::ui::Button* _btnEnd;      // çº¢è‰²ç»“æŸæˆ˜æ–— (back.png)
+    cocos2d::ui::Button* _btnReturn;   // ç»¿è‰²å›è¥ (finishbattle.png)
+    cocos2d::Node* _troopBarNode;      // åº•éƒ¨å…µç§æ¡å®¹å™¨
 
-    int _selectedTroopId = -1; // µ±Ç°Ñ¡ÖĞµÄ±øÖÖID
-    std::map<int, cocos2d::ui::Button*> _troopButtons; // ´æ´¢°´Å¥ÒÔ±ã¿ØÖÆ¸ßÁÁ
+    int _selectedTroopId = -1; // å½“å‰é€‰ä¸­çš„å…µç§ID
+    std::map<int, cocos2d::ui::Button*> _troopButtons; // å­˜å‚¨æŒ‰é’®ä»¥ä¾¿æ§åˆ¶é«˜äº®
     void onTroopSelected(int troopId);
 
     void initTopInfo();
     void initBottomButtons();
     void initTroopBar();
 
-    // ¸¨Öú»ñÈ¡ Scene
+    // è¾…åŠ©è·å– Scene
     BattleScene* getBattleScene();
 };
 

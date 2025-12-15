@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <string>
 #include <vector>
 #include <map> 
@@ -11,19 +11,19 @@ struct BuildingInstance {
   int gridY;
 
   enum class State {
-    PLACING,        // ·ÅÖÃÖĞ
-    CONSTRUCTING,   // ½¨Ôì/Éı¼¶ÖĞ
-    BUILT           // ÒÑÍê³É
+    PLACING,        // æ”¾ç½®ä¸­
+    CONSTRUCTING,   // å»ºé€ /å‡çº§ä¸­
+    BUILT           // å·²å®Œæˆ
   };
   State state;
 
   long long finishTime;
 
-  // ĞÂÔö£ºÊÇ·ñÎªÊ×´Î½¨Ôì£¨ÓÃÓÚÇø·ÖĞÂ½¨ÖşºÍÉı¼¶£©
+  // æ–°å¢ï¼šæ˜¯å¦ä¸ºé¦–æ¬¡å»ºé€ ï¼ˆç”¨äºåŒºåˆ†æ–°å»ºç­‘å’Œå‡çº§ï¼‰
   bool isInitialConstruction;
   
-  // ========== Õ½¶·ÏµÍ³£ºÔËĞĞÊ±ÑªÁ¿ ==========
-  int currentHP;  // µ±Ç°ÑªÁ¿£¨Õ½¶·Ê±Ê¹ÓÃ£¬³õÊ¼Öµ=ÅäÖÃµÄhitPoints£©
+  // ========== æˆ˜æ–—ç³»ç»Ÿï¼šè¿è¡Œæ—¶è¡€é‡ ==========
+  int currentHP;  // å½“å‰è¡€é‡ï¼ˆæˆ˜æ–—æ—¶ä½¿ç”¨ï¼Œåˆå§‹å€¼=é…ç½®çš„hitPointsï¼‰
   // =========================================
 };
 
@@ -33,6 +33,6 @@ struct VillageData {
   int gem;
   std::vector<BuildingInstance> buildings;
 
-  // ÒÑÑµÁ·µÄ¾ü¶ÓÊı¾İ <±øÖÖID, ÊıÁ¿>
+  // å·²è®­ç»ƒçš„å†›é˜Ÿæ•°æ® <å…µç§ID, æ•°é‡>
   std::map<int, int> troops;
 };

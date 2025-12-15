@@ -1,4 +1,4 @@
-#include "BuildingPlacementController.h"
+ï»¿#include "BuildingPlacementController.h"
 #include "Manager/VillageDataManager.h"
 #include "Manager/BuildingManager.h"
 #include "Model/BuildingConfig.h"
@@ -22,11 +22,11 @@ void BuildingPlacementController::cancelPlacement() {
 
   CCLOG("BuildingPlacementController: Placement cancelled for building ID=%d", _currentBuildingId);
 
-  // ´ÓÊı¾İ²ãÉ¾³ı½¨ÖşÊı¾İ
+  // ä»æ•°æ®å±‚åˆ é™¤å»ºç­‘æ•°æ®
   auto dataManager = VillageDataManager::getInstance();
   dataManager->removeBuilding(_currentBuildingId);
 
-  // Í¨ÖªÉ¾³ı³É¹¦£¨ĞèÒªÍ¨¹ı»Øµ÷£©
+  // é€šçŸ¥åˆ é™¤æˆåŠŸï¼ˆéœ€è¦é€šè¿‡å›è°ƒï¼‰
   if (_placementCallback) {
     _placementCallback(false, _currentBuildingId);
   }
@@ -51,10 +51,10 @@ bool BuildingPlacementController::confirmPlacement() {
     return false;
   }
 
-  // ========== µ÷ÓÃÍ³Ò»µÄ·ÅÖÃÍê³É·½·¨ ==========
-  // Õâ¸ö·½·¨»á×Ô¶¯´¦Àí£º
-  //   - ¹¤ÈËĞ¡Îİ£¨ID=201£©¡ú Ë²¼äÍê³É ¡ú BUILT ×´Ì¬
-  //   - ÆäËû½¨Öş ¡ú ½øÈë CONSTRUCTING ×´Ì¬
+  // ========== è°ƒç”¨ç»Ÿä¸€çš„æ”¾ç½®å®Œæˆæ–¹æ³• ==========
+  // è¿™ä¸ªæ–¹æ³•ä¼šè‡ªåŠ¨å¤„ç†ï¼š
+  //   - å·¥äººå°å±‹ï¼ˆID=201ï¼‰â†’ ç¬é—´å®Œæˆ â†’ BUILT çŠ¶æ€
+  //   - å…¶ä»–å»ºç­‘ â†’ è¿›å…¥ CONSTRUCTING çŠ¶æ€
   bool success = dataManager->startConstructionAfterPlacement(_currentBuildingId);
 
   if (!success) {
@@ -86,13 +86,13 @@ bool BuildingPlacementController::canPlaceAtCurrentPosition() const {
   auto config = BuildingConfig::getInstance()->getConfig(building->type);
   if (!config) return false;
 
-  // ¼ì²éÇøÓòÊÇ·ñÕ¼ÓÃ
+  // æ£€æŸ¥åŒºåŸŸæ˜¯å¦å ç”¨
   return !dataManager->isAreaOccupied(
     building->gridX,
     building->gridY,
     config->gridWidth,
     config->gridHeight,
-    _currentBuildingId  // ºöÂÔ×Ô¼º
+    _currentBuildingId  // å¿½ç•¥è‡ªå·±
   );
 }
 

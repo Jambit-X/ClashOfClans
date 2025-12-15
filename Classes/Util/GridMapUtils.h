@@ -1,118 +1,118 @@
-#ifndef __GRID_MAP_UTILS_H__
+ï»¿#ifndef __GRID_MAP_UTILS_H__
 #define __GRID_MAP_UTILS_H__
 
 #include "cocos2d.h"
 
 /**
- * Íø¸ñµØÍ¼¹¤¾ßÀà
+ * ç½‘æ ¼åœ°å›¾å·¥å…·ç±»
  * 
- * Íø¸ñÏµÍ³ËµÃ÷£º
- * - 44x44 µÈÖá²âÁâĞÎÍø¸ñ£¨Isometric Grid£©
- * - Íø¸ñ×ø±êÔ­µã (0,0) ¶ÔÓ¦ÁâĞÎ×ó¶¥µã
- * - Íø¸ñ×ø±ê (43,43) ¶ÔÓ¦ÁâĞÎÓÒ¶¥µã
- * - ÊÀ½ç×ø±êÏµ£º±³¾°Í¼×óÏÂ½ÇÎª(0,0)£¬YÖáÏòÉÏ
+ * ç½‘æ ¼ç³»ç»Ÿè¯´æ˜ï¼š
+ * - 44x44 ç­‰è½´æµ‹è±å½¢ç½‘æ ¼ï¼ˆIsometric Gridï¼‰
+ * - ç½‘æ ¼åæ ‡åŸç‚¹ (0,0) å¯¹åº”è±å½¢å·¦é¡¶ç‚¹
+ * - ç½‘æ ¼åæ ‡ (43,43) å¯¹åº”è±å½¢å³é¡¶ç‚¹
+ * - ä¸–ç•Œåæ ‡ç³»ï¼šèƒŒæ™¯å›¾å·¦ä¸‹è§’ä¸º(0,0)ï¼ŒYè½´å‘ä¸Š
  * 
- * Íø¸ñÇøÓò²ÎÊı£º
- * - ÖĞĞÄ£º(1893, 1370)
- * - ×ó¶¥µã£º(660, 1365) ¡û Íø¸ñÔ­µã (0, 0)
- * - ÓÒ¶¥µã£º(3128, 1365) ¡û Íø¸ñ (44, 44)
- * - ÉÏ¶¥µã£º(1893, 2293) ¡û Íø¸ñ (0, 44)
- * - ÏÂ¶¥µã£º(1893, 445) ¡û Íø¸ñ (44, 0)
+ * ç½‘æ ¼åŒºåŸŸå‚æ•°ï¼š
+ * - ä¸­å¿ƒï¼š(1893, 1370)
+ * - å·¦é¡¶ç‚¹ï¼š(660, 1365) â† ç½‘æ ¼åŸç‚¹ (0, 0)
+ * - å³é¡¶ç‚¹ï¼š(3128, 1365) â† ç½‘æ ¼ (44, 44)
+ * - ä¸Šé¡¶ç‚¹ï¼š(1893, 2293) â† ç½‘æ ¼ (0, 44)
+ * - ä¸‹é¡¶ç‚¹ï¼š(1893, 445) â† ç½‘æ ¼ (44, 0)
  */
 class GridMapUtils {
 public:
-    // Íø¸ñ³ß´ç³£Á¿
-    static const int GRID_WIDTH = 44;   // Íø¸ñ¿í¶È£¨¸ñÊı£©
-    static const int GRID_HEIGHT = 44;  // Íø¸ñ¸ß¶È£¨¸ñÊı£©
+    // ç½‘æ ¼å°ºå¯¸å¸¸é‡
+    static const int GRID_WIDTH = 44;   // ç½‘æ ¼å®½åº¦ï¼ˆæ ¼æ•°ï¼‰
+    static const int GRID_HEIGHT = 44;  // ç½‘æ ¼é«˜åº¦ï¼ˆæ ¼æ•°ï¼‰
     
-    // Íø¸ñ×ø±êÏµÔ­µãºÍµ¥Î»ÏòÁ¿£¨ÏñËØ£©
-    static const float GRID_ORIGIN_X;   // Íø¸ñ(0,0)¶ÔÓ¦µÄÊÀ½çX×ø±ê
-    static const float GRID_ORIGIN_Y;   // Íø¸ñ(0,0)¶ÔÓ¦µÄÊÀ½çY×ø±ê
+    // ç½‘æ ¼åæ ‡ç³»åŸç‚¹å’Œå•ä½å‘é‡ï¼ˆåƒç´ ï¼‰
+    static const float GRID_ORIGIN_X;   // ç½‘æ ¼(0,0)å¯¹åº”çš„ä¸–ç•ŒXåæ ‡
+    static const float GRID_ORIGIN_Y;   // ç½‘æ ¼(0,0)å¯¹åº”çš„ä¸–ç•ŒYåæ ‡
     
-    static const float GRID_X_UNIT_X;   // Íø¸ñX+1·½ÏòµÄÊÀ½çXÆ«ÒÆ
-    static const float GRID_X_UNIT_Y;   // Íø¸ñX+1·½ÏòµÄÊÀ½çYÆ«ÒÆ
+    static const float GRID_X_UNIT_X;   // ç½‘æ ¼X+1æ–¹å‘çš„ä¸–ç•ŒXåç§»
+    static const float GRID_X_UNIT_Y;   // ç½‘æ ¼X+1æ–¹å‘çš„ä¸–ç•ŒYåç§»
     
-    static const float GRID_Y_UNIT_X;   // Íø¸ñY+1·½ÏòµÄÊÀ½çXÆ«ÒÆ
-    static const float GRID_Y_UNIT_Y;   // Íø¸ñY+1·½ÏòµÄÊÀ½çYÆ«ÒÆ
+    static const float GRID_Y_UNIT_X;   // ç½‘æ ¼Y+1æ–¹å‘çš„ä¸–ç•ŒXåç§»
+    static const float GRID_Y_UNIT_Y;   // ç½‘æ ¼Y+1æ–¹å‘çš„ä¸–ç•ŒYåç§»
     
-    // ========== ×ø±ê×ª»» ==========
+    // ========== åæ ‡è½¬æ¢ ==========
     
     /**
-     * ÊÀ½ç×ø±ê×ªÍø¸ñ×ø±ê£¨¾«È·£©
-     * @param pixelX ÊÀ½çX×ø±ê£¨ÏñËØ£©
-     * @param pixelY ÊÀ½çY×ø±ê£¨ÏñËØ£©
-     * @return Íø¸ñ×ø±ê£¨¿ÉÄÜÊÇĞ¡Êı£©
+     * ä¸–ç•Œåæ ‡è½¬ç½‘æ ¼åæ ‡ï¼ˆç²¾ç¡®ï¼‰
+     * @param pixelX ä¸–ç•ŒXåæ ‡ï¼ˆåƒç´ ï¼‰
+     * @param pixelY ä¸–ç•ŒYåæ ‡ï¼ˆåƒç´ ï¼‰
+     * @return ç½‘æ ¼åæ ‡ï¼ˆå¯èƒ½æ˜¯å°æ•°ï¼‰
      */
     static cocos2d::Vec2 pixelToGrid(float pixelX, float pixelY);
     static cocos2d::Vec2 pixelToGrid(const cocos2d::Vec2& pixelPos);
     
     /**
-     * Íø¸ñ×ø±ê×ªÊÀ½ç×ø±ê£¨Íø¸ñ×óÏÂ½Ç£©
-     * @param gridX Íø¸ñX×ø±ê
-     * @param gridY Íø¸ñY×ø±ê
-     * @return ÊÀ½ç×ø±ê£¨¸ÃÍø¸ñµ¥Ôª×óÏÂ½ÇµÄÏñËØÎ»ÖÃ£©
+     * ç½‘æ ¼åæ ‡è½¬ä¸–ç•Œåæ ‡ï¼ˆç½‘æ ¼å·¦ä¸‹è§’ï¼‰
+     * @param gridX ç½‘æ ¼Xåæ ‡
+     * @param gridY ç½‘æ ¼Yåæ ‡
+     * @return ä¸–ç•Œåæ ‡ï¼ˆè¯¥ç½‘æ ¼å•å…ƒå·¦ä¸‹è§’çš„åƒç´ ä½ç½®ï¼‰
      */
     static cocos2d::Vec2 gridToPixel(int gridX, int gridY);
     static cocos2d::Vec2 gridToPixel(const cocos2d::Vec2& gridPos);
     
     /**
-     * Íø¸ñ×ø±ê×ªÊÀ½ç×ø±ê£¨Íø¸ñÖĞĞÄ£©
-     * @param gridX Íø¸ñX×ø±ê
-     * @param gridY Íø¸ñY×ø±ê
-     * @return ÊÀ½ç×ø±ê£¨¸ÃÍø¸ñµ¥ÔªÖĞĞÄµÄÏñËØÎ»ÖÃ£©
+     * ç½‘æ ¼åæ ‡è½¬ä¸–ç•Œåæ ‡ï¼ˆç½‘æ ¼ä¸­å¿ƒï¼‰
+     * @param gridX ç½‘æ ¼Xåæ ‡
+     * @param gridY ç½‘æ ¼Yåæ ‡
+     * @return ä¸–ç•Œåæ ‡ï¼ˆè¯¥ç½‘æ ¼å•å…ƒä¸­å¿ƒçš„åƒç´ ä½ç½®ï¼‰
      */
     static cocos2d::Vec2 gridToPixelCenter(int gridX, int gridY);
     static cocos2d::Vec2 gridToPixelCenter(const cocos2d::Vec2& gridPos);
     
     /**
-     * »ñÈ¡½¨ÖşÖĞĞÄµÄÊÀ½ç×ø±ê
-     * @param gridX ½¨Öş×óÏÂ½ÇÍø¸ñX×ø±ê
-     * @param gridY ½¨Öş×óÏÂ½ÇÍø¸ñY×ø±ê
-     * @param width ½¨Öş¿í¶È£¨¸ñÊı£©
-     * @param height ½¨Öş¸ß¶È£¨¸ñÊı£©
-     * @return ½¨ÖşÖĞĞÄµÄÊÀ½ç×ø±ê
+     * è·å–å»ºç­‘ä¸­å¿ƒçš„ä¸–ç•Œåæ ‡
+     * @param gridX å»ºç­‘å·¦ä¸‹è§’ç½‘æ ¼Xåæ ‡
+     * @param gridY å»ºç­‘å·¦ä¸‹è§’ç½‘æ ¼Yåæ ‡
+     * @param width å»ºç­‘å®½åº¦ï¼ˆæ ¼æ•°ï¼‰
+     * @param height å»ºç­‘é«˜åº¦ï¼ˆæ ¼æ•°ï¼‰
+     * @return å»ºç­‘ä¸­å¿ƒçš„ä¸–ç•Œåæ ‡
      */
     static cocos2d::Vec2 getBuildingCenterPixel(int gridX, int gridY, int width, int height);
     
-    // ========== ±ß½ç¼ì²â ==========
+    // ========== è¾¹ç•Œæ£€æµ‹ ==========
     
     /**
-     * ¼ì²éÍø¸ñ×ø±êÊÇ·ñÔÚÓĞĞ§·¶Î§ÄÚ
-     * @param gridX Íø¸ñX×ø±ê
-     * @param gridY Íø¸ñY×ø±ê
-     * @return ÊÇ·ñÔÚ [0,43] ·¶Î§ÄÚ
+     * æ£€æŸ¥ç½‘æ ¼åæ ‡æ˜¯å¦åœ¨æœ‰æ•ˆèŒƒå›´å†…
+     * @param gridX ç½‘æ ¼Xåæ ‡
+     * @param gridY ç½‘æ ¼Yåæ ‡
+     * @return æ˜¯å¦åœ¨ [0,43] èŒƒå›´å†…
      */
     static bool isValidGridPosition(int gridX, int gridY);
     static bool isValidGridPosition(const cocos2d::Vec2& gridPos);
     
     /**
-     * ¼ì²é½¨ÖşÊÇ·ñÍêÈ«ÔÚÍø¸ñ·¶Î§ÄÚ
-     * @param gridX ½¨Öş×óÏÂ½ÇÍø¸ñX×ø±ê
-     * @param gridY ½¨Öş×óÏÂ½ÇÍø¸ñY×ø±ê
-     * @param width ½¨Öş¿í¶È£¨¸ñÊı£©
-     * @param height ½¨Öş¸ß¶È£¨¸ñÊı£©
-     * @return ½¨ÖşËùÓĞÕ¼ÓÃµÄÍø¸ñÊÇ·ñ¶¼ÔÚÓĞĞ§·¶Î§ÄÚ
+     * æ£€æŸ¥å»ºç­‘æ˜¯å¦å®Œå…¨åœ¨ç½‘æ ¼èŒƒå›´å†…
+     * @param gridX å»ºç­‘å·¦ä¸‹è§’ç½‘æ ¼Xåæ ‡
+     * @param gridY å»ºç­‘å·¦ä¸‹è§’ç½‘æ ¼Yåæ ‡
+     * @param width å»ºç­‘å®½åº¦ï¼ˆæ ¼æ•°ï¼‰
+     * @param height å»ºç­‘é«˜åº¦ï¼ˆæ ¼æ•°ï¼‰
+     * @return å»ºç­‘æ‰€æœ‰å ç”¨çš„ç½‘æ ¼æ˜¯å¦éƒ½åœ¨æœ‰æ•ˆèŒƒå›´å†…
      */
     static bool isBuildingInBounds(int gridX, int gridY, int width, int height);
     
     /**
-     * @brief ¼ì²éÁ½¸ö¾ØĞÎÊÇ·ñÖØµş£¨ÓÃÓÚÅö×²¼ì²â£©
-     * @param pos1 µÚÒ»¸ö¾ØĞÎµÄ×óÏÂ½ÇÎ»ÖÃ£¨Íø¸ñ×ø±ê£©
-     * @param size1 µÚÒ»¸ö¾ØĞÎµÄ´óĞ¡£¨Íø¸ñµ¥Î»£©
-     * @param pos2 µÚ¶ş¸ö¾ØĞÎµÄ×óÏÂ½ÇÎ»ÖÃ£¨Íø¸ñ×ø±ê£©
-     * @param size2 µÚ¶ş¸ö¾ØĞÎµÄ´óĞ¡£¨Íø¸ñµ¥Î»£©
-     * @return ÊÇ·ñÖØµş
+     * @brief æ£€æŸ¥ä¸¤ä¸ªçŸ©å½¢æ˜¯å¦é‡å ï¼ˆç”¨äºç¢°æ’æ£€æµ‹ï¼‰
+     * @param pos1 ç¬¬ä¸€ä¸ªçŸ©å½¢çš„å·¦ä¸‹è§’ä½ç½®ï¼ˆç½‘æ ¼åæ ‡ï¼‰
+     * @param size1 ç¬¬ä¸€ä¸ªçŸ©å½¢çš„å¤§å°ï¼ˆç½‘æ ¼å•ä½ï¼‰
+     * @param pos2 ç¬¬äºŒä¸ªçŸ©å½¢çš„å·¦ä¸‹è§’ä½ç½®ï¼ˆç½‘æ ¼åæ ‡ï¼‰
+     * @param size2 ç¬¬äºŒä¸ªçŸ©å½¢çš„å¤§å°ï¼ˆç½‘æ ¼å•ä½ï¼‰
+     * @return æ˜¯å¦é‡å 
      */
     static bool isRectOverlap(
       const cocos2d::Vec2& pos1, const cocos2d::Size& size1,
       const cocos2d::Vec2& pos2, const cocos2d::Size& size2);
     
     /**
-     * @brief »ñÈ¡½¨ÖşµÄ×îÖÕäÖÈ¾Î»ÖÃ£¨Íø¸ñ×ø±ê + ÊÓ¾õÆ«ÒÆ£©
-     * @param gridX ½¨Öş×óÏÂ½ÇÍø¸ñX×ø±ê
-     * @param gridY ½¨Öş×óÏÂ½ÇÍø¸ñY×ø±ê
-     * @param visualOffset ÊÓ¾õÆ«ÒÆÁ¿£¨´Ó BuildingSprite::getVisualOffset() »ñÈ¡£©
-     * @return ×îÖÕäÖÈ¾Î»ÖÃ£¨ÊÀ½ç×ø±ê£©
+     * @brief è·å–å»ºç­‘çš„æœ€ç»ˆæ¸²æŸ“ä½ç½®ï¼ˆç½‘æ ¼åæ ‡ + è§†è§‰åç§»ï¼‰
+     * @param gridX å»ºç­‘å·¦ä¸‹è§’ç½‘æ ¼Xåæ ‡
+     * @param gridY å»ºç­‘å·¦ä¸‹è§’ç½‘æ ¼Yåæ ‡
+     * @param visualOffset è§†è§‰åç§»é‡ï¼ˆä» BuildingSprite::getVisualOffset() è·å–ï¼‰
+     * @return æœ€ç»ˆæ¸²æŸ“ä½ç½®ï¼ˆä¸–ç•Œåæ ‡ï¼‰
      */
     static cocos2d::Vec2 getVisualPosition(int gridX, int gridY, const cocos2d::Vec2& visualOffset);
 };

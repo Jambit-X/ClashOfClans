@@ -1,10 +1,10 @@
-#ifndef __BATTLE_SCENE_H__
+ï»¿#ifndef __BATTLE_SCENE_H__
 #define __BATTLE_SCENE_H__
 
 #include "cocos2d.h"
-#include <functional> // ĞèÒª°üº¬Õâ¸öÍ·ÎÄ¼ş
+#include <functional> // éœ€è¦åŒ…å«è¿™ä¸ªå¤´æ–‡ä»¶
 
-// Ç°ÖÃÉùÃ÷
+// å‰ç½®å£°æ˜
 namespace cocos2d {
     class Touch;
     class Event;
@@ -17,25 +17,25 @@ class BattleResultLayer;
 class BattleScene : public cocos2d::Scene {
 public:
     enum class BattleState {
-        PREPARE,    // Õì²é½×¶Î
-        FIGHTING,   // Õ½¶·½×¶Î
-        RESULT      // ½áËã½×¶Î
+        PREPARE,    // ä¾¦æŸ¥é˜¶æ®µ
+        FIGHTING,   // æˆ˜æ–—é˜¶æ®µ
+        RESULT      // ç»“ç®—é˜¶æ®µ
     };
 
     static cocos2d::Scene* createScene();
     virtual bool init();
     virtual void update(float dt);
-    virtual void onExit() override; // ¡¾ĞÂÔö¡¿³¡¾°ÍË³öÊ±ÇåÀí×ÊÔ´
+    virtual void onExit() override; // ã€æ–°å¢ã€‘åœºæ™¯é€€å‡ºæ—¶æ¸…ç†èµ„æº
     CREATE_FUNC(BattleScene);
 
     void switchState(BattleState newState);
     BattleState getCurrentState() const { return _currentState; }
 
-    // --- Íâ²¿½»»¥»Øµ÷ ---
-    void onNextOpponentClicked(); // µã»÷¡°Ñ°ÕÒ¶ÔÊÖ¡±
-    // void onStartBattleClicked(); // [ÒÑÉ¾³ı]
-    void onEndBattleClicked();    // µã»÷¡°½áÊøÕ½¶·¡±
-    void onReturnHomeClicked();   // µã»÷¡°»ØÓª¡±
+    // --- å¤–éƒ¨äº¤äº’å›è°ƒ ---
+    void onNextOpponentClicked(); // ç‚¹å‡»â€œå¯»æ‰¾å¯¹æ‰‹â€
+    // void onStartBattleClicked(); // [å·²åˆ é™¤]
+    void onEndBattleClicked();    // ç‚¹å‡»â€œç»“æŸæˆ˜æ–—â€
+    void onReturnHomeClicked();   // ç‚¹å‡»â€œå›è¥â€
 
 private:
     BattleState _currentState = BattleState::PREPARE;
@@ -45,31 +45,31 @@ private:
     BattleHUDLayer* _hudLayer = nullptr;
     BattleResultLayer* _resultLayer = nullptr;
 
-    //¼àÌıµã»÷,Éú³É±øÖÖ,²¢´¥·¢ AI¡£
+    //ç›‘å¬ç‚¹å‡»,ç”Ÿæˆå…µç§,å¹¶è§¦å‘ AIã€‚
     void setupTouchListener();
-    void cleanupTouchListener(); // ¡¾ĞÂÔö¡¿ÇåÀí´¥Ãş¼àÌıÆ÷
+    void cleanupTouchListener(); // ã€æ–°å¢ã€‘æ¸…ç†è§¦æ‘¸ç›‘å¬å™¨
     bool onTouchBegan(cocos2d::Touch* touch, cocos2d::Event* event);
     void onTouchMoved(cocos2d::Touch* touch, cocos2d::Event* event);
     void onTouchEnded(cocos2d::Touch* touch, cocos2d::Event* event);
     
-    // ´¥Ãş×´Ì¬¸ú×Ù
+    // è§¦æ‘¸çŠ¶æ€è·Ÿè¸ª
     cocos2d::Vec2 _touchStartPos;
     bool _isTouchMoving;
-    cocos2d::EventListenerTouchOneByOne* _touchListener = nullptr; // ¡¾ĞÂÔö¡¿±£´æ¼àÌıÆ÷Ö¸Õë
+    cocos2d::EventListenerTouchOneByOne* _touchListener = nullptr; // ã€æ–°å¢ã€‘ä¿å­˜ç›‘å¬å™¨æŒ‡é’ˆ
     
-    // ¸¨Öú·½·¨£ºÅĞ¶Ï´¥ÃşÊÇ·ñÔÚ UI ÇøÓò
+    // è¾…åŠ©æ–¹æ³•ï¼šåˆ¤æ–­è§¦æ‘¸æ˜¯å¦åœ¨ UI åŒºåŸŸ
     bool isTouchOnUI(const cocos2d::Vec2& touchPos);
 
-    // --- ÔÆ²ãÕÚÕÖÏà¹Ø ---
+    // --- äº‘å±‚é®ç½©ç›¸å…³ ---
     cocos2d::Sprite* _cloudSprite = nullptr;
-    bool _isSearching = false; // ·ÀÖ¹ÖØ¸´µã»÷±êÖ¾Î»
+    bool _isSearching = false; // é˜²æ­¢é‡å¤ç‚¹å‡»æ ‡å¿—ä½
 
     void loadEnemyVillage();
 
     /**
-     * @brief Ö´ĞĞÔÆ²ãËÑË÷¶¯»­
-     * @param onMapReloadCallback µ±ÔÆ²ãÍêÈ«ÕÚ×¡ÆÁÄ»Ê±£¬Ö´ĞĞµÄ»Øµ÷£¨Í¨³£ÓÃÓÚË¢ĞÂµØÍ¼£©
-     * @param isInitialEntry ÊÇ·ñÊÇ¸Õ½øÈë³¡¾°£¨Èç¹ûÊÇ£¬ÔòÖ±½ÓÏÔÊ¾ÔÆ²ã²¢Ö»Ö´ĞĞµ­³ö£©
+     * @brief æ‰§è¡Œäº‘å±‚æœç´¢åŠ¨ç”»
+     * @param onMapReloadCallback å½“äº‘å±‚å®Œå…¨é®ä½å±å¹•æ—¶ï¼Œæ‰§è¡Œçš„å›è°ƒï¼ˆé€šå¸¸ç”¨äºåˆ·æ–°åœ°å›¾ï¼‰
+     * @param isInitialEntry æ˜¯å¦æ˜¯åˆšè¿›å…¥åœºæ™¯ï¼ˆå¦‚æœæ˜¯ï¼Œåˆ™ç›´æ¥æ˜¾ç¤ºäº‘å±‚å¹¶åªæ‰§è¡Œæ·¡å‡ºï¼‰
      */
     void performCloudTransition(std::function<void()> onMapReloadCallback, bool isInitialEntry = false);
 };

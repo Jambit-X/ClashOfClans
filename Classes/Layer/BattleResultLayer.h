@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #ifndef __BATTLE_RESULT_LAYER_H__
 #define __BATTLE_RESULT_LAYER_H__
 

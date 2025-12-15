@@ -1,4 +1,4 @@
-#include "VillageDataManager.h"
+ï»¿#include "VillageDataManager.h"
 #include "../Util/GridMapUtils.h"
 #include "../Model/BuildingConfig.h"
 #include "../Model/BuildingRequirements.h"
@@ -46,7 +46,7 @@ void VillageDataManager::destroyInstance() {
   }
 }
 
-// ========== ×ÊÔ´½Ó¿Ú£¨Ö»±£Áô»ù´¡Ôö¼õ£©==========
+// ========== èµ„æºæ¥å£ï¼ˆåªä¿ç•™åŸºç¡€å¢å‡ï¼‰==========
 
 int VillageDataManager::getGold() const {
   return _data.gold;
@@ -84,7 +84,7 @@ bool VillageDataManager::spendElixir(int amount) {
   return false;
 }
 
-// ±¦Ê¯½Ó¿ÚÊµÏÖ
+// å®çŸ³æ¥å£å®ç°
 int VillageDataManager::getGem() const {
   return _data.gem;
 }
@@ -115,21 +115,21 @@ void VillageDataManager::notifyResourceChanged() {
 }
 
 
-// ========== ¾ü¶ÓÓë±øÓª½Ó¿ÚÊµÏÖ ==========
+// ========== å†›é˜Ÿä¸å…µè¥æ¥å£å®ç° ==========
 
 int VillageDataManager::getTownHallLevel() const {
     for (const auto& building : _data.buildings) {
-        if (building.type == 1) { // ¼ÙÉè´ó±¾Óª ID Îª 1
+        if (building.type == 1) { // å‡è®¾å¤§æœ¬è¥ ID ä¸º 1
             return building.level;
         }
     }
-    return 1; // Ä¬ÈÏ1¼¶
+    return 1; // é»˜è®¤1çº§
 }
 
 int VillageDataManager::getArmyCampCount() const {
     int count = 0;
     for (const auto& building : _data.buildings) {
-        // ÅÅ³ı·ÅÖÃÖĞµÄ±øÓª£¬Ö»¼ÆËãÒÑ´æÔÚµÄ
+        // æ’é™¤æ”¾ç½®ä¸­çš„å…µè¥ï¼Œåªè®¡ç®—å·²å­˜åœ¨çš„
         if (building.type == 101 && building.state != BuildingInstance::State::PLACING) {
             count++;
         }
@@ -140,10 +140,10 @@ int VillageDataManager::getArmyCampCount() const {
 int VillageDataManager::calculateTotalHousingSpace() const {
     int totalSpace = 0;
     for (const auto& building : _data.buildings) {
-        // ±øÓª ID = 101, ÇÒ²»ÊÇ·ÅÖÃÖĞ×´Ì¬
+        // å…µè¥ ID = 101, ä¸”ä¸æ˜¯æ”¾ç½®ä¸­çŠ¶æ€
         if (building.type == 101 && building.state != BuildingInstance::State::PLACING) {
-            // ¹æÔò£º1¼¶=20, 2¼¶=30, 3¼¶=40
-            // ¹«Ê½£º10 + µÈ¼¶ * 10
+            // è§„åˆ™ï¼š1çº§=20, 2çº§=30, 3çº§=40
+            // å…¬å¼ï¼š10 + ç­‰çº§ * 10
             int space = 10 + (building.level * 10);
             totalSpace += space;
         }
@@ -176,7 +176,7 @@ int VillageDataManager::getTroopCount(int troopId) const {
 void VillageDataManager::addTroop(int troopId, int count) {
     if (count <= 0) return;
     _data.troops[troopId] += count;
-    saveToFile("village.json"); // Á¢¼´±£´æ
+    saveToFile("village.json"); // ç«‹å³ä¿å­˜
 }
 
 bool VillageDataManager::removeTroop(int troopId, int count) {
@@ -192,11 +192,11 @@ bool VillageDataManager::removeTroop(int troopId, int count) {
         _data.troops.erase(it);
     }
 
-    saveToFile("village.json"); // Á¢¼´±£´æ
+    saveToFile("village.json"); // ç«‹å³ä¿å­˜
     return true;
 }
 
-// ========== ½¨Öş½Ó¿Ú ==========
+// ========== å»ºç­‘æ¥å£ ==========
 
 const std::vector<BuildingInstance>& VillageDataManager::getAllBuildings() const {
   return _data.buildings;
@@ -223,7 +223,7 @@ int VillageDataManager::addBuilding(int type, int level, int gridX, int gridY,
   building.gridY = gridY;
   building.state = state;
   building.finishTime = finishTime;
-  building.isInitialConstruction = isInitialConstruction;  // ÉèÖÃ±êÖ¾
+  building.isInitialConstruction = isInitialConstruction;  // è®¾ç½®æ ‡å¿—
 
   _data.buildings.push_back(building);
 
@@ -285,22 +285,22 @@ bool VillageDataManager::startUpgradeBuilding(int id) {
     return false;
   }
 
-  // ¼ì²é×î´óµÈ¼¶
+  // æ£€æŸ¥æœ€å¤§ç­‰çº§
   if (building->level >= 3) {
     CCLOG("VillageDataManager: Building %d already at max level (3)", id);
     return false;
   }
 
-  // »ñÈ¡Éı¼¶³É±¾
+  // è·å–å‡çº§æˆæœ¬
   int cost = config->getUpgradeCost(building->type, building->level);
 
-  // ¸ÄÎªÓ¢ÎÄÅĞ¶Ï
+  // æ”¹ä¸ºè‹±æ–‡åˆ¤æ–­
   bool success = false;
-  if (configData->costType == "gold") {  // Ó¢ÎÄ
+  if (configData->costType == "gold") {  // è‹±æ–‡
     success = spendGold(cost);
-  } else if (configData->costType == "elixir") {  // Ó¢ÎÄ
+  } else if (configData->costType == "elixir") {  // è‹±æ–‡
     success = spendElixir(cost);
-  } else if (configData->costType == "gem") {  // ĞÂÔö±¦Ê¯ÀàĞÍ
+  } else if (configData->costType == "gem") {  // æ–°å¢å®çŸ³ç±»å‹
     success = spendGem(cost);
   }
 
@@ -309,19 +309,19 @@ bool VillageDataManager::startUpgradeBuilding(int id) {
     return false;
   }
 
-  // ¿ªÊ¼Éı¼¶
+  // å¼€å§‹å‡çº§
   long long currentTime = time(nullptr);
   long long finishTime = currentTime + configData->buildTimeSeconds;
   building->state = BuildingInstance::State::CONSTRUCTING;
   building->finishTime = finishTime;
-  building->isInitialConstruction = false;  // Éı¼¶²»ÊÇÊ×´Î½¨Ôì
+  building->isInitialConstruction = false;  // å‡çº§ä¸æ˜¯é¦–æ¬¡å»ºé€ 
 
-  CCLOG("VillageDataManager: Started upgrade for building %d (level %d ¡ú %d), finish at %lld",
+  CCLOG("VillageDataManager: Started upgrade for building %d (level %d â†’ %d), finish at %lld",
         id, building->level, building->level + 1, finishTime);
 
   saveToFile("village.json");
 
-  // ========== ´¥·¢½¨Ôì¿ªÊ¼ÊÂ¼ş ==========
+  // ========== è§¦å‘å»ºé€ å¼€å§‹äº‹ä»¶ ==========
   EventCustom event("EVENT_CONSTRUCTION_STARTED");
   int* data = new int(id);
   event.setUserData(data);
@@ -331,7 +331,7 @@ bool VillageDataManager::startUpgradeBuilding(int id) {
   return true;
 }
 
-// ĞÂ½¨Öş½¨ÔìÍê³É
+// æ–°å»ºç­‘å»ºé€ å®Œæˆ
 void VillageDataManager::finishNewBuildingConstruction(int id) {
   auto* building = getBuildingById(id);
   if (!building) {
@@ -339,7 +339,7 @@ void VillageDataManager::finishNewBuildingConstruction(int id) {
     return;
   }
 
-  // ºËĞÄĞŞ¸´£ºĞÂ½¨Öş´Ó 0 ¼¶Éıµ½ 1 ¼¶
+  // æ ¸å¿ƒä¿®å¤ï¼šæ–°å»ºç­‘ä» 0 çº§å‡åˆ° 1 çº§
   building->level++;
   building->state = BuildingInstance::State::BUILT;
   building->finishTime = 0;
@@ -361,14 +361,14 @@ void VillageDataManager::finishUpgradeBuilding(int id) {
   }
 
   int oldLevel = building->level;
-  building->level++;  // Éı¼¶£ºµÈ¼¶ +1
+  building->level++;  // å‡çº§ï¼šç­‰çº§ +1
   building->state = BuildingInstance::State::BUILT;
   building->finishTime = 0;
 
   CCLOG("VillageDataManager: Building %d upgraded from level %d to %d", id, oldLevel, building->level);
 
-  // Èç¹ûÊÇ´ó±¾ÓªÉı¼¶£¬´¥·¢ÌØÊâÊÂ¼ş
-  if (building->type == 1) {  // ´ó±¾Óª ID = 1
+  // å¦‚æœæ˜¯å¤§æœ¬è¥å‡çº§ï¼Œè§¦å‘ç‰¹æ®Šäº‹ä»¶
+  if (building->type == 1) {  // å¤§æœ¬è¥ ID = 1
     CCLOG("VillageDataManager: Town Hall upgraded to level %d!", building->level);
     Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("EVENT_TOWNHALL_UPGRADED");
   }
@@ -379,7 +379,7 @@ void VillageDataManager::finishUpgradeBuilding(int id) {
     "EVENT_BUILDING_UPGRADED", &id);
 }
 
-// ========== ½¨Öş·ÅÖÃÍê³ÉºóµÄ´¦Àí ==========
+// ========== å»ºç­‘æ”¾ç½®å®Œæˆåçš„å¤„ç† ==========
 bool VillageDataManager::startConstructionAfterPlacement(int buildingId) {
   auto building = getBuildingById(buildingId);
   if (!building) {
@@ -392,7 +392,7 @@ bool VillageDataManager::startConstructionAfterPlacement(int buildingId) {
     return false;
   }
 
-  // ========== ÌØÊâ´¦Àí£º½¨Öş¹¤ÈËĞ¡ÎİË²¼äÍê³É ==========
+  // ========== ç‰¹æ®Šå¤„ç†ï¼šå»ºç­‘å·¥äººå°å±‹ç¬é—´å®Œæˆ ==========
   if (building->type == 201) {
     CCLOG("VillageDataManager: Builder hut completing instantly after placement");
 
@@ -400,7 +400,7 @@ bool VillageDataManager::startConstructionAfterPlacement(int buildingId) {
     building->finishTime = 0;
     saveToFile("village.json");
 
-    // ´¥·¢Íê³ÉÊÂ¼ş
+    // è§¦å‘å®Œæˆäº‹ä»¶
     EventCustom event("EVENT_BUILDING_UPGRADED");
     int* data = new int(buildingId);
     event.setUserData(data);
@@ -411,7 +411,7 @@ bool VillageDataManager::startConstructionAfterPlacement(int buildingId) {
   }
   // ====================================================
 
-  // ÆäËû½¨ÖşÕı³£½¨ÔìÁ÷³Ì
+  // å…¶ä»–å»ºç­‘æ­£å¸¸å»ºé€ æµç¨‹
   auto config = BuildingConfig::getInstance()->getConfig(building->type);
   if (!config) {
     CCLOG("VillageDataManager: Config not found for building type %d", building->type);
@@ -423,7 +423,7 @@ bool VillageDataManager::startConstructionAfterPlacement(int buildingId) {
 
   saveToFile("village.json");
 
-  // ========== ´¥·¢½¨Ôì¿ªÊ¼ÊÂ¼ş ==========
+  // ========== è§¦å‘å»ºé€ å¼€å§‹äº‹ä»¶ ==========
   EventCustom event("EVENT_CONSTRUCTION_STARTED");
   int* data = new int(buildingId);
   event.setUserData(data);
@@ -435,7 +435,7 @@ bool VillageDataManager::startConstructionAfterPlacement(int buildingId) {
   return true;
 }
 
-// ========== Íø¸ñÕ¼ÓÃ²éÑ¯ ==========
+// ========== ç½‘æ ¼å ç”¨æŸ¥è¯¢ ==========
 
 bool VillageDataManager::isAreaOccupied(int startX, int startY, int width, int height, int ignoreBuildingId) const {
   if (startX < 0 || startY < 0 ||
@@ -492,18 +492,18 @@ void VillageDataManager::removeBuilding(int buildingId) {
   if (it != _data.buildings.end()) {
     CCLOG("VillageDataManager: Removing building ID=%d", buildingId);
     _data.buildings.erase(it);
-    updateGridOccupancy();  // ¸üĞÂÍø¸ñÕ¼ÓÃ
+    updateGridOccupancy();  // æ›´æ–°ç½‘æ ¼å ç”¨
   } else {
     CCLOG("VillageDataManager: Building ID=%d not found", buildingId);
   }
 }
 
-// ĞÂÔö·½·¨£º¼ì²é²¢Íê³ÉËùÓĞµ½ÆÚµÄ½¨Ôì
+// æ–°å¢æ–¹æ³•ï¼šæ£€æŸ¥å¹¶å®Œæˆæ‰€æœ‰åˆ°æœŸçš„å»ºé€ 
 void VillageDataManager::checkAndFinishConstructions() {
   long long currentTime = time(nullptr);
-  std::vector<int> finishedBuildings;  // ÊÕ¼¯ĞèÒªÍê³ÉµÄ½¨Öş ID
+  std::vector<int> finishedBuildings;  // æ”¶é›†éœ€è¦å®Œæˆçš„å»ºç­‘ ID
 
-  // µÚÒ»±é£ºÕÒ³öËùÓĞÍê³ÉµÄ½¨Öş
+  // ç¬¬ä¸€éï¼šæ‰¾å‡ºæ‰€æœ‰å®Œæˆçš„å»ºç­‘
   for (const auto& building : _data.buildings) {
     if (building.state == BuildingInstance::State::CONSTRUCTING &&
         building.finishTime > 0 &&
@@ -512,7 +512,7 @@ void VillageDataManager::checkAndFinishConstructions() {
     }
   }
 
-  // µÚ¶ş±é£ºÍê³É½¨Ôì£¨±ÜÃâµü´úÖĞĞŞ¸ÄÈİÆ÷£©
+  // ç¬¬äºŒéï¼šå®Œæˆå»ºé€ ï¼ˆé¿å…è¿­ä»£ä¸­ä¿®æ”¹å®¹å™¨ï¼‰
   for (int buildingId : finishedBuildings) {
     auto* building = getBuildingById(buildingId);
     if (!building) continue;
@@ -537,7 +537,7 @@ void VillageDataManager::saveToFile(const std::string& filename) {
   doc.AddMember("gold", _data.gold, allocator);
   doc.AddMember("elixir", _data.elixir, allocator);
   doc.AddMember("gem", _data.gem, allocator);
-  // --- ±£´æ¾ü¶ÓÊı¾İ ---
+  // --- ä¿å­˜å†›é˜Ÿæ•°æ® ---
   rapidjson::Value troopsArray(rapidjson::kArrayType);
   for (const auto& pair : _data.troops) {
       rapidjson::Value troopObj(rapidjson::kObjectType);
@@ -547,7 +547,7 @@ void VillageDataManager::saveToFile(const std::string& filename) {
   }
   doc.AddMember("troops", troopsArray, allocator);
 
-  // ±£´æ½¨ÖşÊı¾İ
+  // ä¿å­˜å»ºç­‘æ•°æ®
   rapidjson::Value buildingsArray(rapidjson::kArrayType);
   for (const auto& building : _data.buildings) {
     rapidjson::Value buildingObj(rapidjson::kObjectType);
@@ -563,7 +563,7 @@ void VillageDataManager::saveToFile(const std::string& filename) {
   }
   doc.AddMember("buildings", buildingsArray, allocator);
 
-  // Ğ´ÈëÎÄ¼ş
+  // å†™å…¥æ–‡ä»¶
   rapidjson::StringBuffer buffer;
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
   doc.Accept(writer);
@@ -589,17 +589,17 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
   if (!fileUtils->isFileExist(fullPath)) {
     CCLOG("VillageDataManager: Save file not found, initializing default game");
 
-    // ==========  ³õÊ¼»¯Ä¬ÈÏ½¨Öş ==========
+    // ==========  åˆå§‹åŒ–é»˜è®¤å»ºç­‘ ==========
     _data.buildings.clear();
 
-    // 1. ´ó±¾Óª£¨·ÅÔÚµØÍ¼ÖĞĞÄ£©
-    // 44x44 Íø¸ñ£¬ÖĞĞÄµãÎª (22, 22)
-    // ´ó±¾ÓªÊÇ 4x4 ½¨Öş£¬×óÏÂ½ÇÓ¦¸Ã·ÅÔÚ (20, 20)
+    // 1. å¤§æœ¬è¥ï¼ˆæ”¾åœ¨åœ°å›¾ä¸­å¿ƒï¼‰
+    // 44x44 ç½‘æ ¼ï¼Œä¸­å¿ƒç‚¹ä¸º (22, 22)
+    // å¤§æœ¬è¥æ˜¯ 4x4 å»ºç­‘ï¼Œå·¦ä¸‹è§’åº”è¯¥æ”¾åœ¨ (20, 20)
     BuildingInstance townHall;
     townHall.id = _nextBuildingId++;
     townHall.type = 1;
-    townHall.gridX = 20;  // ÖĞĞÄ (22, 22) - ¿í¶ÈµÄÒ»°ë (2)
-    townHall.gridY = 20;  // ÖĞĞÄ (22, 22) - ¸ß¶ÈµÄÒ»°ë (2)
+    townHall.gridX = 20;  // ä¸­å¿ƒ (22, 22) - å®½åº¦çš„ä¸€åŠ (2)
+    townHall.gridY = 20;  // ä¸­å¿ƒ (22, 22) - é«˜åº¦çš„ä¸€åŠ (2)
     townHall.level = 1;
     townHall.state = BuildingInstance::State::BUILT;
     townHall.finishTime = 0;
@@ -609,13 +609,13 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
     CCLOG("VillageDataManager: Town Hall created at grid (%d, %d), center at (22, 22)",
           townHall.gridX, townHall.gridY);
 
-    // 2. ½¨Öş¹¤ÈËĞ¡Îİ£¨·ÅÔÚ´ó±¾Óª×ó²à£©
-    // ¹¤ÈËĞ¡ÎİÊÇ 2x2 ½¨Öş
+    // 2. å»ºç­‘å·¥äººå°å±‹ï¼ˆæ”¾åœ¨å¤§æœ¬è¥å·¦ä¾§ï¼‰
+    // å·¥äººå°å±‹æ˜¯ 2x2 å»ºç­‘
     BuildingInstance builderHut;
     builderHut.id = _nextBuildingId++;
     builderHut.type = 201;
-    builderHut.gridX = 16;  // ´ó±¾Óª×ó²à (20 - 2 - 2 = 16)
-    builderHut.gridY = 20;  // Óë´ó±¾ÓªÍ¬Ò»Ë®Æ½Ïß
+    builderHut.gridX = 16;  // å¤§æœ¬è¥å·¦ä¾§ (20 - 2 - 2 = 16)
+    builderHut.gridY = 20;  // ä¸å¤§æœ¬è¥åŒä¸€æ°´å¹³çº¿
     builderHut.level = 1;
     builderHut.state = BuildingInstance::State::BUILT;
     builderHut.finishTime = 0;
@@ -625,10 +625,10 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
     CCLOG("VillageDataManager: Builder Hut created at grid (%d, %d)",
           builderHut.gridX, builderHut.gridY);
 
-    // ¸üĞÂÍø¸ñÕ¼ÓÃ
+    // æ›´æ–°ç½‘æ ¼å ç”¨
     updateGridOccupancy();
 
-    // ±£´æ³õÊ¼ÅäÖÃ
+    // ä¿å­˜åˆå§‹é…ç½®
     saveToFile(filename);
 
     CCLOG("VillageDataManager: Default game initialized with 2 buildings");
@@ -637,7 +637,7 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
     return;
   }
 
-  // ========== ¼ÓÔØÒÑÓĞ´æµµ ==========
+  // ========== åŠ è½½å·²æœ‰å­˜æ¡£ ==========
   std::string content = fileUtils->getStringFromFile(fullPath);
   if (content.empty()) {
     CCLOG("VillageDataManager: Failed to read save file");
@@ -651,7 +651,7 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
     CCLOG("VillageDataManager: JSON parse error");
     return;
   }
-  // ¶ÁÈ¡×ÊÔ´
+  // è¯»å–èµ„æº
   if (doc.HasMember("gold") && doc["gold"].IsInt()) {
     _data.gold = doc["gold"].GetInt();
   }
@@ -662,7 +662,7 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
     _data.gem = doc["gem"].GetInt();  
   }
 
-  // --- ¶ÁÈ¡¾ü¶ÓÊı¾İ ---
+  // --- è¯»å–å†›é˜Ÿæ•°æ® ---
   _data.troops.clear();
   if (doc.HasMember("troops") && doc["troops"].IsArray()) {
       const auto& troopsArray = doc["troops"];
@@ -673,7 +673,7 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
           _data.troops[id] = count;
       }
   }
-  //  ¶ÁÈ¡½¨ÖşÊı¾İ
+  //  è¯»å–å»ºç­‘æ•°æ®
   _data.buildings.clear();
   if (doc.HasMember("buildings") && doc["buildings"].IsArray()) {
     const auto& buildingsArray = doc["buildings"];
@@ -689,7 +689,7 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
       building.state = (BuildingInstance::State)buildingObj["state"].GetInt();
       building.finishTime = buildingObj["finishTime"].GetInt64();
       
-      // ¼ÓÔØĞÂ×Ö¶Î£¨¼æÈİ¾É´æµµ£©
+      // åŠ è½½æ–°å­—æ®µï¼ˆå…¼å®¹æ—§å­˜æ¡£ï¼‰
       if (buildingObj.HasMember("isInitialConstruction")) {
         building.isInitialConstruction = buildingObj["isInitialConstruction"].GetBool();
       } else {
@@ -703,7 +703,7 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
       }
     }
   }
-  // 4. ¸üĞÂºóĞø×´Ì¬
+  // 4. æ›´æ–°åç»­çŠ¶æ€
   updateGridOccupancy();
   notifyResourceChanged();
 
@@ -711,26 +711,26 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
       _data.buildings.size(), _data.troops.size());
 }
 
-// ========== ¹¤ÈËÏµÍ³ÊµÏÖ ==========
+// ========== å·¥äººç³»ç»Ÿå®ç° ==========
 
 int VillageDataManager::getTotalWorkers() const {
   int workerCount = 0;
 
-  // Í³¼ÆËùÓĞÒÑ½¨³ÉµÄ½¨Öş¹¤ÈËĞ¡Îİ£¨ID=201, State=BUILT£©
+  // ç»Ÿè®¡æ‰€æœ‰å·²å»ºæˆçš„å»ºç­‘å·¥äººå°å±‹ï¼ˆID=201, State=BUILTï¼‰
   for (const auto& building : _data.buildings) {
     if (building.type == 201 && building.state == BuildingInstance::State::BUILT) {
       workerCount++;
     }
   }
 
-  // Ö±½Ó·µ»Ø¹¤ÈËĞ¡ÎİÊıÁ¿£¨²»¶îÍâ¼Ó1£©
+  // ç›´æ¥è¿”å›å·¥äººå°å±‹æ•°é‡ï¼ˆä¸é¢å¤–åŠ 1ï¼‰
   return workerCount;
 }
 
 int VillageDataManager::getBusyWorkerCount() const {
   int busyCount = 0;
 
-  // Í³¼ÆËùÓĞÕıÔÚ½¨Ôì/Éı¼¶µÄ½¨Öş
+  // ç»Ÿè®¡æ‰€æœ‰æ­£åœ¨å»ºé€ /å‡çº§çš„å»ºç­‘
   for (const auto& building : _data.buildings) {
     if (building.state == BuildingInstance::State::CONSTRUCTING) {
       busyCount++;
@@ -749,6 +749,6 @@ int VillageDataManager::getIdleWorkerCount() const {
   int busy = getBusyWorkerCount();
   int idle = total - busy;
 
-  // ·ÀÖ¹¸ºÊı
+  // é˜²æ­¢è´Ÿæ•°
   return (idle < 0) ? 0 : idle;
 }
