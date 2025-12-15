@@ -75,6 +75,8 @@ list(APPEND GAME_SOURCE
      Classes/Model/BuildingRequirements.cpp
      Classes/Model/BuildingConfig.cpp
      Classes/Model/TroopConfig.cpp
+     Classes/Model/TroopUpgradeConfig.cpp
+     Classes/Layer/LaboratoryLayer.cpp
      Classes/Util/GridMapUtils.cpp
      Classes/Sprite/BuildingSprite.cpp
      Classes/Sprite/BattleUnitSprite.cpp
@@ -116,6 +118,8 @@ list(APPEND GAME_HEADER
      Classes/Model/BuildingRequirements.h
      Classes/Model/BuildingConfig.h
      Classes/Model/TroopConfig.h
+     Classes/Model/TroopUpgradeConfig.h
+     Classes/Layer/LaboratoryLayer.h
      Classes/Util/GridMapUtils.h
      Classes/Sprite/BuildingSprite.h
      Classes/Sprite/BattleUnitSprite.h

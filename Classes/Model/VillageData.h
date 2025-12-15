@@ -35,4 +35,15 @@ struct VillageData {
 
   // 已训练的军队数据 <兵种ID, 数量>
   std::map<int, int> troops;
+
+  // ========== 实验室研究系统 ==========
+  // 兵种研究等级 <兵种ID, 等级>（默认1级）
+  std::map<int, int> troopLevels;
+
+  // 正在研究的兵种（-1 表示无）
+  int researchingTroopId = -1;
+
+  // 研究完成时间戳
+  long long researchFinishTime = 0;
+  // ====================================
 };
