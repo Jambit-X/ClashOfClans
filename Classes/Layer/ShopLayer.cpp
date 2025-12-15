@@ -345,7 +345,7 @@ void ShopLayer::addShopItem(const ShopItemData& data, int index) {
   // ========== 如果锁定，显示锁图标和解锁条件 ==========
   if (isLocked) {
     // 锁图标
-    auto lockLabel = Label::createWithSystemFont("??", "Arial", 40);
+    auto lockLabel = Label::createWithSystemFont("🔒", "Arial", 40);
     lockLabel->setPosition(Vec2(cardWidth / 2, cardHeight / 2 + 30));
     lockLabel->setColor(Color3B(255, 200, 0));
     bg->addChild(lockLabel, 10);

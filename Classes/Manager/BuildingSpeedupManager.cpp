@@ -67,7 +67,7 @@ bool BuildingSpeedupManager::speedupBuilding(int buildingId) {
     dataManager->finishUpgradeBuilding(buildingId);
   }
 
-  // ?? 关键修复:直接通知 BuildingManager 更新 UI
+  // ★ 关键修复:直接通知 BuildingManager 更新 UI
   // 触发自定义事件,让 VillageLayer/BuildingManager 更新 BuildingSprite
   cocos2d::EventCustom event("EVENT_BUILDING_SPEEDUP_COMPLETE");
   int* data = new int(buildingId);
