@@ -1,9 +1,9 @@
-#pragma once
+ï»¿#pragma once
 #include "cocos2d.h"
 #include "ui/CocosGUI.h"
-#include <memory>  // ? Ìí¼Ó shared_ptr Ö§³Ö
+#include <memory>  // ? æ·»åŠ  shared_ptr æ”¯æŒ
 
-// ×ÊÔ´ÊÕ¼¯UI×é¼ş - ¸ºÔğÏÔÊ¾ºÍÊÕ¼¯°´Å¥
+// èµ„æºæ”¶é›†UIç»„ä»¶ - è´Ÿè´£æ˜¾ç¤ºå’Œæ”¶é›†æŒ‰é’®
 class ResourceCollectionUI : public cocos2d::Node {
 public:
   static ResourceCollectionUI* create();
@@ -22,6 +22,6 @@ private:
   cocos2d::Label* _pendingGoldLabel;
   cocos2d::Label* _pendingElixirLabel;
   
-  // ? Ìí¼Ó£ºÓÃÓÚ¸ú×Ù¶ÔÏóÊÇ·ñÓĞĞ§µÄ±êÖ¾
+  // ? æ·»åŠ ï¼šç”¨äºè·Ÿè¸ªå¯¹è±¡æ˜¯å¦æœ‰æ•ˆçš„æ ‡å¿—
   std::shared_ptr<bool> _isValid;
 };

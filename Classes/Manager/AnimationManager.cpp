@@ -1,4 +1,4 @@
-// Classes/Manager/AnimationManager.cpp
+﻿// Classes/Manager/AnimationManager.cpp
 #include "AnimationManager.h"
 
 USING_NS_CC;

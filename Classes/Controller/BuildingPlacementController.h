@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "cocos2d.h"
 #include <functional>
 
@@ -8,26 +8,26 @@ public:
   BuildingPlacementController();
   ~BuildingPlacementController();
 
-  // ¿ªÊ¼·ÅÖÃ½¨Öş
+  // å¼€å§‹æ”¾ç½®å»ºç­‘
   void startPlacement(int buildingId);
 
-  // È¡Ïû·ÅÖÃ
+  // å–æ¶ˆæ”¾ç½®
   void cancelPlacement();
 
-  // È·ÈÏ·ÅÖÃ
+  // ç¡®è®¤æ”¾ç½®
   bool confirmPlacement();
 
-  // ¼ì²éµ±Ç°Î»ÖÃÊÇ·ñ¿É·ÅÖÃ
+  // æ£€æŸ¥å½“å‰ä½ç½®æ˜¯å¦å¯æ”¾ç½®
   bool canPlaceAtCurrentPosition() const;
 
-  // ÉèÖÃ»Øµ÷
+  // è®¾ç½®å›è°ƒ
   using PlacementCallback = std::function<void(bool success, int buildingId)>;
   void setPlacementCallback(PlacementCallback callback);
 
-  // »ñÈ¡µ±Ç°·ÅÖÃµÄ½¨ÖşID
+  // è·å–å½“å‰æ”¾ç½®çš„å»ºç­‘ID
   int getCurrentBuildingId() const { return _currentBuildingId; }
 
-  // ÊÇ·ñÕıÔÚ·ÅÖÃÖĞ
+  // æ˜¯å¦æ­£åœ¨æ”¾ç½®ä¸­
   bool isPlacing() const { return _isPlacing; }
 
 private:

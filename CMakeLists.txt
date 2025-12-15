@@ -64,6 +64,7 @@ list(APPEND GAME_SOURCE
      Classes/Controller/MoveMapController.cpp
      Classes/Controller/MoveBuildingController.cpp
      Classes/Controller/BuildingPlacementController.cpp
+     Classes/Controller/BattleProcessController.cpp
      Classes/Manager/Resource/ResourceCollectionSystem.cpp
      Classes/Manager/Resource/ResourceManager.cpp
      Classes/Manager/Resource/ResourceProductionSystem.cpp
@@ -101,6 +102,7 @@ list(APPEND GAME_HEADER
      Classes/Controller/MoveMapController.h
      Classes/Controller/MoveBuildingController.h
      Classes/Controller/BuildingPlacementController.h
+     Classes/Controller/BattleProcessController.h
      Classes/Manager/Resource/ResourceCollectionSystem.h
      Classes/Manager/Resource/ResourceManager.h
      Classes/Manager/Resource/ResourceProductionSystem.h

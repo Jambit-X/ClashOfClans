@@ -1,4 +1,4 @@
-#pragma execution_character_set("utf-8")
+ï»¿#pragma execution_character_set("utf-8")
 #include "PlacementConfirmUI.h"
 
 USING_NS_CC;
@@ -21,35 +21,35 @@ bool PlacementConfirmUI::init() {
 
   _canPlace = true;
 
-  // ========== ºËÐÄÐÞ¸´1:ÉèÖÃ Node µÄÎ»ÖÃºÍÃªµã(ºÍÉý¼¶°´Å¥ÍêÈ«Ò»Ñù) ==========
+  // ========== æ ¸å¿ƒä¿®å¤1:è®¾ç½® Node çš„ä½ç½®å’Œé”šç‚¹(å’Œå‡çº§æŒ‰é’®å®Œå…¨ä¸€æ ·) ==========
   auto visibleSize = Director::getInstance()->getVisibleSize();
 
-  // ÉèÖÃÕû¸ö Node µÄÎ»ÖÃ(ºÍ _actionMenuNode Ò»Ñù)
+  // è®¾ç½®æ•´ä¸ª Node çš„ä½ç½®(å’Œ _actionMenuNode ä¸€æ ·)
   this->setPosition(Vec2(visibleSize.width / 2, 100.0f));
 
-  // ÉèÖÃÃªµãÎªÖÐÐÄµã(ÕâÑùËõ·ÅÊ±»á´ÓÖÐÐÄÏòÍâÀ©Õ¹)
+  // è®¾ç½®é”šç‚¹ä¸ºä¸­å¿ƒç‚¹(è¿™æ ·ç¼©æ”¾æ—¶ä¼šä»Žä¸­å¿ƒå‘å¤–æ‰©å±•)
   this->setAnchorPoint(Vec2(0.5f, 0.5f));
   // =========================================================================
 
   initButtons();
 
-  // Ä¬ÈÏÒþ²Ø
+  // é»˜è®¤éšè—
   this->setVisible(false);
 
   return true;
 }
 
 void PlacementConfirmUI::initButtons() {
-  // ========== ºËÐÄÐÞ¸´2:°´Å¥Î»ÖÃ¸ÄÎªÏà¶ÔÓÚ Node ÖÐÐÄµÄÆ«ÒÆ ==========
-  // Ô­À´:°´Å¥Î»ÖÃÊÇ¾ø¶ÔÆÁÄ»×ø±ê
-  // ÏÖÔÚ:°´Å¥Î»ÖÃÊÇÏà¶ÔÓÚ Node (0,0) µÄÆ«ÒÆ
-  float buttonSpacing = 80.0f;  // °´Å¥¼ä¾à
+  // ========== æ ¸å¿ƒä¿®å¤2:æŒ‰é’®ä½ç½®æ”¹ä¸ºç›¸å¯¹äºŽ Node ä¸­å¿ƒçš„åç§» ==========
+  // åŽŸæ¥:æŒ‰é’®ä½ç½®æ˜¯ç»å¯¹å±å¹•åæ ‡
+  // çŽ°åœ¨:æŒ‰é’®ä½ç½®æ˜¯ç›¸å¯¹äºŽ Node (0,0) çš„åç§»
+  float buttonSpacing = 80.0f;  // æŒ‰é’®é—´è·
 
-  // È·ÈÏ°´Å¥(ÂÌ¹´) - ÔÚÓÒ²à
+  // ç¡®è®¤æŒ‰é’®(ç»¿å‹¾) - åœ¨å³ä¾§
   _confirmBtn = Button::create("ImageElements/right.png");
   if (_confirmBtn) {
     _confirmBtn->setScale(0.8f);
-    _confirmBtn->setPosition(Vec2(buttonSpacing, 0));  // Ïà¶ÔÓÚ Node ÖÐÐÄ
+    _confirmBtn->setPosition(Vec2(buttonSpacing, 0));  // ç›¸å¯¹äºŽ Node ä¸­å¿ƒ
     _confirmBtn->addClickEventListener([this](Ref*) {
       onConfirmClicked();
     });
@@ -58,11 +58,11 @@ void PlacementConfirmUI::initButtons() {
     CCLOG("PlacementConfirmUI: ERROR - Failed to load right.png");
   }
 
-  // È¡Ïû°´Å¥(ºì²æ) - ÔÚ×ó²à
+  // å–æ¶ˆæŒ‰é’®(çº¢å‰) - åœ¨å·¦ä¾§
   _cancelBtn = Button::create("ImageElements/wrong.png");
   if (_cancelBtn) {
     _cancelBtn->setScale(0.8f);
-    _cancelBtn->setPosition(Vec2(-buttonSpacing, 0));  // Ïà¶ÔÓÚ Node ÖÐÐÄ
+    _cancelBtn->setPosition(Vec2(-buttonSpacing, 0));  // ç›¸å¯¹äºŽ Node ä¸­å¿ƒ
     _cancelBtn->addClickEventListener([this](Ref*) {
       onCancelClicked();
     });
@@ -82,8 +82,8 @@ void PlacementConfirmUI::setCancelCallback(CancelCallback callback) {
 }
 
 void PlacementConfirmUI::show() {
-  // ========== ºËÐÄÐÞ¸´£ºÍ£Ö¹Ö®Ç°µÄ¶¯»­£¬±ÜÃâ hide() ¸²¸Ç show() ==========
-  this->stopAllActions();  // Í£Ö¹Ö®Ç°µÄ hide() ¶¯»­
+  // ========== æ ¸å¿ƒä¿®å¤ï¼šåœæ­¢ä¹‹å‰çš„åŠ¨ç”»ï¼Œé¿å… hide() è¦†ç›– show() ==========
+  this->stopAllActions();  // åœæ­¢ä¹‹å‰çš„ hide() åŠ¨ç”»
 
   this->setVisible(true);
   this->setScale(0.1f);
@@ -91,7 +91,7 @@ void PlacementConfirmUI::show() {
 }
 
 void PlacementConfirmUI::hide() {
-  // ËõÐ¡ÏûÊ§
+  // ç¼©å°æ¶ˆå¤±
   this->runAction(Sequence::create(
     ScaleTo::create(0.1f, 0.1f),
     Hide::create(),
@@ -103,7 +103,7 @@ void PlacementConfirmUI::updateButtonState(bool canPlace) {
   _canPlace = canPlace;
 
   if (_confirmBtn) {
-    // ¸ù¾ÝÄÜ·ñ·ÅÖÃ£¬È·ÈÏ°´Å¥ÖÃ»Ò»òÆôÓÃ
+    // æ ¹æ®èƒ½å¦æ”¾ç½®ï¼Œç¡®è®¤æŒ‰é’®ç½®ç°æˆ–å¯ç”¨
     _confirmBtn->setEnabled(canPlace);
     _confirmBtn->setOpacity(canPlace ? 255 : 128);
   }
@@ -111,9 +111,9 @@ void PlacementConfirmUI::updateButtonState(bool canPlace) {
 
 void PlacementConfirmUI::onConfirmClicked() {
   if (!_canPlace) {
-    // ÏÔÊ¾´íÎóÌáÊ¾
+    // æ˜¾ç¤ºé”™è¯¯æç¤º
     auto visibleSize = Director::getInstance()->getVisibleSize();
-    auto label = Label::createWithTTF("¸ÃÎ»ÖÃÎÞ·¨·ÅÖÃ½¨Öþ£¡", "fonts/simhei.ttf", 28);
+    auto label = Label::createWithTTF("è¯¥ä½ç½®æ— æ³•æ”¾ç½®å»ºç­‘ï¼", "fonts/simhei.ttf", 28);
     label->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2));
     label->setColor(Color3B::RED);
     this->getParent()->addChild(label, 1000);

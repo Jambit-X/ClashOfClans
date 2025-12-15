@@ -1,4 +1,4 @@
-// ¡¾±ØÐë¼ÓÔÚµÚÒ»ÐÐ¡¿Ç¿ÖÆÊ¹ÓÃ UTF-8 ±àÂë£¬½â¾öÖÐÎÄÂÒÂë
+ï»¿// ã€å¿…é¡»åŠ åœ¨ç¬¬ä¸€è¡Œã€‘å¼ºåˆ¶ä½¿ç”¨ UTF-8 ç¼–ç ï¼Œè§£å†³ä¸­æ–‡ä¹±ç 
 #pragma execution_character_set("utf-8")
 
 #include "BuildingConfig.h"
@@ -7,7 +7,7 @@
 
 USING_NS_CC;
 
-// ¾²Ì¬³ÉÔ±³õÊ¼»¯
+// é™æ€æˆå‘˜åˆå§‹åŒ–
 BuildingConfig* BuildingConfig::_instance = nullptr;
 
 BuildingConfig::BuildingConfig() {
@@ -33,19 +33,19 @@ void BuildingConfig::destroyInstance() {
 }
 
 void BuildingConfig::initConfigs() {
-  // ========== 1: ´ó±¾Óª (Town Hall) ==========
+  // ========== 1: å¤§æœ¬è¥ (Town Hall) ==========
   BuildingConfigData townHall;
   townHall.type = 1;
-  townHall.name = "´ó±¾Óª";
-  townHall.category = "ºËÐÄ";
+  townHall.name = "å¤§æœ¬è¥";
+  townHall.category = "æ ¸å¿ƒ";
   townHall.spritePathTemplate = "buildings/Town_Hall/Town_Hall{level}.png";
   townHall.gridWidth = 4;
   townHall.gridHeight = 4;
   townHall.anchorOffset = Vec2(0, -60);
   townHall.maxLevel = 3;
   townHall.initialCost = 0;
-  townHall.costType = "gold";  // ¸ÄÎªÓ¢ÎÄ
-  townHall.buildTimeSeconds = 60;  // ¸ÄÎª60Ãë
+  townHall.costType = "gold";  // æ”¹ä¸ºè‹±æ–‡
+  townHall.buildTimeSeconds = 60;  // æ”¹ä¸º60ç§’
   townHall.hitPoints = 1500;
   townHall.damagePerSecond = 0;
   townHall.attackRange = 0;
@@ -53,19 +53,19 @@ void BuildingConfig::initConfigs() {
   townHall.productionRate = 0;
   _configs[1] = townHall;
 
-  // ========== ¾ü¶Ó½¨Öþ ==========
-  // 101: ±øÓª
+  // ========== å†›é˜Ÿå»ºç­‘ ==========
+  // 101: å…µè¥
   BuildingConfigData armyCamp;
   armyCamp.type = 101;
-  armyCamp.name = "±øÓª";
-  armyCamp.category = "¾ü¶Ó";
+  armyCamp.name = "å…µè¥";
+  armyCamp.category = "å†›é˜Ÿ";
   armyCamp.spritePathTemplate = "buildings/military_architecture/army_camp/Army_Camp{level}.png";
   armyCamp.gridWidth = 3;
   armyCamp.gridHeight = 3;
   armyCamp.anchorOffset = Vec2(0, -30);
   armyCamp.maxLevel = 3;
   armyCamp.initialCost = 250;
-  armyCamp.costType = "elixir";  // ¸ÄÎªÓ¢ÎÄ
+  armyCamp.costType = "elixir";  // æ”¹ä¸ºè‹±æ–‡
   armyCamp.buildTimeSeconds = 30;
   armyCamp.hitPoints = 0;
   armyCamp.damagePerSecond = 0;
@@ -74,18 +74,18 @@ void BuildingConfig::initConfigs() {
   armyCamp.productionRate = 0;
   _configs[101] = armyCamp;
 
-  // 102: ÑµÁ·Óª
+  // 102: è®­ç»ƒè¥
   BuildingConfigData barracks;
   barracks.type = 102;
-  barracks.name = "ÑµÁ·Óª";
-  barracks.category = "¾ü¶Ó";
+  barracks.name = "è®­ç»ƒè¥";
+  barracks.category = "å†›é˜Ÿ";
   barracks.spritePathTemplate = "buildings/military_architecture/barracks/Barracks{level}.png";
   barracks.gridWidth = 3;
   barracks.gridHeight = 3;
   barracks.anchorOffset = Vec2(0, -30);
   barracks.maxLevel = 3;
   barracks.initialCost = 200;
-  barracks.costType = "elixir";  // ¸ÄÎªÓ¢ÎÄ
+  barracks.costType = "elixir";  // æ”¹ä¸ºè‹±æ–‡
   barracks.buildTimeSeconds = 20;
   barracks.hitPoints = 0;
   barracks.damagePerSecond = 0;
@@ -94,18 +94,18 @@ void BuildingConfig::initConfigs() {
   barracks.productionRate = 0;
   _configs[102] = barracks;
 
-  // 103: ÊµÑéÊÒ
+  // 103: å®žéªŒå®¤
   BuildingConfigData laboratory;
   laboratory.type = 103;
-  laboratory.name = "ÊµÑéÊÒ";
-  laboratory.category = "¾ü¶Ó";
+  laboratory.name = "å®žéªŒå®¤";
+  laboratory.category = "å†›é˜Ÿ";
   laboratory.spritePathTemplate = "buildings/military_architecture/laboratory/Laboratory{level}.png";
   laboratory.gridWidth = 3;
   laboratory.gridHeight = 3;
   laboratory.anchorOffset = Vec2(0, -35);
   laboratory.maxLevel = 3;
   laboratory.initialCost = 500;
-  laboratory.costType = "elixir";  // ¸ÄÎªÓ¢ÎÄ
+  laboratory.costType = "elixir";  // æ”¹ä¸ºè‹±æ–‡
   laboratory.buildTimeSeconds = 60;
   laboratory.hitPoints = 0;
   laboratory.damagePerSecond = 0;
@@ -114,20 +114,20 @@ void BuildingConfig::initConfigs() {
   laboratory.productionRate = 0;
   _configs[103] = laboratory;
 
-  // ========== ×ÊÔ´½¨Öþ ==========
-  // 201: ½¨Öþ¹¤ÈËÐ¡ÎÝ 
+  // ========== èµ„æºå»ºç­‘ ==========
+  // 201: å»ºç­‘å·¥äººå°å±‹ 
   BuildingConfigData builderHut;
   builderHut.type = 201;
-  builderHut.name = "½¨Öþ¹¤ÈËÐ¡ÎÝ";
-  builderHut.category = "×ÊÔ´";
+  builderHut.name = "å»ºç­‘å·¥äººå°å±‹";
+  builderHut.category = "èµ„æº";
   builderHut.spritePathTemplate = "buildings/resource_architecture/builders_hut/Builders_Hut{level}.png";
-  builderHut.gridWidth = 2;           // 2x2 Õ¼µØ
+  builderHut.gridWidth = 2;           // 2x2 å åœ°
   builderHut.gridHeight = 2;
-  builderHut.anchorOffset = Vec2(0, -25);  //  2x2½¨Öþ±ê×¼Æ«ÒÆ
-  builderHut.maxLevel = 1;            // ²»¿ÉÉý¼¶
-  builderHut.initialCost = 50;        // ¹Ì¶¨50±¦Ê¯
-  builderHut.costType = "gem";        // ±¦Ê¯¹ºÂò
-  builderHut.buildTimeSeconds = 0;    // Ë²¼äÍê³É
+  builderHut.anchorOffset = Vec2(0, -25);  //  2x2å»ºç­‘æ ‡å‡†åç§»
+  builderHut.maxLevel = 1;            // ä¸å¯å‡çº§
+  builderHut.initialCost = 50;        // å›ºå®š50å®çŸ³
+  builderHut.costType = "gem";        // å®çŸ³è´­ä¹°
+  builderHut.buildTimeSeconds = 0;    // çž¬é—´å®Œæˆ
   builderHut.hitPoints = 250;
   builderHut.damagePerSecond = 0;
   builderHut.attackRange = 0;
@@ -135,18 +135,18 @@ void BuildingConfig::initConfigs() {
   builderHut.productionRate = 0;
   _configs[201] = builderHut;
 
-  // 202: ½ð¿ó
+  // 202: é‡‘çŸ¿
   BuildingConfigData goldMine;
   goldMine.type = 202;
-  goldMine.name = "½ð¿ó";
-  goldMine.category = "×ÊÔ´";
+  goldMine.name = "é‡‘çŸ¿";
+  goldMine.category = "èµ„æº";
   goldMine.spritePathTemplate = "buildings/resource_architecture/gold_mine/Gold_Mine{level}.png";
   goldMine.gridWidth = 3;
   goldMine.gridHeight = 3;
   goldMine.anchorOffset = Vec2(0, -35);
   goldMine.maxLevel = 3;
   goldMine.initialCost = 150;
-  goldMine.costType = "elixir";  // ¸ÄÎªÓ¢ÎÄ
+  goldMine.costType = "elixir";  // æ”¹ä¸ºè‹±æ–‡
   goldMine.buildTimeSeconds = 20;
   goldMine.hitPoints = 400;
   goldMine.damagePerSecond = 0;
@@ -155,18 +155,18 @@ void BuildingConfig::initConfigs() {
   goldMine.productionRate = 7200;
   _configs[202] = goldMine;
 
-  // 203: Ê¥Ë®²É¼¯Æ÷
+  // 203: åœ£æ°´é‡‡é›†å™¨
   BuildingConfigData elixirCollector;
   elixirCollector.type = 203;
-  elixirCollector.name = "Ê¥Ë®²É¼¯Æ÷";
-  elixirCollector.category = "×ÊÔ´";
+  elixirCollector.name = "åœ£æ°´é‡‡é›†å™¨";
+  elixirCollector.category = "èµ„æº";
   elixirCollector.spritePathTemplate = "buildings/resource_architecture/elixir_collector/Elixir_Collector{level}.png";
   elixirCollector.gridWidth = 3;
   elixirCollector.gridHeight = 3;
   elixirCollector.anchorOffset = Vec2(0, -35);
   elixirCollector.maxLevel = 3;
   elixirCollector.initialCost = 150;
-  elixirCollector.costType = "gold";  // ¸ÄÎªÓ¢ÎÄ
+  elixirCollector.costType = "gold";  // æ”¹ä¸ºè‹±æ–‡
   elixirCollector.buildTimeSeconds = 20;
   elixirCollector.hitPoints = 400;
   elixirCollector.damagePerSecond = 0;
@@ -175,18 +175,18 @@ void BuildingConfig::initConfigs() {
   elixirCollector.productionRate = 7200;
   _configs[203] = elixirCollector;
 
-  // 204: ´¢½ð¹Þ
+  // 204: å‚¨é‡‘ç½
   BuildingConfigData goldStorage;
   goldStorage.type = 204;
-  goldStorage.name = "´¢½ð¹Þ";
-  goldStorage.category = "×ÊÔ´";
+  goldStorage.name = "å‚¨é‡‘ç½";
+  goldStorage.category = "èµ„æº";
   goldStorage.spritePathTemplate = "buildings/resource_architecture/gold_storage/Gold_Storage{level}.png";
   goldStorage.gridWidth = 3;
   goldStorage.gridHeight = 3;
   goldStorage.anchorOffset = Vec2(0, -40);
   goldStorage.maxLevel = 3;
   goldStorage.initialCost = 300;
-  goldStorage.costType = "elixir";  // ¸ÄÎªÓ¢ÎÄ
+  goldStorage.costType = "elixir";  // æ”¹ä¸ºè‹±æ–‡
   goldStorage.buildTimeSeconds = 30;
   goldStorage.hitPoints = 600;
   goldStorage.damagePerSecond = 0;
@@ -195,18 +195,18 @@ void BuildingConfig::initConfigs() {
   goldStorage.productionRate = 0;
   _configs[204] = goldStorage;
 
-  // 205: Ê¥Ë®Æ¿
+  // 205: åœ£æ°´ç“¶
   BuildingConfigData elixirStorage;
   elixirStorage.type = 205;
-  elixirStorage.name = "Ê¥Ë®Æ¿";
-  elixirStorage.category = "×ÊÔ´";
+  elixirStorage.name = "åœ£æ°´ç“¶";
+  elixirStorage.category = "èµ„æº";
   elixirStorage.spritePathTemplate = "buildings/resource_architecture/elixir_storage/Elixir_Storage{level}.png";
   elixirStorage.gridWidth = 3;
   elixirStorage.gridHeight = 3;
   elixirStorage.anchorOffset = Vec2(0, -40);
   elixirStorage.maxLevel = 3;
   elixirStorage.initialCost = 300;
-  elixirStorage.costType = "gold";  // ¸ÄÎªÓ¢ÎÄ
+  elixirStorage.costType = "gold";  // æ”¹ä¸ºè‹±æ–‡
   elixirStorage.buildTimeSeconds = 30;
   elixirStorage.hitPoints = 600;
   elixirStorage.damagePerSecond = 0;
@@ -215,19 +215,19 @@ void BuildingConfig::initConfigs() {
   elixirStorage.productionRate = 0;
   _configs[205] = elixirStorage;
 
-  // ========== ·ÀÓù½¨Öþ ==========
-  // 301: ¼ÓÅ©ÅÚ
+  // ========== é˜²å¾¡å»ºç­‘ ==========
+  // 301: åŠ å†œç‚®
   BuildingConfigData cannon;
   cannon.type = 301;
-  cannon.name = "¼ÓÅ©ÅÚ";
-  cannon.category = "·ÀÓù";
+  cannon.name = "åŠ å†œç‚®";
+  cannon.category = "é˜²å¾¡";
   cannon.spritePathTemplate = "buildings/defence_architecture/cannon/Cannon_lvl{level}.png";
   cannon.gridWidth = 3;
   cannon.gridHeight = 3;
   cannon.anchorOffset = Vec2(0, -30);
   cannon.maxLevel = 3;
   cannon.initialCost = 250;
-  cannon.costType = "gold";  // ¸ÄÎªÓ¢ÎÄ
+  cannon.costType = "gold";  // æ”¹ä¸ºè‹±æ–‡
   cannon.buildTimeSeconds = 15;
   cannon.hitPoints = 620;
   cannon.damagePerSecond = 11;
@@ -236,18 +236,18 @@ void BuildingConfig::initConfigs() {
   cannon.productionRate = 0;
   _configs[301] = cannon;
 
-  // 302: ¼ýËþ
+  // 302: ç®­å¡”
   BuildingConfigData archerTower;
   archerTower.type = 302;
-  archerTower.name = "¼ýËþ";
-  archerTower.category = "·ÀÓù";
+  archerTower.name = "ç®­å¡”";
+  archerTower.category = "é˜²å¾¡";
   archerTower.spritePathTemplate = "buildings/defence_architecture/archer_tower/Archer_Tower{level}.png";
   archerTower.gridWidth = 3;
   archerTower.gridHeight = 3;
   archerTower.anchorOffset = Vec2(0, -35);
   archerTower.maxLevel = 3;
   archerTower.initialCost = 1000;
-  archerTower.costType = "gold";  // ¸ÄÎªÓ¢ÎÄ
+  archerTower.costType = "gold";  // æ”¹ä¸ºè‹±æ–‡
   archerTower.buildTimeSeconds = 30;
   archerTower.hitPoints = 380;
   archerTower.damagePerSecond = 11;
@@ -256,18 +256,18 @@ void BuildingConfig::initConfigs() {
   archerTower.productionRate = 0;
   _configs[302] = archerTower;
 
-  // 303: ³ÇÇ½
+  // 303: åŸŽå¢™
   BuildingConfigData wall;
   wall.type = 303;
-  wall.name = "³ÇÇ½";
-  wall.category = "·ÀÓù";
+  wall.name = "åŸŽå¢™";
+  wall.category = "é˜²å¾¡";
   wall.spritePathTemplate = "buildings/defence_architecture/wall/Wall{level}.png";
   wall.gridWidth = 1;
   wall.gridHeight = 1;
   wall.anchorOffset = Vec2(0, -15);
   wall.maxLevel = 3;
   wall.initialCost = 50;
-  wall.costType = "gold";  // ¸ÄÎªÓ¢ÎÄ
+  wall.costType = "gold";  // æ”¹ä¸ºè‹±æ–‡
   wall.buildTimeSeconds = 0;
   wall.hitPoints = 300;
   wall.damagePerSecond = 0;
@@ -276,19 +276,19 @@ void BuildingConfig::initConfigs() {
   wall.productionRate = 0;
   _configs[303] = wall;
 
-  // ========== ÏÝÚå ==========
-  // 401: Õ¨µ¯
+  // ========== é™·é˜± ==========
+  // 401: ç‚¸å¼¹
   BuildingConfigData bomb;
   bomb.type = 401;
-  bomb.name = "Õ¨µ¯";
-  bomb.category = "ÏÝÚå";
+  bomb.name = "ç‚¸å¼¹";
+  bomb.category = "é™·é˜±";
   bomb.spritePathTemplate = "buildings/trap/bomb/Bomb{level}.png";
   bomb.gridWidth = 1;
   bomb.gridHeight = 1;
   bomb.anchorOffset = Vec2(0, -15);
   bomb.maxLevel = 3;
   bomb.initialCost = 400;
-  bomb.costType = "gold";  // ¸ÄÎªÓ¢ÎÄ
+  bomb.costType = "gold";  // æ”¹ä¸ºè‹±æ–‡
   bomb.buildTimeSeconds = 0;
   bomb.hitPoints = 1;
   bomb.damagePerSecond = 100;
@@ -297,18 +297,18 @@ void BuildingConfig::initConfigs() {
   bomb.productionRate = 0;
   _configs[401] = bomb;
 
-  // 402: ÒþÐÎµ¯»É
+  // 402: éšå½¢å¼¹ç°§
   BuildingConfigData springTrap;
   springTrap.type = 402;
-  springTrap.name = "ÒþÐÎµ¯»É";
-  springTrap.category = "ÏÝÚå";
+  springTrap.name = "éšå½¢å¼¹ç°§";
+  springTrap.category = "é™·é˜±";
   springTrap.spritePathTemplate = "buildings/trap/spring/Spring_Trap{level}.png";
   springTrap.gridWidth = 1;
   springTrap.gridHeight = 1;
   springTrap.anchorOffset = Vec2(0, -15);
   springTrap.maxLevel = 3;
   springTrap.initialCost = 2000;
-  springTrap.costType = "gold";  // ¸ÄÎªÓ¢ÎÄ
+  springTrap.costType = "gold";  // æ”¹ä¸ºè‹±æ–‡
   springTrap.buildTimeSeconds = 0;
   springTrap.hitPoints = 1;
   springTrap.damagePerSecond = 0;
@@ -317,18 +317,18 @@ void BuildingConfig::initConfigs() {
   springTrap.productionRate = 0;
   _configs[402] = springTrap;
 
-  // 404: ¾ÞÐÍÕ¨µ¯
+  // 404: å·¨åž‹ç‚¸å¼¹
   BuildingConfigData giantBomb;
   giantBomb.type = 404;
-  giantBomb.name = "¾ÞÐÍÕ¨µ¯";
-  giantBomb.category = "ÏÝÚå";
+  giantBomb.name = "å·¨åž‹ç‚¸å¼¹";
+  giantBomb.category = "é™·é˜±";
   giantBomb.spritePathTemplate = "buildings/trap/giant_bomb/Giant_Bomb{level}.png";
   giantBomb.gridWidth = 2;
   giantBomb.gridHeight = 2;
   giantBomb.anchorOffset = Vec2(0, -25);
   giantBomb.maxLevel = 3;
   giantBomb.initialCost = 12500;
-  giantBomb.costType = "gold";  // ¸ÄÎªÓ¢ÎÄ
+  giantBomb.costType = "gold";  // æ”¹ä¸ºè‹±æ–‡
   giantBomb.buildTimeSeconds = 0;
   giantBomb.hitPoints = 1;
   giantBomb.damagePerSecond = 400;
@@ -357,10 +357,10 @@ std::string BuildingConfig::getSpritePath(int buildingType, int level) const {
     return "";
   }
 
-  // ºËÐÄÐÞ¸´£º0 ¼¶½¨ÖþÏÔÊ¾ 1 ¼¶Í¼Æ¬
+  // æ ¸å¿ƒä¿®å¤ï¼š0 çº§å»ºç­‘æ˜¾ç¤º 1 çº§å›¾ç‰‡
   int displayLevel = (level == 0) ? 1 : level;
 
-  // Ìæ»» {level} Õ¼Î»·û
+  // æ›¿æ¢ {level} å ä½ç¬¦
   std::string path = config->spritePathTemplate;
   size_t pos = path.find("{level}");
   if (pos != std::string::npos) {
@@ -372,26 +372,26 @@ std::string BuildingConfig::getSpritePath(int buildingType, int level) const {
   return path;
 }
 
-// ºËÐÄÐÞ¸´£ºÓ²±àÂëÉý¼¶³É±¾
+// æ ¸å¿ƒä¿®å¤ï¼šç¡¬ç¼–ç å‡çº§æˆæœ¬
 int BuildingConfig::getUpgradeCost(int buildingType, int currentLevel) const {
   const BuildingConfigData* config = getConfig(buildingType);
   if (!config) {
     return 0;
   }
 
-  // ========== ´ó±¾ÓªÌØÊâ´¦Àí ==========
+  // ========== å¤§æœ¬è¥ç‰¹æ®Šå¤„ç† ==========
   if (buildingType == 1) {
     switch (currentLevel) {
-      case 1: return 1000;   // 1¡ú2 ¼¶£º1000 ½ð±Ò
-      case 2: return 4000;   // 2¡ú3 ¼¶£º4000 ½ð±Ò
+      case 1: return 1000;   // 1â†’2 çº§ï¼š1000 é‡‘å¸
+      case 2: return 4000;   // 2â†’3 çº§ï¼š4000 é‡‘å¸
       default: return 0;
     }
   }
 
-  // ========== ÆäËû½¨ÖþÍ¨ÓÃ¹«Ê½ ==========
-  // »ù´¡³É±¾ * 2 µÄµÈ¼¶´Î·½
-  // ÀýÈç£ºinitialCost=250, level=1 ¡ú 250*2=500
-  //       initialCost=250, level=2 ¡ú 250*4=1000
+  // ========== å…¶ä»–å»ºç­‘é€šç”¨å…¬å¼ ==========
+  // åŸºç¡€æˆæœ¬ * 2 çš„ç­‰çº§æ¬¡æ–¹
+  // ä¾‹å¦‚ï¼šinitialCost=250, level=1 â†’ 250*2=500
+  //       initialCost=250, level=2 â†’ 250*4=1000
   int baseCost = config->initialCost;
   if (baseCost == 0) {
     CCLOG("BuildingConfig: Warning - initialCost is 0 for type %d", buildingType);

@@ -1,4 +1,4 @@
-// Classes/Model/BuildingRequirements.cpp
+ï»¿// Classes/Model/BuildingRequirements.cpp
 #include "BuildingRequirements.h"
 #include "cocos2d.h"
 #include "Manager/VillageDataManager.h"
@@ -32,20 +32,20 @@ void BuildingRequirements::destroyInstance() {
 void BuildingRequirements::initializeRules() {
   rules.clear();
 
-  // ==================== ¾ü¶Ó½¨Öş ====================
+  // ==================== å†›é˜Ÿå»ºç­‘ ====================
 
-  // ´ó±¾Óª£¨3¼¶£©
+  // å¤§æœ¬è¥ï¼ˆ3çº§ï¼‰
   {
     BuildingUnlockRule rule;
     rule.buildingType = 1;
     rule.minTownHallLevel = 1;
 
-    // ÊıÁ¿ÏŞÖÆ£ºÊ¼ÖÕÖ»ÓĞ1¸ö
+    // æ•°é‡é™åˆ¶ï¼šå§‹ç»ˆåªæœ‰1ä¸ª
     rule.thLevelToMaxCount[1] = 1;
     rule.thLevelToMaxCount[2] = 1;
     rule.thLevelToMaxCount[3] = 1;
 
-    // µÈ¼¶ÏŞÖÆ£º²»ÄÜ³¬¹ı´ó±¾ÓªµÈ¼¶£¨ÕâÀïÌØÊâ£¬´ó±¾Óª×Ô¼º£©
+    // ç­‰çº§é™åˆ¶ï¼šä¸èƒ½è¶…è¿‡å¤§æœ¬è¥ç­‰çº§ï¼ˆè¿™é‡Œç‰¹æ®Šï¼Œå¤§æœ¬è¥è‡ªå·±ï¼‰
     rule.buildingLevelToTH[1] = 1;
     rule.buildingLevelToTH[2] = 2;
     rule.buildingLevelToTH[3] = 3;
@@ -53,18 +53,18 @@ void BuildingRequirements::initializeRules() {
     addRule(rule);
   }
 
-  // ±øÓª£¨3¼¶£©- ÊıÁ¿Ëæ´ó±¾Ôö¼Ó
+  // å…µè¥ï¼ˆ3çº§ï¼‰- æ•°é‡éšå¤§æœ¬å¢åŠ 
   {
     BuildingUnlockRule rule;
     rule.buildingType = 101;
     rule.minTownHallLevel = 1;
 
-    // ÊıÁ¿ÏŞÖÆ
-    rule.thLevelToMaxCount[1] = 1;  // ´ó±¾1£º1¸ö
-    rule.thLevelToMaxCount[2] = 2;  // ´ó±¾2£º2¸ö
-    rule.thLevelToMaxCount[3] = 3;  // ´ó±¾3£º3¸ö
+    // æ•°é‡é™åˆ¶
+    rule.thLevelToMaxCount[1] = 1;  // å¤§æœ¬1ï¼š1ä¸ª
+    rule.thLevelToMaxCount[2] = 2;  // å¤§æœ¬2ï¼š2ä¸ª
+    rule.thLevelToMaxCount[3] = 3;  // å¤§æœ¬3ï¼š3ä¸ª
 
-    // µÈ¼¶ÏŞÖÆ£º½¨ÖşµÈ¼¶ <= ´ó±¾ÓªµÈ¼¶
+    // ç­‰çº§é™åˆ¶ï¼šå»ºç­‘ç­‰çº§ <= å¤§æœ¬è¥ç­‰çº§
     rule.buildingLevelToTH[1] = 1;
     rule.buildingLevelToTH[2] = 2;
     rule.buildingLevelToTH[3] = 3;
@@ -72,18 +72,18 @@ void BuildingRequirements::initializeRules() {
     addRule(rule);
   }
 
-  // ÑµÁ·Óª£¨3¼¶£©- Ê¼ÖÕÖ»ÓĞ1¸ö£¬µÈ¼¶¸úËæ´ó±¾
+  // è®­ç»ƒè¥ï¼ˆ3çº§ï¼‰- å§‹ç»ˆåªæœ‰1ä¸ªï¼Œç­‰çº§è·Ÿéšå¤§æœ¬
   {
     BuildingUnlockRule rule;
     rule.buildingType = 102;
     rule.minTownHallLevel = 1;
 
-    // ÊıÁ¿ÏŞÖÆ£ºÊ¼ÖÕ1¸ö
+    // æ•°é‡é™åˆ¶ï¼šå§‹ç»ˆ1ä¸ª
     rule.thLevelToMaxCount[1] = 1;
     rule.thLevelToMaxCount[2] = 1;
     rule.thLevelToMaxCount[3] = 1;
 
-    // µÈ¼¶ÏŞÖÆ£º½¨ÖşµÈ¼¶ <= ´ó±¾ÓªµÈ¼¶
+    // ç­‰çº§é™åˆ¶ï¼šå»ºç­‘ç­‰çº§ <= å¤§æœ¬è¥ç­‰çº§
     rule.buildingLevelToTH[1] = 1;
     rule.buildingLevelToTH[2] = 2;
     rule.buildingLevelToTH[3] = 3;
@@ -91,18 +91,18 @@ void BuildingRequirements::initializeRules() {
     addRule(rule);
   }
 
-  // ÊµÑéÊÒ£¨3¼¶£©- ´ó±¾1½âËø£¬Ö»ÓĞ1¸ö
+  // å®éªŒå®¤ï¼ˆ3çº§ï¼‰- å¤§æœ¬1è§£é”ï¼Œåªæœ‰1ä¸ª
   {
     BuildingUnlockRule rule;
     rule.buildingType = 103;
     rule.minTownHallLevel = 1;
 
-    // ÊıÁ¿ÏŞÖÆ£ºÊ¼ÖÕ1¸ö
+    // æ•°é‡é™åˆ¶ï¼šå§‹ç»ˆ1ä¸ª
     rule.thLevelToMaxCount[1] = 1;
     rule.thLevelToMaxCount[2] = 1;
     rule.thLevelToMaxCount[3] = 1;
 
-    // µÈ¼¶ÏŞÖÆ
+    // ç­‰çº§é™åˆ¶
     rule.buildingLevelToTH[1] = 1;
     rule.buildingLevelToTH[2] = 2;
     rule.buildingLevelToTH[3] = 3;
@@ -110,17 +110,17 @@ void BuildingRequirements::initializeRules() {
     addRule(rule);
   }
 
-  // ·¨Êõ¹¤³§£¨3¼¶£©- ´ó±¾2½âËø£¬Ö»ÓĞ1¸ö
+  // æ³•æœ¯å·¥å‚ï¼ˆ3çº§ï¼‰- å¤§æœ¬2è§£é”ï¼Œåªæœ‰1ä¸ª
   {
     BuildingUnlockRule rule;
     rule.buildingType = 104;
     rule.minTownHallLevel = 2;
 
-    // ÊıÁ¿ÏŞÖÆ
+    // æ•°é‡é™åˆ¶
     rule.thLevelToMaxCount[2] = 1;
     rule.thLevelToMaxCount[3] = 1;
 
-    // µÈ¼¶ÏŞÖÆ
+    // ç­‰çº§é™åˆ¶
     rule.buildingLevelToTH[1] = 2;
     rule.buildingLevelToTH[2] = 2;
     rule.buildingLevelToTH[3] = 3;
@@ -128,37 +128,37 @@ void BuildingRequirements::initializeRules() {
     addRule(rule);
   }
 
-  // ==================== ×ÊÔ´½¨Öş ====================
+  // ==================== èµ„æºå»ºç­‘ ====================
 
-  // ½¨Öş¹¤ÈËĞ¡Îİ£¨3¼¶£©- Ã¿¸ö500±¦Ê¯
+  // å»ºç­‘å·¥äººå°å±‹ï¼ˆ3çº§ï¼‰- æ¯ä¸ª500å®çŸ³
   {
     BuildingUnlockRule rule;
     rule.buildingType = 201;
     rule.minTownHallLevel = 1;
 
-    // ÊıÁ¿ÏŞÖÆ£º´ó±¾Éı¼¶¿ÉÒÔ¶àÂò¹¤ÈË
+    // æ•°é‡é™åˆ¶ï¼šå¤§æœ¬å‡çº§å¯ä»¥å¤šä¹°å·¥äºº
     rule.thLevelToMaxCount[1] = 5;
     rule.thLevelToMaxCount[2] = 5;
     rule.thLevelToMaxCount[3] = 5;
 
-    // µÈ¼¶ÏŞÖÆ£¨¹¤ÈËĞ¡Îİ²»ÄÜÉı¼¶£¬µ«ÎªÁËÍ³Ò»¼ÓÉÏ£©
+    // ç­‰çº§é™åˆ¶ï¼ˆå·¥äººå°å±‹ä¸èƒ½å‡çº§ï¼Œä½†ä¸ºäº†ç»Ÿä¸€åŠ ä¸Šï¼‰
     rule.buildingLevelToTH[1] = 1;
 
     addRule(rule);
   }
 
-  // ½ğ¿ó£¨3¼¶£©
+  // é‡‘çŸ¿ï¼ˆ3çº§ï¼‰
   {
     BuildingUnlockRule rule;
     rule.buildingType = 202;
     rule.minTownHallLevel = 1;
 
-    // ÊıÁ¿ÏŞÖÆ
+    // æ•°é‡é™åˆ¶
     rule.thLevelToMaxCount[1] = 1;
     rule.thLevelToMaxCount[2] = 2;
     rule.thLevelToMaxCount[3] = 3;
 
-    // µÈ¼¶ÏŞÖÆ
+    // ç­‰çº§é™åˆ¶
     rule.buildingLevelToTH[1] = 1;
     rule.buildingLevelToTH[2] = 2;
     rule.buildingLevelToTH[3] = 3;
@@ -166,18 +166,18 @@ void BuildingRequirements::initializeRules() {
     addRule(rule);
   }
 
-  // Ê¥Ë®²É¼¯Æ÷£¨3¼¶£©
+  // åœ£æ°´é‡‡é›†å™¨ï¼ˆ3çº§ï¼‰
   {
     BuildingUnlockRule rule;
     rule.buildingType = 203;
     rule.minTownHallLevel = 1;
 
-    // ÊıÁ¿ÏŞÖÆ
+    // æ•°é‡é™åˆ¶
     rule.thLevelToMaxCount[1] = 1;
     rule.thLevelToMaxCount[2] = 2;
     rule.thLevelToMaxCount[3] = 3;
 
-    // µÈ¼¶ÏŞÖÆ
+    // ç­‰çº§é™åˆ¶
     rule.buildingLevelToTH[1] = 1;
     rule.buildingLevelToTH[2] = 2;
     rule.buildingLevelToTH[3] = 3;
@@ -185,18 +185,18 @@ void BuildingRequirements::initializeRules() {
     addRule(rule);
   }
 
-  // ´¢½ğ¹Ş£¨3¼¶£©
+  // å‚¨é‡‘ç½ï¼ˆ3çº§ï¼‰
   {
     BuildingUnlockRule rule;
     rule.buildingType = 204;
     rule.minTownHallLevel = 1;
 
-    // ÊıÁ¿ÏŞÖÆ£º´ó±¾3²ÅÄÜÓĞ2¸ö
+    // æ•°é‡é™åˆ¶ï¼šå¤§æœ¬3æ‰èƒ½æœ‰2ä¸ª
     rule.thLevelToMaxCount[1] = 1;
     rule.thLevelToMaxCount[2] = 1;
     rule.thLevelToMaxCount[3] = 2;
 
-    // µÈ¼¶ÏŞÖÆ
+    // ç­‰çº§é™åˆ¶
     rule.buildingLevelToTH[1] = 1;
     rule.buildingLevelToTH[2] = 2;
     rule.buildingLevelToTH[3] = 3;
@@ -204,18 +204,18 @@ void BuildingRequirements::initializeRules() {
     addRule(rule);
   }
 
-  // Ê¥Ë®Æ¿£¨3¼¶£©
+  // åœ£æ°´ç“¶ï¼ˆ3çº§ï¼‰
   {
     BuildingUnlockRule rule;
     rule.buildingType = 205;
     rule.minTownHallLevel = 1;
 
-    // ÊıÁ¿ÏŞÖÆ
+    // æ•°é‡é™åˆ¶
     rule.thLevelToMaxCount[1] = 1;
     rule.thLevelToMaxCount[2] = 1;
     rule.thLevelToMaxCount[3] = 2;
 
-    // µÈ¼¶ÏŞÖÆ
+    // ç­‰çº§é™åˆ¶
     rule.buildingLevelToTH[1] = 1;
     rule.buildingLevelToTH[2] = 2;
     rule.buildingLevelToTH[3] = 3;
@@ -223,20 +223,20 @@ void BuildingRequirements::initializeRules() {
     addRule(rule);
   }
 
-  // ==================== ·ÀÓù½¨Öş ====================
+  // ==================== é˜²å¾¡å»ºç­‘ ====================
 
-  // ¼ÓÅ©ÅÚ£¨3¼¶£©
+  // åŠ å†œç‚®ï¼ˆ3çº§ï¼‰
   {
     BuildingUnlockRule rule;
     rule.buildingType = 301;
     rule.minTownHallLevel = 1;
 
-    // ÊıÁ¿ÏŞÖÆ£º³õÊ¼2¸ö
+    // æ•°é‡é™åˆ¶ï¼šåˆå§‹2ä¸ª
     rule.thLevelToMaxCount[1] = 2;
     rule.thLevelToMaxCount[2] = 3;
     rule.thLevelToMaxCount[3] = 4;
 
-    // µÈ¼¶ÏŞÖÆ
+    // ç­‰çº§é™åˆ¶
     rule.buildingLevelToTH[1] = 1;
     rule.buildingLevelToTH[2] = 2;
     rule.buildingLevelToTH[3] = 3;
@@ -244,18 +244,18 @@ void BuildingRequirements::initializeRules() {
     addRule(rule);
   }
 
-  // ¼ıËş£¨3¼¶£©- ´ó±¾1½âËø
+  // ç®­å¡”ï¼ˆ3çº§ï¼‰- å¤§æœ¬1è§£é”
   {
     BuildingUnlockRule rule;
     rule.buildingType = 302;
     rule.minTownHallLevel = 1;
 
-    // ÊıÁ¿ÏŞÖÆ
+    // æ•°é‡é™åˆ¶
     rule.thLevelToMaxCount[1] = 1;
     rule.thLevelToMaxCount[2] = 2;
     rule.thLevelToMaxCount[3] = 3;
 
-    // µÈ¼¶ÏŞÖÆ
+    // ç­‰çº§é™åˆ¶
     rule.buildingLevelToTH[1] = 1;
     rule.buildingLevelToTH[2] = 2;
     rule.buildingLevelToTH[3] = 3;
@@ -263,18 +263,18 @@ void BuildingRequirements::initializeRules() {
     addRule(rule);
   }
 
-  // ³ÇÇ½£¨3¼¶£©- ´ó±¾1½âËø£¬ÊıÁ¿ºÜ¶à
+  // åŸå¢™ï¼ˆ3çº§ï¼‰- å¤§æœ¬1è§£é”ï¼Œæ•°é‡å¾ˆå¤š
   {
     BuildingUnlockRule rule;
     rule.buildingType = 303;
     rule.minTownHallLevel = 1;
 
-    // ÊıÁ¿ÏŞÖÆ£º³ÇÇ½ÊıÁ¿ºÜ¶à
+    // æ•°é‡é™åˆ¶ï¼šåŸå¢™æ•°é‡å¾ˆå¤š
     rule.thLevelToMaxCount[1] = 25;
     rule.thLevelToMaxCount[2] = 50;
     rule.thLevelToMaxCount[3] = 75;
 
-    // µÈ¼¶ÏŞÖÆ
+    // ç­‰çº§é™åˆ¶
     rule.buildingLevelToTH[1] = 1;
     rule.buildingLevelToTH[2] = 2;
     rule.buildingLevelToTH[3] = 3;
@@ -282,17 +282,17 @@ void BuildingRequirements::initializeRules() {
     addRule(rule);
   }
 
-  // ÆÈ»÷ÅÚ£¨3¼¶£©- ´ó±¾2½âËø
+  // è¿«å‡»ç‚®ï¼ˆ3çº§ï¼‰- å¤§æœ¬2è§£é”
   {
     BuildingUnlockRule rule;
     rule.buildingType = 304;
     rule.minTownHallLevel = 2;
 
-    // ÊıÁ¿ÏŞÖÆ
+    // æ•°é‡é™åˆ¶
     rule.thLevelToMaxCount[2] = 1;
     rule.thLevelToMaxCount[3] = 2;
 
-    // µÈ¼¶ÏŞÖÆ
+    // ç­‰çº§é™åˆ¶
     rule.buildingLevelToTH[1] = 2;
     rule.buildingLevelToTH[2] = 2;
     rule.buildingLevelToTH[3] = 3;
@@ -300,20 +300,20 @@ void BuildingRequirements::initializeRules() {
     addRule(rule);
   }
 
-  // ==================== ÏİÚå ====================
+  // ==================== é™·é˜± ====================
 
-  // Õ¨µ¯£¨3¼¶£©- ´ó±¾1½âËø
+  // ç‚¸å¼¹ï¼ˆ3çº§ï¼‰- å¤§æœ¬1è§£é”
   {
     BuildingUnlockRule rule;
     rule.buildingType = 401;
     rule.minTownHallLevel = 1;
 
-    // ÊıÁ¿ÏŞÖÆ
+    // æ•°é‡é™åˆ¶
     rule.thLevelToMaxCount[1] = 2;
     rule.thLevelToMaxCount[2] = 3;
     rule.thLevelToMaxCount[3] = 4;
 
-    // µÈ¼¶ÏŞÖÆ
+    // ç­‰çº§é™åˆ¶
     rule.buildingLevelToTH[1] = 1;
     rule.buildingLevelToTH[2] = 2;
     rule.buildingLevelToTH[3] = 3;
@@ -321,17 +321,17 @@ void BuildingRequirements::initializeRules() {
     addRule(rule);
   }
 
-  // µ¯»ÉÏİÚå£¨3¼¶£©- ´ó±¾2½âËø
+  // å¼¹ç°§é™·é˜±ï¼ˆ3çº§ï¼‰- å¤§æœ¬2è§£é”
   {
     BuildingUnlockRule rule;
     rule.buildingType = 402;
     rule.minTownHallLevel = 2;
 
-    // ÊıÁ¿ÏŞÖÆ
+    // æ•°é‡é™åˆ¶
     rule.thLevelToMaxCount[2] = 2;
     rule.thLevelToMaxCount[3] = 3;
 
-    // µÈ¼¶ÏŞÖÆ
+    // ç­‰çº§é™åˆ¶
     rule.buildingLevelToTH[1] = 2;
     rule.buildingLevelToTH[2] = 2;
     rule.buildingLevelToTH[3] = 3;
@@ -339,16 +339,16 @@ void BuildingRequirements::initializeRules() {
     addRule(rule);
   }
 
-  // ¾ŞĞÍÕ¨µ¯£¨3¼¶£©- ´ó±¾3½âËø
+  // å·¨å‹ç‚¸å¼¹ï¼ˆ3çº§ï¼‰- å¤§æœ¬3è§£é”
   {
     BuildingUnlockRule rule;
     rule.buildingType = 404;
     rule.minTownHallLevel = 3;
 
-    // ÊıÁ¿ÏŞÖÆ
+    // æ•°é‡é™åˆ¶
     rule.thLevelToMaxCount[3] = 2;
 
-    // µÈ¼¶ÏŞÖÆ
+    // ç­‰çº§é™åˆ¶
     rule.buildingLevelToTH[1] = 3;
     rule.buildingLevelToTH[2] = 3;
     rule.buildingLevelToTH[3] = 3;
@@ -372,12 +372,12 @@ bool BuildingRequirements::canPurchase(int buildingType, int currentTHLevel, int
 
   const BuildingUnlockRule& rule = it->second;
 
-  // ¼ì²é1£º´ó±¾ÓªµÈ¼¶ÊÇ·ñ×ã¹»½âËø
+  // æ£€æŸ¥1ï¼šå¤§æœ¬è¥ç­‰çº§æ˜¯å¦è¶³å¤Ÿè§£é”
   if (currentTHLevel < rule.minTownHallLevel) {
     return false;
   }
 
-  // ¼ì²é2£ºÊıÁ¿ÊÇ·ñÒÑ´ïÉÏÏŞ
+  // æ£€æŸ¥2ï¼šæ•°é‡æ˜¯å¦å·²è¾¾ä¸Šé™
   int maxCount = getMaxCount(buildingType, currentTHLevel);
   if (currentCount >= maxCount) {
     return false;
@@ -396,12 +396,12 @@ bool BuildingRequirements::canUpgrade(int buildingType, int currentBuildingLevel
 
   int targetLevel = currentBuildingLevel + 1;
 
-  // ¼ì²é1£º²»ÄÜ³¬¹ı×î´óµÈ¼¶3
+  // æ£€æŸ¥1ï¼šä¸èƒ½è¶…è¿‡æœ€å¤§ç­‰çº§3
   if (targetLevel > 3) {
     return false;
   }
 
-  // ¼ì²é2£ºÊÇ·ñÂú×ã´ó±¾ÓªµÈ¼¶ÒªÇó
+  // æ£€æŸ¥2ï¼šæ˜¯å¦æ»¡è¶³å¤§æœ¬è¥ç­‰çº§è¦æ±‚
   auto upgradeIt = rule.buildingLevelToTH.find(targetLevel);
   if (upgradeIt == rule.buildingLevelToTH.end()) {
     return false;
@@ -419,7 +419,7 @@ int BuildingRequirements::getMaxCount(int buildingType, int townHallLevel) const
 
   const BuildingUnlockRule& rule = it->second;
 
-  // ²éÕÒµ±Ç°´ó±¾ÓªµÈ¼¶ÏÂµÄ×î´óÊıÁ¿
+  // æŸ¥æ‰¾å½“å‰å¤§æœ¬è¥ç­‰çº§ä¸‹çš„æœ€å¤§æ•°é‡
   int maxCount = 0;
   for (const auto& pair : rule.thLevelToMaxCount) {
     if (pair.first <= townHallLevel) {
@@ -457,42 +457,42 @@ int BuildingRequirements::getMinTHLevel(int buildingType) const {
 std::string BuildingRequirements::getRestrictionReason(int buildingType, int currentLevel, int currentTHLevel, int currentCount) const {
   auto it = rules.find(buildingType);
   if (it == rules.end()) {
-    return "Î´ÖªµÄ½¨ÖşÀàĞÍ";
+    return "æœªçŸ¥çš„å»ºç­‘ç±»å‹";
   }
 
   const BuildingUnlockRule& rule = it->second;
 
-  // Çé¿ö1£º¹ºÂòĞÂ½¨Öş£¨currentLevel == 0£©
+  // æƒ…å†µ1ï¼šè´­ä¹°æ–°å»ºç­‘ï¼ˆcurrentLevel == 0ï¼‰
   if (currentLevel == 0) {
-    // ¼ì²é´ó±¾ÓªµÈ¼¶
+    // æ£€æŸ¥å¤§æœ¬è¥ç­‰çº§
     if (currentTHLevel < rule.minTownHallLevel) {
-      return "ĞèÒª" + std::to_string(rule.minTownHallLevel) + "¼¶´ó±¾Óª½âËø";
+      return "éœ€è¦" + std::to_string(rule.minTownHallLevel) + "çº§å¤§æœ¬è¥è§£é”";
     }
 
-    // ¼ì²éÊıÁ¿ÏŞÖÆ
+    // æ£€æŸ¥æ•°é‡é™åˆ¶
     int maxCount = getMaxCount(buildingType, currentTHLevel);
     if (currentCount >= maxCount) {
-      return "ÒÑ´ïµ½ÊıÁ¿ÉÏÏŞ£¨×î¶à" + std::to_string(maxCount) + "¸ö£©";
+      return "å·²è¾¾åˆ°æ•°é‡ä¸Šé™ï¼ˆæœ€å¤š" + std::to_string(maxCount) + "ä¸ªï¼‰";
     }
   }
-  // Çé¿ö2£ºÉı¼¶½¨Öş£¨currentLevel > 0£©
+  // æƒ…å†µ2ï¼šå‡çº§å»ºç­‘ï¼ˆcurrentLevel > 0ï¼‰
   else {
     int targetLevel = currentLevel + 1;
 
-    // ¼ì²é×î´óµÈ¼¶
+    // æ£€æŸ¥æœ€å¤§ç­‰çº§
     if (targetLevel > 3) {
-      return "ÒÑ´ïµ½×î¸ßµÈ¼¶£¨3¼¶£©";
+      return "å·²è¾¾åˆ°æœ€é«˜ç­‰çº§ï¼ˆ3çº§ï¼‰";
     }
 
-    // ¼ì²é´ó±¾ÓªµÈ¼¶ÒªÇó
+    // æ£€æŸ¥å¤§æœ¬è¥ç­‰çº§è¦æ±‚
     auto upgradeIt = rule.buildingLevelToTH.find(targetLevel);
     if (upgradeIt == rule.buildingLevelToTH.end()) {
-      return "ÒÑ´ïµ½×î¸ßµÈ¼¶";
+      return "å·²è¾¾åˆ°æœ€é«˜ç­‰çº§";
     }
 
     int requiredTHLevel = upgradeIt->second;
     if (currentTHLevel < requiredTHLevel) {
-      return "ĞèÒª" + std::to_string(requiredTHLevel) + "¼¶´ó±¾Óª";
+      return "éœ€è¦" + std::to_string(requiredTHLevel) + "çº§å¤§æœ¬è¥";
     }
   }
 
@@ -500,29 +500,29 @@ std::string BuildingRequirements::getRestrictionReason(int buildingType, int cur
 }
 
 
-// ĞÂÔö£º¼ì²é½¨ÖşÊÇ·ñ¿ÉÒÔÉı¼¶£¨º¬ÌØÊâ¹æÔò£©
+// æ–°å¢ï¼šæ£€æŸ¥å»ºç­‘æ˜¯å¦å¯ä»¥å‡çº§ï¼ˆå«ç‰¹æ®Šè§„åˆ™ï¼‰
 bool BuildingRequirements::canUpgradeBuilding(int buildingType, int currentLevel, int townHallLevel) const {
-  // ÌØÊâ´¦Àí£º´ó±¾Óª£¨±ØĞë·ÅÔÚµÚÒ»Î»£©
+  // ç‰¹æ®Šå¤„ç†ï¼šå¤§æœ¬è¥ï¼ˆå¿…é¡»æ”¾åœ¨ç¬¬ä¸€ä½ï¼‰
   if (buildingType == 1) {
     CCLOG("BuildingRequirements: Checking Town Hall upgrade");
-    return canUpgradeTownHall(currentLevel);  // ×¢Òâ£º´«Èë currentLevel
+    return canUpgradeTownHall(currentLevel);  // æ³¨æ„ï¼šä¼ å…¥ currentLevel
   }
 
-  // Í¨ÓÃ¹æÔò£ºÆäËû½¨ÖşµÈ¼¶²»ÄÜ³¬¹ı´ó±¾ÓªµÈ¼¶
+  // é€šç”¨è§„åˆ™ï¼šå…¶ä»–å»ºç­‘ç­‰çº§ä¸èƒ½è¶…è¿‡å¤§æœ¬è¥ç­‰çº§
   if (currentLevel >= townHallLevel) {
     CCLOG("BuildingRequirements: Building level %d cannot exceed Town Hall level %d",
           currentLevel, townHallLevel);
     return false;
   }
 
-  // ¼ì²é×î´óµÈ¼¶
+  // æ£€æŸ¥æœ€å¤§ç­‰çº§
   auto it = rules.find(buildingType);
   if (it == rules.end()) {
     CCLOG("BuildingRequirements: No requirements found for building type %d", buildingType);
     return false;
   }
 
-  int maxLevel = 3; // Ä¿Ç°ËùÓĞ½¨Öş×î´óµÈ¼¶Îª3
+  int maxLevel = 3; // ç›®å‰æ‰€æœ‰å»ºç­‘æœ€å¤§ç­‰çº§ä¸º3
   if (currentLevel >= maxLevel) {
     CCLOG("BuildingRequirements: Building already at max level %d", maxLevel);
     return false;
@@ -531,22 +531,22 @@ bool BuildingRequirements::canUpgradeBuilding(int buildingType, int currentLevel
   return true;
 }
 
-// ĞŞ¸´£º¼ì²é´ó±¾ÓªÊÇ·ñ¿ÉÒÔÉı¼¶
+// ä¿®å¤ï¼šæ£€æŸ¥å¤§æœ¬è¥æ˜¯å¦å¯ä»¥å‡çº§
 bool BuildingRequirements::canUpgradeTownHall(int currentTownHallLevel) const {
   auto dataManager = VillageDataManager::getInstance();
 
-  // »ñÈ¡µ±Ç°´ó±¾ÓªµÈ¼¶ÒªÇóµÄ·ÀÓù½¨ÖşÀàĞÍ
+  // è·å–å½“å‰å¤§æœ¬è¥ç­‰çº§è¦æ±‚çš„é˜²å¾¡å»ºç­‘ç±»å‹
   std::vector<int> requiredDefenses = getRequiredDefenseTypes(currentTownHallLevel);
 
   CCLOG("BuildingRequirements: Checking Town Hall level %d upgrade conditions", currentTownHallLevel);
   CCLOG("BuildingRequirements: Required defense types: %lu", requiredDefenses.size());
 
-  // ¼ì²éÃ¿ÖÖ·ÀÓù½¨ÖşÊÇ·ñ´ïµ½ÒªÇóÊıÁ¿
+  // æ£€æŸ¥æ¯ç§é˜²å¾¡å»ºç­‘æ˜¯å¦è¾¾åˆ°è¦æ±‚æ•°é‡
   for (int defenseType : requiredDefenses) {
     int requiredCount = getMaxCount(defenseType, currentTownHallLevel);
     int currentCount = 0;
 
-    // Í³¼ÆÒÑ½¨ÔìÍê³ÉµÄ·ÀÓù½¨Öş
+    // ç»Ÿè®¡å·²å»ºé€ å®Œæˆçš„é˜²å¾¡å»ºç­‘
     for (const auto& building : dataManager->getAllBuildings()) {
       if (building.type == defenseType && building.state == BuildingInstance::State::BUILT) {
         currentCount++;
@@ -556,7 +556,7 @@ bool BuildingRequirements::canUpgradeTownHall(int currentTownHallLevel) const {
     if (currentCount < requiredCount) {
       CCLOG("BuildingRequirements: Missing defense - Type %d: %d/%d built",
             defenseType, currentCount, requiredCount);
-      return false;  //  È±ÉÙ·ÀÓù½¨Öş
+      return false;  //  ç¼ºå°‘é˜²å¾¡å»ºç­‘
     } else {
       CCLOG("BuildingRequirements: Defense Type %d: %d/%d built ?",
             defenseType, currentCount, requiredCount);
@@ -567,15 +567,15 @@ bool BuildingRequirements::canUpgradeTownHall(int currentTownHallLevel) const {
   return true;
 }
 
-// ĞÂÔö£º»ñÈ¡·ÀÓù½¨ÖşÀàĞÍÁĞ±í
+// æ–°å¢ï¼šè·å–é˜²å¾¡å»ºç­‘ç±»å‹åˆ—è¡¨
 std::vector<int> BuildingRequirements::getRequiredDefenseTypes(int townHallLevel) const {
   std::vector<int> defenseTypes;
 
-  // ¶¨Òå·ÀÓù½¨Öş ID ·¶Î§£º301-399
+  // å®šä¹‰é˜²å¾¡å»ºç­‘ ID èŒƒå›´ï¼š301-399
   for (const auto& pair : rules) {
     int buildingType = pair.first;
     if (buildingType >= 301 && buildingType <= 399) {
-      // ¼ì²éÕâ¸ö·ÀÓù½¨ÖşÔÚµ±Ç°´ó±¾ÓªµÈ¼¶ÊÇ·ñ½âËø
+      // æ£€æŸ¥è¿™ä¸ªé˜²å¾¡å»ºç­‘åœ¨å½“å‰å¤§æœ¬è¥ç­‰çº§æ˜¯å¦è§£é”
       const BuildingUnlockRule& rule = pair.second;
       if (rule.minTownHallLevel <= townHallLevel && getMaxCount(buildingType, townHallLevel) > 0) {
         defenseTypes.push_back(buildingType);

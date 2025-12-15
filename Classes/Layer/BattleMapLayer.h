@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #ifndef __BATTLE_MAP_LAYER_H__
 #define __BATTLE_MAP_LAYER_H__
 
@@ -10,10 +10,10 @@ class MoveMapController;
 class BattleMapLayer : public cocos2d::Layer {
 public:
     virtual bool init() override;
-    virtual ~BattleMapLayer();  // Ìí¼ÓÎö¹¹º¯ÊıÉùÃ÷
+    virtual ~BattleMapLayer();  // æ·»åŠ ææ„å‡½æ•°å£°æ˜
     CREATE_FUNC(BattleMapLayer);
 
-    // ÖØĞÂ¼ÓÔØµØÍ¼ (ÓÃÓÚ"Ñ°ÕÒÏÂÒ»¸ö")
+    // é‡æ–°åŠ è½½åœ°å›¾ (ç”¨äº"å¯»æ‰¾ä¸‹ä¸€ä¸ª")
     void reloadMap();
 
 private:

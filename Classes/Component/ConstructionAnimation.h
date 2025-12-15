@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "cocos2d.h"
 
 class BuildingSprite;
@@ -13,7 +13,7 @@ public:
   void updateProgress(float progress);
 
 private:
-  BuildingSprite* _buildingSprite;  // ͳһʹ�� _buildingSprite
+  BuildingSprite* _buildingSprite;  // 统一使用 _buildingSprite
   bool _isRunning;
   cocos2d::Label* _progressLabel;
 };

@@ -1,4 +1,4 @@
-#ifndef __VILLAGESCENE_H__
+﻿#ifndef __VILLAGESCENE_H__
 #define __VILLAGESCENE_H__
 
 #include "cocos2d.h"

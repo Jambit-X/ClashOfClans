@@ -1,7 +1,7 @@
-// Classes/Manager/BuildingSpeedupManager.cpp
+ï»¿// Classes/Manager/BuildingSpeedupManager.cpp
 #include "BuildingSpeedupManager.h"
 #include "VillageDataManager.h"
-#include "BuildingManager.h"  // ÐèÒªÌí¼ÓÕâ¸öÍ·ÎÄ¼þ
+#include "BuildingManager.h"  // éœ€è¦æ·»åŠ è¿™ä¸ªå¤´æ–‡ä»¶
 
 BuildingSpeedupManager* BuildingSpeedupManager::instance = nullptr;
 
@@ -31,12 +31,12 @@ bool BuildingSpeedupManager::canSpeedup(int buildingId) const {
     return false;
   }
 
-  // ¼ì²é1:½¨Öþ±ØÐëÔÚ½¨ÔìÖÐ
+  // æ£€æŸ¥1:å»ºç­‘å¿…é¡»åœ¨å»ºé€ ä¸­
   if (building->state != BuildingInstance::State::CONSTRUCTING) {
     return false;
   }
 
-  // ¼ì²é2:±ØÐëÓÐÖÁÉÙ1¿Å±¦Ê¯
+  // æ£€æŸ¥2:å¿…é¡»æœ‰è‡³å°‘1é¢—å®çŸ³
   if (dataManager->getGem() < 1) {
     return false;
   }
@@ -51,24 +51,24 @@ bool BuildingSpeedupManager::speedupBuilding(int buildingId) {
 
   auto dataManager = VillageDataManager::getInstance();
 
-  // 1. ÏûºÄ1¿Å±¦Ê¯
+  // 1. æ¶ˆè€—1é¢—å®çŸ³
   if (!dataManager->spendGem(1)) {
     CCLOG("BuildingSpeedupManager: Failed to spend gem");
     return false;
   }
 
-  // 2. Á¢¼´Íê³É½¨Ôì(Õâ»á¸Ä±äÊý¾Ý²ã×´Ì¬Îª BUILT)
+  // 2. ç«‹å³å®Œæˆå»ºé€ (è¿™ä¼šæ”¹å˜æ•°æ®å±‚çŠ¶æ€ä¸º BUILT)
   auto building = dataManager->getBuildingById(buildingId);
   if (building->isInitialConstruction) {
-    // Ê×´Î½¨ÔìÍê³É
+    // é¦–æ¬¡å»ºé€ å®Œæˆ
     dataManager->finishNewBuildingConstruction(buildingId);
   } else {
-    // Éý¼¶Íê³É
+    // å‡çº§å®Œæˆ
     dataManager->finishUpgradeBuilding(buildingId);
   }
 
-  // ?? ¹Ø¼üÐÞ¸´:Ö±½ÓÍ¨Öª BuildingManager ¸üÐÂ UI
-  // ´¥·¢×Ô¶¨ÒåÊÂ¼þ,ÈÃ VillageLayer/BuildingManager ¸üÐÂ BuildingSprite
+  // â˜… å…³é”®ä¿®å¤:ç›´æŽ¥é€šçŸ¥ BuildingManager æ›´æ–° UI
+  // è§¦å‘è‡ªå®šä¹‰äº‹ä»¶,è®© VillageLayer/BuildingManager æ›´æ–° BuildingSprite
   cocos2d::EventCustom event("EVENT_BUILDING_SPEEDUP_COMPLETE");
   int* data = new int(buildingId);
   event.setUserData(data);
@@ -84,15 +84,15 @@ std::string BuildingSpeedupManager::getSpeedupFailReason(int buildingId) const {
   auto building = dataManager->getBuildingById(buildingId);
 
   if (!building) {
-    return "½¨Öþ²»´æÔÚ";
+    return "å»ºç­‘ä¸å­˜åœ¨";
   }
 
   if (building->state != BuildingInstance::State::CONSTRUCTING) {
-    return "½¨ÖþÎ´ÔÚ½¨ÔìÖÐ";
+    return "å»ºç­‘æœªåœ¨å»ºé€ ä¸­";
   }
 
   if (dataManager->getGem() < 1) {
-    return "±¦Ê¯²»×ã(ÐèÒª1¿Å)";
+    return "å®çŸ³ä¸è¶³(éœ€è¦1é¢—)";
   }
 
   return "";

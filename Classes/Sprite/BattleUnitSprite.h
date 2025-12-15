@@ -1,4 +1,4 @@
-// BattleUnitSprite.h
+ï»¿// BattleUnitSprite.h
 #ifndef __BATTLE_UNIT_SPRITE_H__
 #define __BATTLE_UNIT_SPRITE_H__
 
@@ -12,7 +12,7 @@ public:
   static BattleUnitSprite* create(const std::string& unitType);
   virtual bool init(const std::string& unitType);
 
-  // »ù´¡¶¯»­¿ØÖÆ
+  // åŸºç¡€åŠ¨ç”»æ§åˆ¶
   void playAnimation(AnimationType animType, bool loop = false,
                      const std::function<void()>& callback = nullptr);
   
@@ -22,60 +22,60 @@ public:
   void playAttackAnimation(const std::function<void()>& callback = nullptr);
   void playDeathAnimation(const std::function<void()>& callback = nullptr);
 
-  // ===== ÏñËØ×ø±êĞĞ×ß =====
+  // ===== åƒç´ åæ ‡è¡Œèµ° =====
   
-  // ĞĞ×ßµ½Ö¸¶¨ÏñËØÎ»ÖÃ
+  // è¡Œèµ°åˆ°æŒ‡å®šåƒç´ ä½ç½®
   void walkToPosition(const Vec2& targetPos, float duration = 2.0f,
                       const std::function<void()>& callback = nullptr);
   
-  // ÑØÏòÁ¿Æ«ÒÆĞĞ×ß
+  // æ²¿å‘é‡åç§»è¡Œèµ°
   void walkByOffset(const Vec2& offset, float duration = 2.0f,
                     const std::function<void()>& callback = nullptr);
 
-  // ===== Íø¸ñ×ø±êĞĞ×ß =====
+  // ===== ç½‘æ ¼åæ ‡è¡Œèµ° =====
   
-  // ´Óµ±Ç°Íø¸ñÎ»ÖÃĞĞ×ßµ½Ä¿±êÍø¸ñÎ»ÖÃ
+  // ä»å½“å‰ç½‘æ ¼ä½ç½®è¡Œèµ°åˆ°ç›®æ ‡ç½‘æ ¼ä½ç½®
   void walkToGrid(int targetGridX, int targetGridY, float speed = 100.0f,
                   const std::function<void()>& callback = nullptr);
   
-  // ´ÓÖ¸¶¨Íø¸ñĞĞ×ßµ½Ä¿±êÍø¸ñ
+  // ä»æŒ‡å®šç½‘æ ¼è¡Œèµ°åˆ°ç›®æ ‡ç½‘æ ¼
   void walkFromGridToGrid(int startGridX, int startGridY, 
                          int targetGridX, int targetGridY,
                          float speed = 100.0f,
                          const std::function<void()>& callback = nullptr);
 
-  // ===== ·½Ïò¹¥»÷ =====
+  // ===== æ–¹å‘æ”»å‡» =====
   
-  // ÏòÖ¸¶¨·½Ïò¹¥»÷£¨Ö»²¥·Å¶¯»­£¬²»ÒÆ¶¯£©
+  // å‘æŒ‡å®šæ–¹å‘æ”»å‡»ï¼ˆåªæ’­æ”¾åŠ¨ç”»ï¼Œä¸ç§»åŠ¨ï¼‰
   void attackInDirection(const Vec2& direction, 
                         const std::function<void()>& callback = nullptr);
   
-  // ¹¥»÷Ö¸¶¨Î»ÖÃ£¨¼ÆËã·½Ïò£¬Õ¾¶¨¹¥»÷£©
+  // æ”»å‡»æŒ‡å®šä½ç½®ï¼ˆè®¡ç®—æ–¹å‘ï¼Œç«™å®šæ”»å‡»ï¼‰
   void attackTowardPosition(const Vec2& targetPos, 
                            const std::function<void()>& callback = nullptr);
   
-  // ¹¥»÷Ö¸¶¨Íø¸ñ£¨¼ÆËã·½Ïò£¬Õ¾¶¨¹¥»÷£©
+  // æ”»å‡»æŒ‡å®šç½‘æ ¼ï¼ˆè®¡ç®—æ–¹å‘ï¼Œç«™å®šæ”»å‡»ï¼‰
   void attackTowardGrid(int targetGridX, int targetGridY,
                        const std::function<void()>& callback = nullptr);
 
-  // ===== Íø¸ñÎ»ÖÃ¹ÜÀí =====
+  // ===== ç½‘æ ¼ä½ç½®ç®¡ç† =====
   
-  // ÉèÖÃµ¥Î»µ±Ç°Íø¸ñÎ»ÖÃ
+  // è®¾ç½®å•ä½å½“å‰ç½‘æ ¼ä½ç½®
   void setGridPosition(int gridX, int gridY);
   
-  // »ñÈ¡µ¥Î»µ±Ç°Íø¸ñÎ»ÖÃ
+  // è·å–å•ä½å½“å‰ç½‘æ ¼ä½ç½®
   Vec2 getGridPosition() const { return _currentGridPos; }
   
-  // ½«µ¥Î»Ë²ÒÆµ½Íø¸ñÎ»ÖÃ£¨²»²¥·Å¶¯»­£©
+  // å°†å•ä½ç¬ç§»åˆ°ç½‘æ ¼ä½ç½®ï¼ˆä¸æ’­æ”¾åŠ¨ç”»ï¼‰
   void teleportToGrid(int gridX, int gridY);
 
-  // ===== Ñ°Â·ÒÆ¶¯ =====
+  // ===== å¯»è·¯ç§»åŠ¨ =====
   
   /**
-   * @brief Ê¹ÓÃÑ°Â·Ëã·¨ÒÆ¶¯µ½Ö¸¶¨ÊÀ½ç×ø±ê
-   * @param targetWorldPos Ä¿±êÊÀ½ç×ø±ê
-   * @param speed ÒÆ¶¯ËÙ¶È£¨ÏñËØ/Ãë£©
-   * @param callback Íê³Éºó»Øµ÷
+   * @brief ä½¿ç”¨å¯»è·¯ç®—æ³•ç§»åŠ¨åˆ°æŒ‡å®šä¸–ç•Œåæ ‡
+   * @param targetWorldPos ç›®æ ‡ä¸–ç•Œåæ ‡
+   * @param speed ç§»åŠ¨é€Ÿåº¦ï¼ˆåƒç´ /ç§’ï¼‰
+   * @param callback å®Œæˆåå›è°ƒ
    */
   void moveToTargetWithPathfinding(
       const Vec2& targetWorldPos, 
@@ -83,11 +83,11 @@ public:
       const std::function<void()>& callback = nullptr);
   
   /**
-   * @brief Ê¹ÓÃÑ°Â·Ëã·¨ÒÆ¶¯µ½Ö¸¶¨Íø¸ñ£¨¸ù¾İVillageDataManagerµÄ½¨ÖşÕ¼ÓÃ±í±Ü¿ªÕÏ°­£©
-   * @param targetGridX Ä¿±êÍø¸ñX×ø±ê
-   * @param targetGridY Ä¿±êÍø¸ñY×ø±ê
-   * @param speed ÒÆ¶¯ËÙ¶È£¨ÏñËØ/Ãë£©
-   * @param callback Íê³Éºó»Øµ÷
+   * @brief ä½¿ç”¨å¯»è·¯ç®—æ³•ç§»åŠ¨åˆ°æŒ‡å®šç½‘æ ¼ï¼ˆæ ¹æ®VillageDataManagerçš„å»ºç­‘å ç”¨è¡¨é¿å¼€éšœç¢ï¼‰
+   * @param targetGridX ç›®æ ‡ç½‘æ ¼Xåæ ‡
+   * @param targetGridY ç›®æ ‡ç½‘æ ¼Yåæ ‡
+   * @param speed ç§»åŠ¨é€Ÿåº¦ï¼ˆåƒç´ /ç§’ï¼‰
+   * @param callback å®Œæˆåå›è°ƒ
    */
   void moveToGridWithPathfinding(
       int targetGridX, 
@@ -96,17 +96,17 @@ public:
       const std::function<void()>& callback = nullptr);
   
   /**
-   * @brief ÑØÖ¸¶¨Â·¾¶ÁĞ±íÒÆ¶¯
-   * @param path Â·¾¶µãÁĞ±í£¨ÊÀ½ç×ø±ê£©
-   * @param speed ÒÆ¶¯ËÙ¶È£¨ÏñËØ/Ãë£©
-   * @param callback Íê³Éºó»Øµ÷
+   * @brief æ²¿æŒ‡å®šè·¯å¾„åˆ—è¡¨ç§»åŠ¨
+   * @param path è·¯å¾„ç‚¹åˆ—è¡¨ï¼ˆä¸–ç•Œåæ ‡ï¼‰
+   * @param speed ç§»åŠ¨é€Ÿåº¦ï¼ˆåƒç´ /ç§’ï¼‰
+   * @param callback å®Œæˆåå›è°ƒ
    */
   void followPath(
       const std::vector<Vec2>& path, 
       float speed = 100.0f,
       const std::function<void()>& callback = nullptr);
 
-  // ===== ÊôĞÔ·ÃÎÊ =====
+  // ===== å±æ€§è®¿é—® =====
   
   std::string getUnitType() const { return _unitType; }
   AnimationType getCurrentAnimation() const { return _currentAnimation; }
@@ -116,16 +116,16 @@ protected:
   std::string _unitType;
   AnimationType _currentAnimation;
   bool _isAnimating;
-  Vec2 _currentGridPos;  // µ±Ç°Íø¸ñ×ø±ê
+  Vec2 _currentGridPos;  // å½“å‰ç½‘æ ¼åæ ‡
   
   static const int ANIMATION_TAG = 1000;
   static const int MOVE_TAG = 1001;
 
-  // ¸ù¾İÒÆ¶¯·½ÏòÑ¡Ôñ¶¯»­ÀàĞÍºÍÊÇ·ñĞèÒª·­×ª
+  // æ ¹æ®ç§»åŠ¨æ–¹å‘é€‰æ‹©åŠ¨ç”»ç±»å‹å’Œæ˜¯å¦éœ€è¦ç¿»è½¬
   void selectWalkAnimation(const Vec2& direction, AnimationType& outAnimType, bool& outFlipX);
   void selectAttackAnimation(const Vec2& direction, AnimationType& outAnimType, bool& outFlipX);
   
-  // ¼ÆËã½Ç¶È£¨0¶È=ÓÒ£¬ÄæÊ±Õë£©
+  // è®¡ç®—è§’åº¦ï¼ˆ0åº¦=å³ï¼Œé€†æ—¶é’ˆï¼‰
   float getAngleFromDirection(const Vec2& direction);
 };
 

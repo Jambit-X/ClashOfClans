@@ -1,155 +1,155 @@
-#ifndef __MOVE_BUILDING_CONTROLLER_H__
+ï»¿#ifndef __MOVE_BUILDING_CONTROLLER_H__
 #define __MOVE_BUILDING_CONTROLLER_H__
 
 #include "cocos2d.h"
 #include <map>
 
-// Ç°ÏòÉùÃ÷
+// å‰å‘å£°æ˜
 class BuildingManager;
 class BuildingSprite;
 
 /**
- * ½¨ÖşÎ»ÖÃĞÅÏ¢£¨ÓÃÓÚÍ³Ò»×ø±ê×ª»»ºÍºÏ·¨ĞÔ¼ì²é£©
+ * å»ºç­‘ä½ç½®ä¿¡æ¯ï¼ˆç”¨äºç»Ÿä¸€åæ ‡è½¬æ¢å’Œåˆæ³•æ€§æ£€æŸ¥ï¼‰
  */
 struct BuildingPositionInfo {
-    cocos2d::Vec2 gridPos;      // ¶ÔÆëºóµÄÍø¸ñ×ø±ê
-    cocos2d::Vec2 worldPos;     // ¶ÔÆëºóµÄÊÀ½ç×ø±ê
-    bool isValid;               // Î»ÖÃÊÇ·ñºÏ·¨
+    cocos2d::Vec2 gridPos;      // å¯¹é½åçš„ç½‘æ ¼åæ ‡
+    cocos2d::Vec2 worldPos;     // å¯¹é½åçš„ä¸–ç•Œåæ ‡
+    bool isValid;               // ä½ç½®æ˜¯å¦åˆæ³•
 };
 
 /**
- * ½¨ÖşÒÆ¶¯¿ØÖÆÆ÷
+ * å»ºç­‘ç§»åŠ¨æ§åˆ¶å™¨
  * 
- * Ö°Ôğ£º
- * - ¹ÜÀí½¨ÖşÒÆ¶¯µÄÒµÎñÂß¼­
- * - ´¦Àí´¥ÃşÊäÈë£¨ÍÏ¶¯½¨Öş£©
- * - ÊµÊ±Ô¤ÀÀ½¨ÖşÎ»ÖÃ
- * - ¼ì²é·ÅÖÃºÏ·¨ĞÔ
- * - ´¦Àí½¨ÖşÒÆ¶¯µÄÍê³É»òÈ¡Ïû
+ * èŒè´£ï¼š
+ * - ç®¡ç†å»ºç­‘ç§»åŠ¨çš„ä¸šåŠ¡é€»è¾‘
+ * - å¤„ç†è§¦æ‘¸è¾“å…¥ï¼ˆæ‹–åŠ¨å»ºç­‘ï¼‰
+ * - å®æ—¶é¢„è§ˆå»ºç­‘ä½ç½®
+ * - æ£€æŸ¥æ”¾ç½®åˆæ³•æ€§
+ * - å¤„ç†å»ºç­‘ç§»åŠ¨çš„å®Œæˆæˆ–å–æ¶ˆ
  */
 class MoveBuildingController {
 public:
     /**
-     * ¹¹Ôìº¯Êı
-     * @param layer ¸¸²ã£¨VillageLayer£©
-     * @param buildingManager ½¨Öş¹ÜÀíÆ÷ÒıÓÃ
+     * æ„é€ å‡½æ•°
+     * @param layer çˆ¶å±‚ï¼ˆVillageLayerï¼‰
+     * @param buildingManager å»ºç­‘ç®¡ç†å™¨å¼•ç”¨
      */
     MoveBuildingController(cocos2d::Layer* layer, BuildingManager* buildingManager);
     ~MoveBuildingController();
 
     /**
-     * ÉèÖÃ´¥Ãş¼àÌıÆ÷£¨ÓÉ VillageLayer µ÷ÓÃÒ»´Î£©
+     * è®¾ç½®è§¦æ‘¸ç›‘å¬å™¨ï¼ˆç”± VillageLayer è°ƒç”¨ä¸€æ¬¡ï¼‰
      */
     void setupTouchListener();
 
     /**
-     * ¿ªÊ¼ÒÆ¶¯½¨Öş
-     * @param buildingId ÒªÒÆ¶¯µÄ½¨ÖşID
+     * å¼€å§‹ç§»åŠ¨å»ºç­‘
+     * @param buildingId è¦ç§»åŠ¨çš„å»ºç­‘ID
      */
     void startMoving(int buildingId);
 
     /**
-     * È¡Ïû½¨ÖşÒÆ¶¯
+     * å–æ¶ˆå»ºç­‘ç§»åŠ¨
      */
     void cancelMoving();
 
     /**
-     * ¼ì²éÊÇ·ñÕıÔÚÒÆ¶¯½¨Öş
-     * @return ÊÇ·ñ´¦ÓÚÒÆ¶¯×´Ì¬
+     * æ£€æŸ¥æ˜¯å¦æ­£åœ¨ç§»åŠ¨å»ºç­‘
+     * @return æ˜¯å¦å¤„äºç§»åŠ¨çŠ¶æ€
      */
     bool isMoving() const { return _isMoving; }
 
     /**
-     * »ñÈ¡ÕıÔÚÒÆ¶¯µÄ½¨ÖşID
-     * @return ½¨ÖşID£¬Èç¹ûÃ»ÓĞ·µ»Ø-1
+     * è·å–æ­£åœ¨ç§»åŠ¨çš„å»ºç­‘ID
+     * @return å»ºç­‘IDï¼Œå¦‚æœæ²¡æœ‰è¿”å›-1
      */
     int getMovingBuildingId() const { return _movingBuildingId; }
 
     /**
-     * ÉèÖÃ½¨Öşµã»÷»Øµ÷£¨¶Ì°´Ê±´¥·¢£©
-     * @param callback »Øµ÷º¯Êı£¬²ÎÊıÎª½¨ÖşID
+     * è®¾ç½®å»ºç­‘ç‚¹å‡»å›è°ƒï¼ˆçŸ­æŒ‰æ—¶è§¦å‘ï¼‰
+     * @param callback å›è°ƒå‡½æ•°ï¼Œå‚æ•°ä¸ºå»ºç­‘ID
      */
     void setOnBuildingTappedCallback(std::function<void(int)> callback) {
         _onBuildingTapped = callback;
     }
 
 private:
-    cocos2d::Layer* _parentLayer;        // ¸¸²ã£¨ÓÃÓÚ×ø±ê×ª»»£©
-    BuildingManager* _buildingManager;   // ½¨Öş¹ÜÀíÆ÷ÒıÓÃ
+    cocos2d::Layer* _parentLayer;        // çˆ¶å±‚ï¼ˆç”¨äºåæ ‡è½¬æ¢ï¼‰
+    BuildingManager* _buildingManager;   // å»ºç­‘ç®¡ç†å™¨å¼•ç”¨
     
-    bool _isMoving;                      // ÊÇ·ñÕıÔÚÒÆ¶¯½¨Öş£¨×¼±¸ÒÆ¶¯×´Ì¬£©
-    bool _isDragging;                    // ÊÇ·ñÕıÔÚÍÏ¶¯½¨Öş
-    int _movingBuildingId;               // ÕıÔÚÒÆ¶¯µÄ½¨ÖşID
-    cocos2d::Vec2 _touchStartPos;        // ´¥Ãş¿ªÊ¼Î»ÖÃ£¨ÓÃÓÚÅĞ¶ÏÊÇ·ñÍÏ¶¯£©
+    bool _isMoving;                      // æ˜¯å¦æ­£åœ¨ç§»åŠ¨å»ºç­‘ï¼ˆå‡†å¤‡ç§»åŠ¨çŠ¶æ€ï¼‰
+    bool _isDragging;                    // æ˜¯å¦æ­£åœ¨æ‹–åŠ¨å»ºç­‘
+    int _movingBuildingId;               // æ­£åœ¨ç§»åŠ¨çš„å»ºç­‘ID
+    cocos2d::Vec2 _touchStartPos;        // è§¦æ‘¸å¼€å§‹ä½ç½®ï¼ˆç”¨äºåˆ¤æ–­æ˜¯å¦æ‹–åŠ¨ï¼‰
     
-    // ´æ´¢ÒÆ¶¯½¨ÖşµÄÔ­Ê¼Î»ÖÃ£¨ÓÃÓÚÈ¡ÏûÊ±»Ö¸´£©
+    // å­˜å‚¨ç§»åŠ¨å»ºç­‘çš„åŸå§‹ä½ç½®ï¼ˆç”¨äºå–æ¶ˆæ—¶æ¢å¤ï¼‰
     std::map<int, cocos2d::Vec2> _originalPositions;
 
-    // ´¥ÃşÊÂ¼ş¼àÌıÆ÷
+    // è§¦æ‘¸äº‹ä»¶ç›‘å¬å™¨
     cocos2d::EventListenerTouchOneByOne* _touchListener;
 
-    // ========== ³¤°´¼ì²âÏà¹Ø ==========
-    float _touchDownTime;                // ´¥Ãş°´ÏÂµÄÊ±¼ä´Á
-    bool _isLongPressTriggered;          // ÊÇ·ñÒÑ´¥·¢³¤°´
-    int _touchedBuildingId; // ´¥Ãşµ½µÄ½¨ÖşID
+    // ========== é•¿æŒ‰æ£€æµ‹ç›¸å…³ ==========
+    float _touchDownTime;                // è§¦æ‘¸æŒ‰ä¸‹çš„æ—¶é—´æˆ³
+    bool _isLongPressTriggered;          // æ˜¯å¦å·²è§¦å‘é•¿æŒ‰
+    int _touchedBuildingId; // è§¦æ‘¸åˆ°çš„å»ºç­‘ID
     
-    static constexpr float LONG_PRESS_DURATION = 0.5f;  // ³¤°´Ê±³¤ãĞÖµ£¨0.5Ãë£©
+    static constexpr float LONG_PRESS_DURATION = 0.5f;  // é•¿æŒ‰æ—¶é•¿é˜ˆå€¼ï¼ˆ0.5ç§’ï¼‰
 
-    // »Øµ÷º¯Êı
-    std::function<void(int)> _onBuildingTapped;  // ¶Ì°´½¨Öş»Øµ÷
+    // å›è°ƒå‡½æ•°
+    std::function<void(int)> _onBuildingTapped;  // çŸ­æŒ‰å»ºç­‘å›è°ƒ
 
     /**
-     * ´¦Àí´¥Ãş¿ªÊ¼
+     * å¤„ç†è§¦æ‘¸å¼€å§‹
      */
     bool onTouchBegan(cocos2d::Touch* touch, cocos2d::Event* event);
 
     /**
-     * ´¦Àí´¥ÃşÒÆ¶¯
+     * å¤„ç†è§¦æ‘¸ç§»åŠ¨
      */
     void onTouchMoved(cocos2d::Touch* touch, cocos2d::Event* event);
 
     /**
-     * ´¦Àí´¥Ãş½áÊø
+     * å¤„ç†è§¦æ‘¸ç»“æŸ
      */
     void onTouchEnded(cocos2d::Touch* touch, cocos2d::Event* event);
 
     /**
-     * ¸üĞÂ½¨ÖşÔ¤ÀÀÎ»ÖÃ£¨ÍÏ¶¯Ê±µ÷ÓÃ£©
-     * @param worldPos ÊÀ½ç×ø±ê
+     * æ›´æ–°å»ºç­‘é¢„è§ˆä½ç½®ï¼ˆæ‹–åŠ¨æ—¶è°ƒç”¨ï¼‰
+     * @param worldPos ä¸–ç•Œåæ ‡
      */
     void updatePreviewPosition(const cocos2d::Vec2& worldPos);
 
     /**
-     * Íê³É½¨ÖşÒÆ¶¯£¨ËÉÊÖÊ±µ÷ÓÃ£©
-     * @param worldPos ×îÖÕÊÀ½ç×ø±ê
-     * @return ÊÇ·ñ³É¹¦·ÅÖÃ
+     * å®Œæˆå»ºç­‘ç§»åŠ¨ï¼ˆæ¾æ‰‹æ—¶è°ƒç”¨ï¼‰
+     * @param worldPos æœ€ç»ˆä¸–ç•Œåæ ‡
+     * @return æ˜¯å¦æˆåŠŸæ”¾ç½®
      */
     bool completeMove(const cocos2d::Vec2& worldPos);
 
     /**
-     * ¼ì²é½¨ÖşÊÇ·ñ¿ÉÒÔ·ÅÖÃÔÚÖ¸¶¨Î»ÖÃ
-     * @param buildingId ½¨ÖşID
-     * @param gridPos Íø¸ñ×ø±ê
-     * @return ÊÇ·ñ¿ÉÒÔ·ÅÖÃ
+     * æ£€æŸ¥å»ºç­‘æ˜¯å¦å¯ä»¥æ”¾ç½®åœ¨æŒ‡å®šä½ç½®
+     * @param buildingId å»ºç­‘ID
+     * @param gridPos ç½‘æ ¼åæ ‡
+     * @return æ˜¯å¦å¯ä»¥æ”¾ç½®
      */
     bool canPlaceBuildingAt(int buildingId, const cocos2d::Vec2& gridPos);
 
     /**
-     * ±£´æ½¨ÖşÔ­Ê¼Î»ÖÃ
-     * @param buildingId ½¨ÖşID
+     * ä¿å­˜å»ºç­‘åŸå§‹ä½ç½®
+     * @param buildingId å»ºç­‘ID
      */
     void saveOriginalPosition(int buildingId);
     
     /**
-     * ¼ÆËã½¨ÖşÎ»ÖÃĞÅÏ¢£¨Í³Ò»´¦Àí×ø±ê×ª»»¡¢¶ÔÆëºÍºÏ·¨ĞÔ¼ì²é£©
-     * @param touchWorldPos ´¥ÃşµãµÄÊÀ½ç×ø±ê
-     * @param buildingId ½¨ÖşID
-     * @return Î»ÖÃĞÅÏ¢½á¹¹Ìå
+     * è®¡ç®—å»ºç­‘ä½ç½®ä¿¡æ¯ï¼ˆç»Ÿä¸€å¤„ç†åæ ‡è½¬æ¢ã€å¯¹é½å’Œåˆæ³•æ€§æ£€æŸ¥ï¼‰
+     * @param touchWorldPos è§¦æ‘¸ç‚¹çš„ä¸–ç•Œåæ ‡
+     * @param buildingId å»ºç­‘ID
+     * @return ä½ç½®ä¿¡æ¯ç»“æ„ä½“
      */
     BuildingPositionInfo calculatePositionInfo(const cocos2d::Vec2& touchWorldPos, int buildingId);
 
     /**
-     * ¼ì²éÊÇ·ñ´ïµ½³¤°´Ê±³¤
+     * æ£€æŸ¥æ˜¯å¦è¾¾åˆ°é•¿æŒ‰æ—¶é•¿
      */
     bool checkLongPress();
 };

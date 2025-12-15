@@ -1,26 +1,26 @@
-#ifndef __VILLAGE_LAYER_H__
+ï»¿#ifndef __VILLAGE_LAYER_H__
 #define __VILLAGE_LAYER_H__
 
 #include "cocos2d.h"
 
-// Ç°ÏòÉùÃ÷
+// å‰å‘å£°æ˜
 class MoveMapController;
 class BuildingManager;
 class MoveBuildingController;
 class BuildingSprite;
 
 /**
- * @brief ´å×¯³¡¾°µÄÖ÷ÒªÏÔÊ¾²ã
+ * @brief æ‘åº„åœºæ™¯çš„ä¸»è¦æ˜¾ç¤ºå±‚
  */
 class VillageLayer : public cocos2d::Layer {
 private:
-  // µØÍ¼¾«Áé
+  // åœ°å›¾ç²¾çµ
   cocos2d::Sprite* _mapSprite;
-  // µØÍ¼ÒÆ¶¯¿ØÖÆÆ÷
+  // åœ°å›¾ç§»åŠ¨æ§åˆ¶å™¨
   MoveMapController* _inputController;
-  // ½¨Öş¹ÜÀíÆ÷
+  // å»ºç­‘ç®¡ç†å™¨
   BuildingManager* _buildingManager;
-  // ½¨ÖşÒÆ¶¯¿ØÖÆÆ÷
+  // å»ºç­‘ç§»åŠ¨æ§åˆ¶å™¨
   MoveBuildingController* _moveBuildingController;
 
 
@@ -28,31 +28,31 @@ public:
   virtual bool init() override;
   CREATE_FUNC(VillageLayer);
 
-  // »ñÈ¡µØÍ¼ÒÆ¶¯¿ØÖÆÆ÷
+  // è·å–åœ°å›¾ç§»åŠ¨æ§åˆ¶å™¨
   MoveMapController* getInputController() const { return _inputController; }
-  // »ñÈ¡½¨Öş¹ÜÀíÆ÷
+  // è·å–å»ºç­‘ç®¡ç†å™¨
   BuildingManager* getBuildingManager() const { return _buildingManager; }
-  // »ñÈ¡½¨ÖşÒÆ¶¯¿ØÖÆÆ÷
+  // è·å–å»ºç­‘ç§»åŠ¨æ§åˆ¶å™¨
   MoveBuildingController* getMoveBuildingController() const { return _moveBuildingController; }
-  // ÉÌµê¹ºÂò½¨ÖşºóµÄ»Øµ÷
+  // å•†åº—è´­ä¹°å»ºç­‘åçš„å›è°ƒ
   void onBuildingPurchased(int buildingId);
 
-  // ÇåÀí
+  // æ¸…ç†
   virtual void cleanup() override;
   void removeBuildingSprite(int buildingId);
   void updateBuildingPreviewPosition(int buildingId, const cocos2d::Vec2& worldPos);
-  void updateBuildingDisplay(int buildingId);  // ĞÂÔö£º¸üĞÂ½¨ÖşÏÔÊ¾
+  void updateBuildingDisplay(int buildingId);  // æ–°å¢ï¼šæ›´æ–°å»ºç­‘æ˜¾ç¤º
 
 private:
-  // ========== ³õÊ¼»¯·½·¨ ==========
+  // ========== åˆå§‹åŒ–æ–¹æ³• ==========
   void initializeBasicProperties();
   void setupInputCallbacks();
 
-  // ========== ¸¨Öú·½·¨ ==========
-  /** ¸ù¾İÆÁÄ»×ø±ê»ñÈ¡½¨Öş£¨¸´ÓÃÂß¼­£¬±ÜÃâÖØ¸´´úÂë£©*/
+  // ========== è¾…åŠ©æ–¹æ³• ==========
+  /** æ ¹æ®å±å¹•åæ ‡è·å–å»ºç­‘ï¼ˆå¤ç”¨é€»è¾‘ï¼Œé¿å…é‡å¤ä»£ç ï¼‰*/
   BuildingSprite* getBuildingAtScreenPos(const cocos2d::Vec2& screenPos);
   
-  /** ´´½¨µØÍ¼¾«Áé */
+  /** åˆ›å»ºåœ°å›¾ç²¾çµ */
   cocos2d::Sprite* createMapSprite();
 };
 

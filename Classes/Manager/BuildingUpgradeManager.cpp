@@ -1,4 +1,4 @@
-#include "BuildingUpgradeManager.h"
+ï»¿#include "BuildingUpgradeManager.h"
 #include "VillageDataManager.h"
 #include "Model/BuildingRequirements.h"
 #include "Model/BuildingConfig.h" 
@@ -24,7 +24,7 @@ void BuildingUpgradeManager::destroyInstance() {
 }
 
 void BuildingUpgradeManager::update(float dt) {
-  // Ã¿Ãë¼ì²éÒ»´Î(±ÜÃâÆµ·±¼ì²é)
+  // æ¯ç§’æ£€æŸ¥ä¸€æ¬¡(é¿å…é¢‘ç¹æ£€æŸ¥)
   static float timer = 0;
   timer += dt;
   if (timer >= 1.0f) {
@@ -40,7 +40,7 @@ void BuildingUpgradeManager::checkFinishedUpgrades() {
   for (const auto& building : dataManager->getAllBuildings()) {
     if (building.state == BuildingInstance::State::CONSTRUCTING) {
       if (currentTime >= building.finishTime) {
-        // Éý¼¶Íê³É
+        // å‡çº§å®Œæˆ
         dataManager->finishUpgradeBuilding(building.id);
         CCLOG("BuildingUpgradeManager: Building %d upgrade finished", building.id);
       }
@@ -62,7 +62,7 @@ bool BuildingUpgradeManager::canUpgrade(int buildingId) {
     return false;
   }
 
-  // ÐÞ¸Ä1£º»ñÈ¡ BuildingConfig ÊµÀý¶ø²»ÊÇ BuildingConfigData Ö¸Õë
+  // ä¿®æ”¹1ï¼šèŽ·å– BuildingConfig å®žä¾‹è€Œä¸æ˜¯ BuildingConfigData æŒ‡é’ˆ
   auto configManager = BuildingConfig::getInstance();
   auto configData = configManager->getConfig(building->type);
 
@@ -70,13 +70,13 @@ bool BuildingUpgradeManager::canUpgrade(int buildingId) {
     return false;
   }
 
-  // ÐÞ¸Ä2£ºÊ¹ÓÃ BuildingConfig µÄ canUpgrade ·½·¨
+  // ä¿®æ”¹2ï¼šä½¿ç”¨ BuildingConfig çš„ canUpgrade æ–¹æ³•
   if (!configManager->canUpgrade(building->type, building->level)) {
     CCLOG("BuildingUpgradeManager: Building %d is already max level", buildingId);
     return false;
   }
 
-  // ¼ì²é´ó±¾ÓªµÈ¼¶ÏÞÖÆ
+  // æ£€æŸ¥å¤§æœ¬è¥ç­‰çº§é™åˆ¶
   auto requirements = BuildingRequirements::getInstance();
   int currentTHLevel = dataManager->getTownHallLevel();
 
@@ -87,22 +87,22 @@ bool BuildingUpgradeManager::canUpgrade(int buildingId) {
     return false;
   }
 
-  // ÐÞ¸Ä3£ºÊ¹ÓÃ BuildingConfig µÄ getUpgradeCost ·½·¨
+  // ä¿®æ”¹3ï¼šä½¿ç”¨ BuildingConfig çš„ getUpgradeCost æ–¹æ³•
   int cost = configManager->getUpgradeCost(building->type, building->level);
 
-  if (configData->costType == "½ð±Ò") {
+  if (configData->costType == "é‡‘å¸") {
     if (dataManager->getGold() < cost) {
       CCLOG("BuildingUpgradeManager: Not enough gold");
       return false;
     }
-  } else if (configData->costType == "Ê¥Ë®") {
+  } else if (configData->costType == "åœ£æ°´") {
     if (dataManager->getElixir() < cost) {
       CCLOG("BuildingUpgradeManager: Not enough elixir");
       return false;
     }
   }
 
-  // ¼ì²é½¨Ôì¹¤ÈË£¨Èç¹ûÓÐ BuilderManager£©
+  // æ£€æŸ¥å»ºé€ å·¥äººï¼ˆå¦‚æžœæœ‰ BuilderManagerï¼‰
   // if (!builderManager->hasAvailableBuilder()) {
   //     return false;
   // }
@@ -115,24 +115,24 @@ std::string BuildingUpgradeManager::getUpgradeFailReason(int buildingId) const {
   auto building = dataManager->getBuildingById(buildingId);
 
   if (!building) {
-    return "½¨Öþ²»´æÔÚ";
+    return "å»ºç­‘ä¸å­˜åœ¨";
   }
 
   if (building->state != BuildingInstance::State::BUILT) {
-    return "½¨ÖþÎ´Íê³É½¨Ôì";
+    return "å»ºç­‘æœªå®Œæˆå»ºé€ ";
   }
 
-  // ÐÞ¸Ä4£ºÍ¬ÑùÐÞ¸ÄÕâÀï
+  // ä¿®æ”¹4ï¼šåŒæ ·ä¿®æ”¹è¿™é‡Œ
   auto configManager = BuildingConfig::getInstance();
   auto configData = configManager->getConfig(building->type);
 
   if (!configData) {
-    return "ÅäÖÃ´íÎó";
+    return "é…ç½®é”™è¯¯";
   }
 
-  // ÐÞ¸Ä5£ºÊ¹ÓÃ configManager µ÷ÓÃ·½·¨
+  // ä¿®æ”¹5ï¼šä½¿ç”¨ configManager è°ƒç”¨æ–¹æ³•
   if (!configManager->canUpgrade(building->type, building->level)) {
-    return "ÒÑ´ï×î¸ßµÈ¼¶";
+    return "å·²è¾¾æœ€é«˜ç­‰çº§";
   }
 
   auto requirements = BuildingRequirements::getInstance();
@@ -140,19 +140,19 @@ std::string BuildingUpgradeManager::getUpgradeFailReason(int buildingId) const {
 
   if (!requirements->canUpgrade(building->type, building->level, currentTHLevel)) {
     int requiredTH = requirements->getRequiredTHLevel(building->type, building->level + 1);
-    return "ÐèÒª" + std::to_string(requiredTH) + "¼¶´ó±¾Óª";
+    return "éœ€è¦" + std::to_string(requiredTH) + "çº§å¤§æœ¬è¥";
   }
 
-  // ÐÞ¸Ä6£ºÊ¹ÓÃ configManager »ñÈ¡Éý¼¶³É±¾
+  // ä¿®æ”¹6ï¼šä½¿ç”¨ configManager èŽ·å–å‡çº§æˆæœ¬
   int cost = configManager->getUpgradeCost(building->type, building->level);
 
-  if (configData->costType == "½ð±Ò") {
+  if (configData->costType == "é‡‘å¸") {
     if (dataManager->getGold() < cost) {
-      return "½ð±Ò²»×ã£¨ÐèÒª" + std::to_string(cost) + "£©";
+      return "é‡‘å¸ä¸è¶³ï¼ˆéœ€è¦" + std::to_string(cost) + "ï¼‰";
     }
-  } else if (configData->costType == "Ê¥Ë®") {
+  } else if (configData->costType == "åœ£æ°´") {
     if (dataManager->getElixir() < cost) {
-      return "Ê¥Ë®²»×ã£¨ÐèÒª" + std::to_string(cost) + "£©";
+      return "åœ£æ°´ä¸è¶³ï¼ˆéœ€è¦" + std::to_string(cost) + "ï¼‰";
     }
   }
 

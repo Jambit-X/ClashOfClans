@@ -1,41 +1,41 @@
-#pragma once
+ï»¿#pragma once
 #include "cocos2d.h"
 #include <functional>
 
-// ×ÊÔ´Éú²úÏµÍ³ - ¸ºÔğ¼ÆËãºÍÀÛ»ı×ÊÔ´
+// èµ„æºç”Ÿäº§ç³»ç»Ÿ - è´Ÿè´£è®¡ç®—å’Œç´¯ç§¯èµ„æº
 class ResourceProductionSystem {
 public:
   static ResourceProductionSystem* getInstance();
   static void destroyInstance();
 
-  // Æô¶¯/Í£Ö¹Éú²ú
+  // å¯åŠ¨/åœæ­¢ç”Ÿäº§
   void startProduction();
   void stopProduction();
 
-  // ¸üĞÂÉú²ú£¨Ã¿0.5Ãëµ÷ÓÃ£©
+  // æ›´æ–°ç”Ÿäº§ï¼ˆæ¯0.5ç§’è°ƒç”¨ï¼‰
   void update(float dt);
 
-  // ¼ÆËãÉú²úËÙÂÊ
+  // è®¡ç®—ç”Ÿäº§é€Ÿç‡
   int calculateGoldProductionRate() const;
   int calculateElixirProductionRate() const;
 
-  // »ñÈ¡´ıÊÕ¼¯×ÊÔ´
+  // è·å–å¾…æ”¶é›†èµ„æº
   int getPendingGold() const { return _pendingGold; }
   int getPendingElixir() const { return _pendingElixir; }
 
-  // »ñÈ¡ÊÕ¼¯ÈİÁ¿
+  // è·å–æ”¶é›†å®¹é‡
   int getGoldStorageCapacity() const;
   int getElixirStorageCapacity() const;
 
-  // ÊÕ¼¯×ÊÔ´
+  // æ”¶é›†èµ„æº
   void collectGold();
   void collectElixir();
 
-  // ÉèÖÃ»Øµ÷
+  // è®¾ç½®å›è°ƒ
   using PendingResourceCallback = std::function<void(int gold, int elixir)>;
   void setPendingResourceCallback(PendingResourceCallback callback);
 
-  // ´¦ÀíÀëÏßÊ±¼ä
+  // å¤„ç†ç¦»çº¿æ—¶é—´
   void processOfflineTime(long long lastOnlineTime);
 
 private:

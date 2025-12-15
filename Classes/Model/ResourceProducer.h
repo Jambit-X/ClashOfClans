@@ -1,9 +1,9 @@
-#ifndef __RESOURCE_PRODUCER_H__
+ï»¿#ifndef __RESOURCE_PRODUCER_H__
 #define __RESOURCE_PRODUCER_H__
 
 #include "../Model/Building.h"
 
-// ×ÊÔ´Éú²ú½¨Öş»ùÀà£¨½ğ¿ó¡¢Ê¥Ë®²É¼¯Æ÷£©
+// èµ„æºç”Ÿäº§å»ºç­‘åŸºç±»ï¼ˆé‡‘çŸ¿ã€åœ£æ°´é‡‡é›†å™¨ï¼‰
 class ResourceProducer : public Building {
 public:
   enum ResourceType {
@@ -15,12 +15,12 @@ public:
   ResourceProducer();
   virtual ~ResourceProducer();
 
-  // Éú²úÏà¹Ø
+  // ç”Ÿäº§ç›¸å…³
   void startProduction();
   void stopProduction();
   virtual void update(float dt) override;
 
-  // ×ÊÔ´¼ÆËã
+  // èµ„æºè®¡ç®—
   int calculateProducedResource();
   void collectResource();
   void calculateOfflineProduction(long long offlineSeconds);
@@ -34,13 +34,13 @@ public:
 
 protected:
   ResourceType _resourceType;
-  int _productionRate;      // Ã¿Ğ¡Ê±Éú²úËÙÂÊ
-  int _storageCapacity;     // ´æ´¢ÈİÁ¿
-  int _currentStored;       // µ±Ç°´æ´¢Á¿
+  int _productionRate;      // æ¯å°æ—¶ç”Ÿäº§é€Ÿç‡
+  int _storageCapacity;     // å­˜å‚¨å®¹é‡
+  int _currentStored;       // å½“å‰å­˜å‚¨é‡
   long long _lastUpdateTime;
   bool _isProducing;
 
-  void updateVisualStorage();  // ¸üĞÂUIÏÔÊ¾
+  void updateVisualStorage();  // æ›´æ–°UIæ˜¾ç¤º
 };
 
 #endif

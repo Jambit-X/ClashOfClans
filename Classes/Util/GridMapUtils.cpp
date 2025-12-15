@@ -1,60 +1,60 @@
-#include "GridMapUtils.h"
+ï»¿#include "GridMapUtils.h"
 #include <cmath>
 
 USING_NS_CC;
 
-// ========== Íø¸ñ×ø±êÏµÍ³²ÎÊı£¨»ùÓÚ²âÊÔÊı¾İ¼ÆËã£© ==========
+// ========== ç½‘æ ¼åæ ‡ç³»ç»Ÿå‚æ•°ï¼ˆåŸºäºæµ‹è¯•æ•°æ®è®¡ç®—ï¼‰ ==========
 
-// Íø¸ñËÄ¸ö¶¥µã£¨²âÊÔÊı¾İ£©£º
-// - ÖĞĞÄ£º(1893, 1370)
-// - ×ó¶¥µã£º(660, 1365) - Íø¸ñÔ­µã (0, 0)
-// - ÓÒ¶¥µã£º(3128, 1365) - Íø¸ñ (44, 44)
-// - ÉÏ¶¥µã£º(1893, 2293) - Íø¸ñ (0, 44)
-// - ÏÂ¶¥µã£º(1893, 445) - Íø¸ñ (44, 0)
-// - Íø¸ñ´óĞ¡£º44 x 44£¬·¶Î§ (0,0) µ½ (43,43)
+// ç½‘æ ¼å››ä¸ªé¡¶ç‚¹ï¼ˆæµ‹è¯•æ•°æ®ï¼‰ï¼š
+// - ä¸­å¿ƒï¼š(1893, 1370)
+// - å·¦é¡¶ç‚¹ï¼š(660, 1365) - ç½‘æ ¼åŸç‚¹ (0, 0)
+// - å³é¡¶ç‚¹ï¼š(3128, 1365) - ç½‘æ ¼ (44, 44)
+// - ä¸Šé¡¶ç‚¹ï¼š(1893, 2293) - ç½‘æ ¼ (0, 44)
+// - ä¸‹é¡¶ç‚¹ï¼š(1893, 445) - ç½‘æ ¼ (44, 0)
+// - ç½‘æ ¼å¤§å°ï¼š44 x 44ï¼ŒèŒƒå›´ (0,0) åˆ° (43,43)
 
-// Íø¸ñÔ­µã£º×ó¶¥µã£¬¶ÔÓ¦Íø¸ñ×ø±ê(0,0)
+// ç½‘æ ¼åŸç‚¹ï¼šå·¦é¡¶ç‚¹ï¼Œå¯¹åº”ç½‘æ ¼åæ ‡(0,0)
 const float GridMapUtils::GRID_ORIGIN_X = 660.0f;
 const float GridMapUtils::GRID_ORIGIN_Y = 1365.0f;
 
-// XÖáµ¥Î»ÏòÁ¿£ºÃ¿ÒÆ¶¯1¸ñÑØXÖáµÄÏñËØÆ«ÒÆ£¨´Ó×ó¶¥µãµ½ÏÂ¶¥µã£©
-// ¼ÆËã£º(ÏÂ¶¥µã - ×ó¶¥µã) / 44 = (1893-660, 445-1365) / 44
+// Xè½´å•ä½å‘é‡ï¼šæ¯ç§»åŠ¨1æ ¼æ²¿Xè½´çš„åƒç´ åç§»ï¼ˆä»å·¦é¡¶ç‚¹åˆ°ä¸‹é¡¶ç‚¹ï¼‰
+// è®¡ç®—ï¼š(ä¸‹é¡¶ç‚¹ - å·¦é¡¶ç‚¹) / 44 = (1893-660, 445-1365) / 44
 const float GridMapUtils::GRID_X_UNIT_X = 28.02f;   // (1893-660)/44 = 1233/44
 const float GridMapUtils::GRID_X_UNIT_Y = -20.91f;  // (445-1365)/44 = -920/44
 
-// YÖáµ¥Î»ÏòÁ¿£ºÃ¿ÒÆ¶¯1¸ñÑØYÖáµÄÏñËØÆ«ÒÆ£¨´Ó×ó¶¥µãµ½ÉÏ¶¥µã£©
-// ¼ÆËã£º(ÉÏ¶¥µã - ×ó¶¥µã) / 44 = (1893-660, 2293-1365) / 44
+// Yè½´å•ä½å‘é‡ï¼šæ¯ç§»åŠ¨1æ ¼æ²¿Yè½´çš„åƒç´ åç§»ï¼ˆä»å·¦é¡¶ç‚¹åˆ°ä¸Šé¡¶ç‚¹ï¼‰
+// è®¡ç®—ï¼š(ä¸Šé¡¶ç‚¹ - å·¦é¡¶ç‚¹) / 44 = (1893-660, 2293-1365) / 44
 const float GridMapUtils::GRID_Y_UNIT_X = 28.02f;   // (1893-660)/44 = 1233/44
 const float GridMapUtils::GRID_Y_UNIT_Y = 21.09f;   // (2293-1365)/44 = 928/44
 
-// ========== ×ø±ê×ª»»ÊµÏÖ ==========
+// ========== åæ ‡è½¬æ¢å®ç° ==========
 
-// ÏñËØ×ø±ê -> Íø¸ñ×ø±ê
+// åƒç´ åæ ‡ -> ç½‘æ ¼åæ ‡
 Vec2 GridMapUtils::pixelToGrid(float pixelX, float pixelY) {
-    // 1. ¼ÆËãÏà¶ÔÓÚÔ­µãµÄÆ«ÒÆ
+    // 1. è®¡ç®—ç›¸å¯¹äºåŸç‚¹çš„åç§»
     float deltaX = pixelX - GRID_ORIGIN_X;
     float deltaY = pixelY - GRID_ORIGIN_Y;
 
-    // 2. ·ÂÉäÄæ±ä»»
-    // ÒÑÖª£ºpixel = origin + gridX * xUnit + gridY * yUnit
-    // Çó½â£ºgridX ºÍ gridY
+    // 2. ä»¿å°„é€†å˜æ¢
+    // å·²çŸ¥ï¼špixel = origin + gridX * xUnit + gridY * yUnit
+    // æ±‚è§£ï¼šgridX å’Œ gridY
     // 
     // deltaX = gridX * GRID_X_UNIT_X + gridY * GRID_Y_UNIT_X
     // deltaY = gridX * GRID_X_UNIT_Y + gridY * GRID_Y_UNIT_Y
     //
-    // Ê¹ÓÃ2x2¾ØÕóÇóÄæ£¨¿ËÀ­Ä¬·¨Ôò£©£º
+    // ä½¿ç”¨2x2çŸ©é˜µæ±‚é€†ï¼ˆå…‹æ‹‰é»˜æ³•åˆ™ï¼‰ï¼š
     // | GRID_X_UNIT_X  GRID_Y_UNIT_X |   | gridX |   | deltaX |
     // | GRID_X_UNIT_Y  GRID_Y_UNIT_Y | * | gridY | = | deltaY |
     
     float det = GRID_X_UNIT_X * GRID_Y_UNIT_Y - GRID_X_UNIT_Y * GRID_Y_UNIT_X;
     
     if (std::abs(det) < 0.0001f) {
-        // ĞĞÁĞÊ½Îª0£¬¾ØÕó²»¿ÉÄæ£¨ÀíÂÛÉÏ²»Ó¦¸Ã·¢Éú£©
+        // è¡Œåˆ—å¼ä¸º0ï¼ŒçŸ©é˜µä¸å¯é€†ï¼ˆç†è®ºä¸Šä¸åº”è¯¥å‘ç”Ÿï¼‰
         CCLOG("GridMapUtils::pixelToGrid - Matrix is singular!");
         return Vec2(0, 0);
     }
     
-    // Äæ¾ØÕó¼ÆËã
+    // é€†çŸ©é˜µè®¡ç®—
     float gridX = (deltaX * GRID_Y_UNIT_Y - deltaY * GRID_Y_UNIT_X) / det;
     float gridY = (deltaY * GRID_X_UNIT_X - deltaX * GRID_X_UNIT_Y) / det;
 
@@ -65,9 +65,9 @@ Vec2 GridMapUtils::pixelToGrid(const Vec2& pixelPos) {
     return pixelToGrid(pixelPos.x, pixelPos.y);
 }
 
-// Íø¸ñ×ø±ê -> ÏñËØ×ø±ê£¨Íø¸ñÔªËØ×óÏÂ½Ç£©
+// ç½‘æ ¼åæ ‡ -> åƒç´ åæ ‡ï¼ˆç½‘æ ¼å…ƒç´ å·¦ä¸‹è§’ï¼‰
 Vec2 GridMapUtils::gridToPixel(int gridX, int gridY) {
-    // ·ÂÉä¾ØÕóÕı±ä»»£ºpixel = origin + gridX * xUnit + gridY * yUnit
+    // ä»¿å°„çŸ©é˜µæ­£å˜æ¢ï¼špixel = origin + gridX * xUnit + gridY * yUnit
     float pixelX = GRID_ORIGIN_X + gridX * GRID_X_UNIT_X + gridY * GRID_Y_UNIT_X;
     float pixelY = GRID_ORIGIN_Y + gridX * GRID_X_UNIT_Y + gridY * GRID_Y_UNIT_Y;
 
@@ -78,12 +78,12 @@ Vec2 GridMapUtils::gridToPixel(const Vec2& gridPos) {
     return gridToPixel((int)gridPos.x, (int)gridPos.y);
 }
 
-// Íø¸ñ×ø±ê -> ÏñËØ×ø±ê£¨Íø¸ñÔªËØÖĞĞÄ£©
+// ç½‘æ ¼åæ ‡ -> åƒç´ åæ ‡ï¼ˆç½‘æ ¼å…ƒç´ ä¸­å¿ƒï¼‰
 Vec2 GridMapUtils::gridToPixelCenter(int gridX, int gridY) {
-    // ÏÈ»ñÈ¡×óÏÂ½Ç×ø±ê
+    // å…ˆè·å–å·¦ä¸‹è§’åæ ‡
     Vec2 corner = gridToPixel(gridX, gridY);
 
-    // ¼ÓÉÏ°ë¸öµ¥Ôª¸ñµÄÆ«ÒÆ£¬µ½´ïÖĞĞÄ
+    // åŠ ä¸ŠåŠä¸ªå•å…ƒæ ¼çš„åç§»ï¼Œåˆ°è¾¾ä¸­å¿ƒ
     float centerX = corner.x + (GRID_X_UNIT_X + GRID_Y_UNIT_X) * 0.5f;
     float centerY = corner.y + (GRID_X_UNIT_Y + GRID_Y_UNIT_Y) * 0.5f;
 
@@ -94,24 +94,24 @@ Vec2 GridMapUtils::gridToPixelCenter(const Vec2& gridPos) {
     return gridToPixelCenter((int)gridPos.x, (int)gridPos.y);
 }
 
-// ========== ½¨ÖşÎ»ÖÃ¼ÆËã ==========
+// ========== å»ºç­‘ä½ç½®è®¡ç®— ==========
 
 Vec2 GridMapUtils::getBuildingCenterPixel(int gridX, int gridY, int width, int height) {
-    // ½¨ÖşµÄ×óÏÂ½Ç£º (gridX, gridY)
-    // ½¨ÖşµÄÖĞĞÄ£º (gridX + width/2, gridY + height/2) ÔÚÍø¸ñ×ø±êÏµ
-    // ×¢Òâ£º±ÈÈç 3x3 ½¨Öş£¬ÖĞĞÄÔÚ (gridX+1.5, gridY+1.5)
+    // å»ºç­‘çš„å·¦ä¸‹è§’ï¼š (gridX, gridY)
+    // å»ºç­‘çš„ä¸­å¿ƒï¼š (gridX + width/2, gridY + height/2) åœ¨ç½‘æ ¼åæ ‡ç³»
+    // æ³¨æ„ï¼šæ¯”å¦‚ 3x3 å»ºç­‘ï¼Œä¸­å¿ƒåœ¨ (gridX+1.5, gridY+1.5)
 
     float centerGridX = gridX + width * 0.5f;
     float centerGridY = gridY + height * 0.5f;
 
-    // ×ª»»ÎªÏñËØ×ø±ê
+    // è½¬æ¢ä¸ºåƒç´ åæ ‡
     float pixelX = GRID_ORIGIN_X + centerGridX * GRID_X_UNIT_X + centerGridY * GRID_Y_UNIT_X;
     float pixelY = GRID_ORIGIN_Y + centerGridX * GRID_X_UNIT_Y + centerGridY * GRID_Y_UNIT_Y;
 
     return Vec2(pixelX, pixelY);
 }
 
-// ========== ±ß½ç¼ì²â ==========
+// ========== è¾¹ç•Œæ£€æµ‹ ==========
 
 bool GridMapUtils::isValidGridPosition(int gridX, int gridY) {
     return gridX >= 0 && gridX < GRID_WIDTH &&
@@ -123,7 +123,7 @@ bool GridMapUtils::isValidGridPosition(const Vec2& gridPos) {
 }
 
 bool GridMapUtils::isBuildingInBounds(int gridX, int gridY, int width, int height) {
-    // ¼ì²é×óÏÂ½ÇºÍÓÒÉÏ½ÇÊÇ·ñ¶¼ÔÚ·¶Î§ÄÚ
+    // æ£€æŸ¥å·¦ä¸‹è§’å’Œå³ä¸Šè§’æ˜¯å¦éƒ½åœ¨èŒƒå›´å†…
     return isValidGridPosition(gridX, gridY) && 
            isValidGridPosition(gridX + width - 1, gridY + height - 1);
 }
@@ -132,18 +132,18 @@ bool GridMapUtils::isRectOverlap(
     const Vec2& pos1, const Size& size1,
     const Vec2& pos2, const Size& size2) {
     
-    // Èç¹ûÒ»¸ö¾ØĞÎÔÚÁíÒ»¸ö¾ØĞÎµÄ×ó±ß¡¢ÓÒ±ß¡¢ÉÏ±ß»òÏÂ±ß£¬Ôò²»ÖØµş
-    return !(pos1.x + size1.width <= pos2.x ||   // rect1 ÔÚ rect2 ×ó±ß
-             pos2.x + size2.width <= pos1.x ||   // rect1 ÔÚ rect2 ÓÒ±ß
-             pos1.y + size1.height <= pos2.y ||  // rect1 ÔÚ rect2 ÏÂ±ß
-             pos2.y + size2.height <= pos1.y);   // rect1 ÔÚ rect2 ÉÏ±ß
+    // å¦‚æœä¸€ä¸ªçŸ©å½¢åœ¨å¦ä¸€ä¸ªçŸ©å½¢çš„å·¦è¾¹ã€å³è¾¹ã€ä¸Šè¾¹æˆ–ä¸‹è¾¹ï¼Œåˆ™ä¸é‡å 
+    return !(pos1.x + size1.width <= pos2.x ||   // rect1 åœ¨ rect2 å·¦è¾¹
+             pos2.x + size2.width <= pos1.x ||   // rect1 åœ¨ rect2 å³è¾¹
+             pos1.y + size1.height <= pos2.y ||  // rect1 åœ¨ rect2 ä¸‹è¾¹
+             pos2.y + size2.height <= pos1.y);   // rect1 åœ¨ rect2 ä¸Šè¾¹
 }
 
 Vec2 GridMapUtils::getVisualPosition(int gridX, int gridY, const Vec2& visualOffset) {
-    // 1. Íø¸ñ×ø±ê×ªÊÀ½ç×ø±ê
+    // 1. ç½‘æ ¼åæ ‡è½¬ä¸–ç•Œåæ ‡
     Vec2 worldPos = gridToPixel(gridX, gridY);
     
-    // 2. Ó¦ÓÃÊÓ¾õÆ«ÒÆÁ¿
+    // 2. åº”ç”¨è§†è§‰åç§»é‡
     worldPos += visualOffset;
     
     return worldPos;

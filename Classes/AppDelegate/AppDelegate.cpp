@@ -1,4 +1,4 @@
-/****************************************************************************
+ï»¿/****************************************************************************
  Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
  
  http://www.cocos2d-x.org
@@ -26,7 +26,7 @@
 #include "Scene/StartupScene.h"
 #include "Manager/AnimationManager.h"
 #include "Manager/VillageDataManager.h"
-#include "Manager/Resource/ResourceProductionSystem.h" // Ìí¼Ó´ËÐÐ
+#include "Manager/Resource/ResourceProductionSystem.h" // æ·»åŠ æ­¤è¡Œ
 
 // #define USE_AUDIO_ENGINE 1
 // #define USE_SIMPLE_AUDIO_ENGINE 1
@@ -120,21 +120,21 @@ bool AppDelegate::applicationDidFinishLaunching() {
     }
 #endif
     register_all_packages();
-    // ³õÊ¼»¯¶¯»­¹ÜÀíÆ÷
+    // åˆå§‹åŒ–åŠ¨ç”»ç®¡ç†å™¨
     auto animMgr = AnimationManager::getInstance();
     animMgr->preloadBattleAnimations();
     animMgr->initializeDefaultConfigs();
 
     CCLOG("AppDelegate: Animation system initialized");
 
-    // ========== ¼ÓÔØ´æµµ ==========
+    // ========== åŠ è½½å­˜æ¡£ ==========
     VillageDataManager::getInstance()->loadFromFile("village.json");
-    // loadFromFile() ÄÚ²¿»á´¦Àí£º
-    //   - Èç¹û´æµµ´æÔÚ ¡ú ¼ÓÔØ
-    //   - Èç¹û´æµµ²»´æÔÚ ¡ú ´´½¨Ä¬ÈÏ½¨Öþ£¨´ó±¾Óª+¹¤ÈËÐ¡ÎÝ£©
+    // loadFromFile() å†…éƒ¨ä¼šå¤„ç†ï¼š
+    //   - å¦‚æžœå­˜æ¡£å­˜åœ¨ â†’ åŠ è½½
+    //   - å¦‚æžœå­˜æ¡£ä¸å­˜åœ¨ â†’ åˆ›å»ºé»˜è®¤å»ºç­‘ï¼ˆå¤§æœ¬è¥+å·¥äººå°å±‹ï¼‰
     
-    // ¿ªÊ¼×ÊÔ´Éú²ú
-    ResourceProductionSystem::getInstance()->startProduction();  // ÐÞ¸ÄÕâÀï£º¸ÄÓÃ startProduction()
+    // å¼€å§‹èµ„æºç”Ÿäº§
+    ResourceProductionSystem::getInstance()->startProduction();  // ä¿®æ”¹è¿™é‡Œï¼šæ”¹ç”¨ startProduction()
     CCLOG("AppDelegate: Resource production system started");
 
     // create a scene. it's an autorelease object

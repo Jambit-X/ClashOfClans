@@ -1,6 +1,6 @@
-#include "BuildingSprite.h"
+ï»¿#include "BuildingSprite.h"
 #include "../Model/BuildingConfig.h"
-// ²»ÔÙÐèÒª ConstructionAnimation
+// ä¸å†éœ€è¦ ConstructionAnimation
 // #include "../Component/ConstructionAnimation.h"
 
 USING_NS_CC;
@@ -23,7 +23,7 @@ bool BuildingSprite::init(const BuildingInstance& building) {
   _visualOffset = Vec2::ZERO;
   _gridPos = Vec2(building.gridX, building.gridY);
 
-  // ³õÊ¼»¯ÈÝÆ÷ºÍ×ÓÔªËØÎª nullptr
+  // åˆå§‹åŒ–å®¹å™¨å’Œå­å…ƒç´ ä¸º nullptr
   _constructionUIContainer = nullptr;
   _progressBg = nullptr;
   _progressBar = nullptr;
@@ -32,12 +32,12 @@ bool BuildingSprite::init(const BuildingInstance& building) {
 
   loadSprite(_buildingType, _buildingLevel);
 
-  // Ô¤ÏÈ´´½¨ UI ÈÝÆ÷£¨Ö»´´½¨Ò»´Î£©
+  // é¢„å…ˆåˆ›å»º UI å®¹å™¨ï¼ˆåªåˆ›å»ºä¸€æ¬¡ï¼‰
   initConstructionUI();
 
   updateVisuals();
 
-  // Èç¹ûÊÇ½¨ÔìÖÐ×´Ì¬£¬ÏÔÊ¾ UI
+  // å¦‚æžœæ˜¯å»ºé€ ä¸­çŠ¶æ€ï¼Œæ˜¾ç¤º UI
   if (_buildingState == BuildingInstance::State::CONSTRUCTING) {
     startConstruction();
   }
@@ -45,16 +45,16 @@ bool BuildingSprite::init(const BuildingInstance& building) {
   return true;
 }
 
-// ÐÂÔö£º´´½¨ UI ÈÝÆ÷£¨ºËÐÄ·½·¨£©
+// æ–°å¢žï¼šåˆ›å»º UI å®¹å™¨ï¼ˆæ ¸å¿ƒæ–¹æ³•ï¼‰
 void BuildingSprite::initConstructionUI() {
-  // ´´½¨ÈÝÆ÷
+  // åˆ›å»ºå®¹å™¨
   _constructionUIContainer = Node::create();
-  _constructionUIContainer->setVisible(false);  // Ä¬ÈÏÒþ²Ø
-  this->addChild(_constructionUIContainer, 100);  // ¸ß ZOrder
+  _constructionUIContainer->setVisible(false);  // é»˜è®¤éšè—
+  this->addChild(_constructionUIContainer, 100);  // é«˜ ZOrder
 
   auto spriteSize = this->getContentSize();
 
-  // 1. ´´½¨½ø¶ÈÌõ±³¾°£¨»ÒÉ«£©
+  // 1. åˆ›å»ºè¿›åº¦æ¡èƒŒæ™¯ï¼ˆç°è‰²ï¼‰
   _progressBg = Sprite::create();
   _progressBg->setTextureRect(Rect(0, 0, 100, 12));
   _progressBg->setColor(Color3B(50, 50, 50));
@@ -62,7 +62,7 @@ void BuildingSprite::initConstructionUI() {
   _progressBg->setPosition(Vec2(spriteSize.width / 2, spriteSize.height + 30));
   _constructionUIContainer->addChild(_progressBg, 1);
 
-  // 2. ´´½¨½ø¶ÈÌõ£¨ÂÌÉ«£©
+  // 2. åˆ›å»ºè¿›åº¦æ¡ï¼ˆç»¿è‰²ï¼‰
   auto progressSprite = Sprite::create();
   progressSprite->setTextureRect(Rect(0, 0, 100, 12));
   progressSprite->setColor(Color3B(50, 205, 50));
@@ -74,14 +74,14 @@ void BuildingSprite::initConstructionUI() {
   _progressBar->setPosition(Vec2(spriteSize.width / 2, spriteSize.height + 30));
   _constructionUIContainer->addChild(_progressBar, 2);
 
-  // 3. ´´½¨µ¹¼ÆÊ±±êÇ©
+  // 3. åˆ›å»ºå€’è®¡æ—¶æ ‡ç­¾
   _countdownLabel = Label::createWithTTF("", "fonts/simhei.ttf", 18);
   _countdownLabel->setColor(Color3B::WHITE);
   _countdownLabel->enableOutline(Color4B::BLACK, 2);
   _countdownLabel->setPosition(Vec2(spriteSize.width / 2, spriteSize.height + 50));
   _constructionUIContainer->addChild(_countdownLabel, 3);
 
-  // 4. ´´½¨°Ù·Ö±È±êÇ©£¨Ô­ ConstructionAnimation µÄ£©
+  // 4. åˆ›å»ºç™¾åˆ†æ¯”æ ‡ç­¾ï¼ˆåŽŸ ConstructionAnimation çš„ï¼‰
   _percentLabel = Label::createWithTTF("", "fonts/simhei.ttf", 20);
   _percentLabel->setColor(Color3B::YELLOW);
   _percentLabel->enableOutline(Color4B::BLACK, 2);
@@ -91,14 +91,14 @@ void BuildingSprite::initConstructionUI() {
   CCLOG("BuildingSprite: Construction UI container initialized (ID=%d)", _buildingId);
 }
 
-// ÐÂÔö£ºÏÔÊ¾½¨Ôì UI
+// æ–°å¢žï¼šæ˜¾ç¤ºå»ºé€  UI
 void BuildingSprite::showConstructionUI() {
   if (_constructionUIContainer) {
     _constructionUIContainer->setVisible(true);
   }
 }
 
-// ÐÂÔö£ºÒþ²Ø½¨Ôì UI
+// æ–°å¢žï¼šéšè—å»ºé€  UI
 void BuildingSprite::hideConstructionUI() {
   if (_constructionUIContainer) {
     _constructionUIContainer->setVisible(false);
@@ -133,7 +133,7 @@ void BuildingSprite::updateState(BuildingInstance::State state) {
   BuildingInstance::State oldState = _buildingState;
   _buildingState = state;
 
-  // ÇåÀí¾É×´Ì¬µÄ UI
+  // æ¸…ç†æ—§çŠ¶æ€çš„ UI
   if (oldState == BuildingInstance::State::CONSTRUCTING) {
     hideConstructionUI();
     this->setColor(Color3B::WHITE);
@@ -147,7 +147,7 @@ void BuildingSprite::updateState(BuildingInstance::State state) {
     finishConstruction();
   }
 
-  CCLOG("BuildingSprite: State changed %d ¡ú %d (ID=%d)",
+  CCLOG("BuildingSprite: State changed %d â†’ %d (ID=%d)",
         (int)oldState, (int)_buildingState, _buildingId);
 }
 
@@ -163,22 +163,22 @@ void BuildingSprite::updateLevel(int level) {
 void BuildingSprite::startConstruction() {
   CCLOG("BuildingSprite: Starting construction (ID=%d)", _buildingId);
 
-  // ÏÔÊ¾ UI ÈÝÆ÷
+  // æ˜¾ç¤º UI å®¹å™¨
   showConstructionUI();
 
-  // ÉèÖÃ½¨Öþ±ä°µ
+  // è®¾ç½®å»ºç­‘å˜æš—
   this->setColor(Color3B(100, 100, 100));
 }
 
 void BuildingSprite::updateConstructionProgress(float progress) {
-  // ¸üÐÂ½ø¶ÈÌõ
+  // æ›´æ–°è¿›åº¦æ¡
   if (_progressBar) {
     _progressBar->setPercentage(progress * 100);
   }
 
-  // ¸üÐÂ°Ù·Ö±ÈÎÄ×Ö
+  // æ›´æ–°ç™¾åˆ†æ¯”æ–‡å­—
   if (_percentLabel) {
-    std::string text = StringUtils::format("½¨ÔìÖÐ...%.0f%%", progress * 100);
+    std::string text = StringUtils::format("å»ºé€ ä¸­...%.0f%%", progress * 100);
     _percentLabel->setString(text);
   }
 }
@@ -186,10 +186,10 @@ void BuildingSprite::updateConstructionProgress(float progress) {
 void BuildingSprite::finishConstruction() {
   CCLOG("BuildingSprite: Finishing construction (ID=%d)", _buildingId);
 
-  // Òþ²Ø UI ÈÝÆ÷£¨²»É¾³ý£¬¿É¸´ÓÃ£©
+  // éšè— UI å®¹å™¨ï¼ˆä¸åˆ é™¤ï¼Œå¯å¤ç”¨ï¼‰
   hideConstructionUI();
 
-  // »Ö¸´½¨ÖþÑÕÉ«
+  // æ¢å¤å»ºç­‘é¢œè‰²
   this->setColor(Color3B::WHITE);
 }
 
@@ -253,7 +253,7 @@ void BuildingSprite::updateVisuals() {
       break;
     case BuildingInstance::State::CONSTRUCTING:
       this->setOpacity(255);
-      // ÑÕÉ«ÓÉ startConstruction() ÉèÖÃ
+      // é¢œè‰²ç”± startConstruction() è®¾ç½®
       break;
     case BuildingInstance::State::BUILT:
       this->setOpacity(255);

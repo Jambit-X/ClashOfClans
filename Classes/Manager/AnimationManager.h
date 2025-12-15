@@ -1,4 +1,4 @@
-#ifndef __ANIMATION_MANAGER_H__
+ï»¿#ifndef __ANIMATION_MANAGER_H__
 #define __ANIMATION_MANAGER_H__
 
 #include "cocos2d.h"
@@ -7,60 +7,60 @@
 
 USING_NS_CC;
 
-// ¶¯»­ÀàĞÍÃ¶¾Ù
+// åŠ¨ç”»ç±»å‹æšä¸¾
 enum class AnimationType {
-  IDLE,              // ´ı»ú
-  WALK,              // ÏòÓÒ×ß
-  WALK_UP,           // ÏòÓÒÉÏ×ß
-  WALK_DOWN,         // ÏòÓÒÏÂ×ß
+  IDLE,              // å¾…æœº
+  WALK,              // å‘å³èµ°
+  WALK_UP,           // å‘å³ä¸Šèµ°
+  WALK_DOWN,         // å‘å³ä¸‹èµ°
   RUN,
-  ATTACK,            // ÏòÓÒ¹¥»÷
-  ATTACK_UP,         // ÏòÓÒÉÏ¹¥»÷
-  ATTACK_DOWN,       // ÏòÓÒÏÂ¹¥»÷
+  ATTACK,            // å‘å³æ”»å‡»
+  ATTACK_UP,         // å‘å³ä¸Šæ”»å‡»
+  ATTACK_DOWN,       // å‘å³ä¸‹æ”»å‡»
   DEATH,
-  SPAWN,             // »¹Ã»ÓĞ
+  SPAWN,             // è¿˜æ²¡æœ‰
   VICTORY,
   HURT
 };
 
-// Ìí¼ÓÒÆ¶¯·½ÏòÃ¶¾Ù
+// æ·»åŠ ç§»åŠ¨æ–¹å‘æšä¸¾
 enum class MoveDirection {
-  RIGHT,         // ÏòÓÒ£¨0¶È£©
-  RIGHT_UP,      // ÓÒÉÏ£¨45¶È£©
-  UP,            // ÏòÉÏ£¨90¶È£©
-  LEFT_UP,       // ×óÉÏ£¨135¶È£©
-  LEFT,          // Ïò×ó£¨180¶È£©
-  LEFT_DOWN,     // ×óÏÂ£¨225¶È£©
-  DOWN,          // ÏòÏÂ£¨270¶È£©
-  RIGHT_DOWN     // ÓÒÏÂ£¨315¶È£©
+  RIGHT,         // å‘å³ï¼ˆ0åº¦ï¼‰
+  RIGHT_UP,      // å³ä¸Šï¼ˆ45åº¦ï¼‰
+  UP,            // å‘ä¸Šï¼ˆ90åº¦ï¼‰
+  LEFT_UP,       // å·¦ä¸Šï¼ˆ135åº¦ï¼‰
+  LEFT,          // å‘å·¦ï¼ˆ180åº¦ï¼‰
+  LEFT_DOWN,     // å·¦ä¸‹ï¼ˆ225åº¦ï¼‰
+  DOWN,          // å‘ä¸‹ï¼ˆ270åº¦ï¼‰
+  RIGHT_DOWN     // å³ä¸‹ï¼ˆ315åº¦ï¼‰
 };
 
-// ¶¯»­ÅäÖÃÊı¾İ
+// åŠ¨ç”»é…ç½®æ•°æ®
 struct AnimationConfig {
   std::string framePrefix;
-  int startFrame;        // ÆğÊ¼Ö¡ºÅ
-  int frameCount;        // Ö¡ÊıÁ¿
+  int startFrame;        // èµ·å§‹å¸§å·
+  int frameCount;        // å¸§æ•°é‡
   float frameDelay;
   bool loop;
 };
 
-// ¶¯»­¹ÜÀíÆ÷£¨µ¥Àı£©
+// åŠ¨ç”»ç®¡ç†å™¨ï¼ˆå•ä¾‹ï¼‰
 class AnimationManager {
 public:
   static AnimationManager* getInstance();
   static void destroyInstance();
 
-  // ×ÊÔ´¼ÓÔØ
+  // èµ„æºåŠ è½½
   void loadSpriteFrames(const std::string& plistFile);
   void preloadBattleAnimations();
   void unloadSpriteFrames(const std::string& plistFile);
 
-  // ¶¯»­´´½¨
+  // åŠ¨ç”»åˆ›å»º
   Animation* createAnimation(const std::string& unitType, AnimationType animType);
   RepeatForever* createLoopAnimate(const std::string& unitType, AnimationType animType);
   Animate* createOnceAnimate(const std::string& unitType, AnimationType animType);
 
-  // ÅäÖÃ¹ÜÀí
+  // é…ç½®ç®¡ç†
   void registerAnimationConfig(
     const std::string& unitType,
     AnimationType animType,
@@ -69,7 +69,7 @@ public:
 
   void initializeDefaultConfigs();
 
-  // ¸¨Öú·½·¨
+  // è¾…åŠ©æ–¹æ³•
   std::string animTypeToString(AnimationType type) const;
 
 private:
@@ -78,10 +78,10 @@ private:
 
   static AnimationManager* _instance;
 
-  // ¶¯»­ÅäÖÃ»º´æ: <"Barbarian_WALK", AnimationConfig>
+  // åŠ¨ç”»é…ç½®ç¼“å­˜: <"Barbarian_WALK", AnimationConfig>
   std::unordered_map<std::string, AnimationConfig> _animConfigs;
 
-  // ÒÑ¼ÓÔØµÄ .plist ÎÄ¼şÁĞ±í
+  // å·²åŠ è½½çš„ .plist æ–‡ä»¶åˆ—è¡¨
   std::vector<std::string> _loadedPlists;
 
   std::string getConfigKey(const std::string& unitType, AnimationType animType) const;

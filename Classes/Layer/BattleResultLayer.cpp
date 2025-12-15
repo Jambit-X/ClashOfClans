@@ -1,4 +1,4 @@
-#pragma execution_character_set("utf-8")
+ï»¿#pragma execution_character_set("utf-8")
 #include "BattleResultLayer.h"
 #include "../Scene/BattleScene.h"
 #include "ui/CocosGUI.h"
@@ -9,29 +9,29 @@ using namespace ui;
 const std::string FONT_PATH = "fonts/simhei.ttf";
 
 bool BattleResultLayer::init() {
-    // °ëÍ¸Ã÷ºÚÉ«±³¾°
+    // åŠé€æ˜Žé»‘è‰²èƒŒæ™¯
     if (!LayerColor::initWithColor(Color4B(0, 0, 0, 200))) return false;
 
     auto visibleSize = Director::getInstance()->getVisibleSize();
 
-    // ±êÌâ
-    auto titleLabel = Label::createWithTTF("Õ½¶·½áÊø", FONT_PATH, 48);
+    // æ ‡é¢˜
+    auto titleLabel = Label::createWithTTF("æˆ˜æ–—ç»“æŸ", FONT_PATH, 48);
     titleLabel->setPosition(visibleSize.width / 2, visibleSize.height / 2 + 100);
     titleLabel->setColor(Color3B::YELLOW);
     this->addChild(titleLabel);
 
-    // Ä£Äâ½áËãÊý¾Ý
-    auto infoLabel = Label::createWithTTF("»ñµÃÕ½ÀûÆ·:\n½ð±Ò: 0\nÊ¥Ë®: 0", FONT_PATH, 30);
+    // æ¨¡æ‹Ÿç»“ç®—æ•°æ®
+    auto infoLabel = Label::createWithTTF("èŽ·å¾—æˆ˜åˆ©å“:\né‡‘å¸: 0\nåœ£æ°´: 0", FONT_PATH, 30);
     infoLabel->setPosition(visibleSize.width / 2, visibleSize.height / 2);
     this->addChild(infoLabel);
 
-    // [»ØÓª] °´Å¥ - Ìæ»»ÎªÍ¼Æ¬ back.png
+    // [å›žè¥] æŒ‰é’® - æ›¿æ¢ä¸ºå›¾ç‰‡ back.png
     auto btnReturn = Button::create("UI/battle/battle-prepare/back.png");
 
-    // ÉÔÎ¢ËõÐ¡Ò»µã£¬·ÀÖ¹Ô­Í¼Ì«´ó
+    // ç¨å¾®ç¼©å°ä¸€ç‚¹ï¼Œé˜²æ­¢åŽŸå›¾å¤ªå¤§
     btnReturn->setScale(0.4f);
 
-    // ·ÅÔÚÆÁÄ»ÏÂ·½ÖÐ¼äÎ»ÖÃ
+    // æ”¾åœ¨å±å¹•ä¸‹æ–¹ä¸­é—´ä½ç½®
     btnReturn->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2 - 150));
 
     btnReturn->addClickEventListener([this](Ref*) {
@@ -40,7 +40,7 @@ bool BattleResultLayer::init() {
         });
     this->addChild(btnReturn);
 
-    // ÍÌÊÉ´¥Ãþ£¬·ÀÖ¹µãµ½ºóÃæµÄµØÍ¼
+    // åžå™¬è§¦æ‘¸ï¼Œé˜²æ­¢ç‚¹åˆ°åŽé¢çš„åœ°å›¾
     auto listener = EventListenerTouchOneByOne::create();
     listener->setSwallowTouches(true);
     listener->onTouchBegan = [](Touch*, Event*) { return true; };

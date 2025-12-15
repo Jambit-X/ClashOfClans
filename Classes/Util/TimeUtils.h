@@ -1,18 +1,18 @@
-#ifndef __TIME_UTILS_H__
+ï»¿#ifndef __TIME_UTILS_H__
 #define __TIME_UTILS_H__
 
 #include <ctime>
 
 class TimeUtils {
 public:
-  // »ñÈ¡µ±Ç°UnixÊ±¼ä´Á£¨Ãë£©
+  // è·å–å½“å‰Unixæ—¶é—´æˆ³ï¼ˆç§’ï¼‰
   static long long getCurrentTimestamp();
 
-  // Ê±¼ä¸ñÊ½»¯
+  // æ—¶é—´æ ¼å¼åŒ–
   static std::string formatDuration(long long seconds);
   static std::string formatDateTime(long long timestamp);
 
-  // Ê±¼ä¼ÆËã
+  // æ—¶é—´è®¡ç®—
   static long long getOfflineSeconds(long long lastSaveTime);
 };
 

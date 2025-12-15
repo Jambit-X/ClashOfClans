@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "../Model/VillageData.h"
 #include <functional>
 #include <ctime>
@@ -9,7 +9,7 @@ public:
   static VillageDataManager* getInstance();
   static void destroyInstance();
 
-  // ========== ×ÊÔ´½Ó¿Ú ==========
+  // ========== èµ„æºæ¥å£ ==========
   int getGold() const;
   int getElixir() const;
   void addGold(int amount);
@@ -23,7 +23,7 @@ public:
   using ResourceCallback = std::function<void(int gold, int elixir)>;
   void setResourceCallback(ResourceCallback callback);
 
-  // ========== ´ıÊÕ¼¯×ÊÔ´½Ó¿Ú ==========
+  // ========== å¾…æ”¶é›†èµ„æºæ¥å£ ==========
   int getPendingGold() const;
   int getPendingElixir() const;
   void collectGold();
@@ -34,14 +34,14 @@ public:
 
   using PendingResourceCallback = std::function<void(int pendingGold, int pendingElixir)>;
   void setPendingResourceCallback(PendingResourceCallback callback);
-  // ¼ì²é²¢Íê³ÉËùÓĞµ½ÆÚµÄ½¨ÔìÈÎÎñ
+  // æ£€æŸ¥å¹¶å®Œæˆæ‰€æœ‰åˆ°æœŸçš„å»ºé€ ä»»åŠ¡
   void checkAndFinishConstructions();
 
-  // ========== ½¨Öş½Ó¿Ú ==========
+  // ========== å»ºç­‘æ¥å£ ==========
   const std::vector<BuildingInstance>& getAllBuildings() const;
   BuildingInstance* getBuildingById(int id);
 
-  // ĞŞ¸Ä£ºÌí¼Ó isInitialConstruction ²ÎÊı
+  // ä¿®æ”¹ï¼šæ·»åŠ  isInitialConstruction å‚æ•°
   int addBuilding(int type, int level, int gridX, int gridY,
                   BuildingInstance::State state,
                   long long finishTime = 0,
@@ -52,43 +52,43 @@ public:
   void setBuildingState(int id, BuildingInstance::State state, long long finishTime = 0);
 
   bool startUpgradeBuilding(int id);
-  void finishNewBuildingConstruction(int id);  // ĞÂÔö£ºĞÂ½¨Öş½¨ÔìÍê³É
+  void finishNewBuildingConstruction(int id);  // æ–°å¢ï¼šæ–°å»ºç­‘å»ºé€ å®Œæˆ
   void finishUpgradeBuilding(int id);
-  // ĞÂÔö£º½¨Öş·ÅÖÃÍê³ÉºóµÄ´¦Àí
+  // æ–°å¢ï¼šå»ºç­‘æ”¾ç½®å®Œæˆåçš„å¤„ç†
   bool startConstructionAfterPlacement(int buildingId);
   void removeBuilding(int buildingId);
 
-  // ========== Íø¸ñÕ¼ÓÃ²éÑ¯ ==========
+  // ========== ç½‘æ ¼å ç”¨æŸ¥è¯¢ ==========
   bool isAreaOccupied(int startX, int startY, int width, int height, int ignoreBuildingId = -1) const;
   void updateGridOccupancy();
 
-  // ========== ´æµµ/¶Áµµ ==========
+  // ========== å­˜æ¡£/è¯»æ¡£ ==========
   void loadFromFile(const std::string& filename);
   void saveToFile(const std::string& filename);
 
-  // ========== ¾ü¶ÓÓë±øÓª½Ó¿Ú ==========
+  // ========== å†›é˜Ÿä¸å…µè¥æ¥å£ ==========
 
-  // »ñÈ¡´ó±¾ÓªµÈ¼¶
+  // è·å–å¤§æœ¬è¥ç­‰çº§
   int getTownHallLevel() const;
 
-  // »ñÈ¡±øÓªÊıÁ¿
+  // è·å–å…µè¥æ•°é‡
   int getArmyCampCount() const;
 
-  // ¼ÆËã×ÜÈË¿ÚÈİÁ¿ (¸ù¾İ±øÓªµÈ¼¶ 20/30/40)
+  // è®¡ç®—æ€»äººå£å®¹é‡ (æ ¹æ®å…µè¥ç­‰çº§ 20/30/40)
   int calculateTotalHousingSpace() const;
 
-  // ¼ÆËãµ±Ç°ÒÑÕ¼ÓÃÈË¿Ú
+  // è®¡ç®—å½“å‰å·²å ç”¨äººå£
   int getCurrentHousingSpace() const;
 
-  // ±øÖÖÔöÉ¾²é
+  // å…µç§å¢åˆ æŸ¥
   int getTroopCount(int troopId) const;
   void addTroop(int troopId, int count);
   bool removeTroop(int troopId, int count);
 
-  // »ñÈ¡ËùÓĞ±øÖÖÊı¾İ(ÓÃÓÚUIÏÔÊ¾)
+  // è·å–æ‰€æœ‰å…µç§æ•°æ®(ç”¨äºUIæ˜¾ç¤º)
   const std::map<int, int>& getAllTroops() const { return _data.troops; }
 
-  // ========== ×ÊÔ´Éú²úÏµÍ³ ==========
+  // ========== èµ„æºç”Ÿäº§ç³»ç»Ÿ ==========
   void startResourceProduction();
   void stopResourceProduction();
   void updateResourceProduction(float dt);
@@ -96,27 +96,27 @@ public:
   int calculateElixirProductionRate() const;
   void processOfflineTime();
 
-  // ========== ¹¤ÈËÏµÍ³ ==========
+  // ========== å·¥äººç³»ç»Ÿ ==========
 
 /**
- * @brief »ñÈ¡µ±Ç°ÓµÓĞµÄ×Ü¹¤ÈËÊıÁ¿
- * @return ÒÑ½¨ÔìÍê³ÉµÄ½¨Öş¹¤ÈËĞ¡ÎİÊıÁ¿
+ * @brief è·å–å½“å‰æ‹¥æœ‰çš„æ€»å·¥äººæ•°é‡
+ * @return å·²å»ºé€ å®Œæˆçš„å»ºç­‘å·¥äººå°å±‹æ•°é‡
  */
   int getTotalWorkers() const;
 
   /**
-   * @brief »ñÈ¡µ±Ç°ÕıÔÚ¹¤×÷µÄ¹¤ÈËÊıÁ¿
-   * @return ËùÓĞ´¦ÓÚ CONSTRUCTING ×´Ì¬µÄ½¨ÖşÊıÁ¿
+   * @brief è·å–å½“å‰æ­£åœ¨å·¥ä½œçš„å·¥äººæ•°é‡
+   * @return æ‰€æœ‰å¤„äº CONSTRUCTING çŠ¶æ€çš„å»ºç­‘æ•°é‡
    */
   int getBusyWorkerCount() const;
 
   /**
-   * @brief ¼ì²éÊÇ·ñÓĞ¿ÕÏĞ¹¤ÈË
+   * @brief æ£€æŸ¥æ˜¯å¦æœ‰ç©ºé—²å·¥äºº
    */
   bool hasIdleWorker() const;
 
   /**
-   * @brief »ñÈ¡¿ÕÏĞ¹¤ÈËÊıÁ¿
+   * @brief è·å–ç©ºé—²å·¥äººæ•°é‡
    */
   int getIdleWorkerCount() const;
 private:

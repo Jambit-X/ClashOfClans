@@ -1,26 +1,26 @@
-#pragma once
+ï»¿#pragma once
 #include "cocos2d.h"
 #include "ui/CocosGUI.h"
 #include <functional>
 
-// ·ÅÖÃÈ·ÈÏUI - ÏÔÊ¾¹´²æ°´Å¥
+// æ”¾ç½®ç¡®è®¤UI - æ˜¾ç¤ºå‹¾å‰æŒ‰é’®
 class PlacementConfirmUI : public cocos2d::Node {
 public:
   static PlacementConfirmUI* create();
   virtual bool init() override;
 
-  // ÉèÖÃ»Øµ÷
+  // è®¾ç½®å›è°ƒ
   using ConfirmCallback = std::function<void()>;
   using CancelCallback = std::function<void()>;
 
   void setConfirmCallback(ConfirmCallback callback);
   void setCancelCallback(CancelCallback callback);
 
-  // ÏÔÊ¾/Òş²Ø
+  // æ˜¾ç¤º/éšè—
   void show();
   void hide();
 
-  // ¸üĞÂ°´Å¥×´Ì¬£¨¸ù¾İÊÇ·ñ¿É·ÅÖÃ£©
+  // æ›´æ–°æŒ‰é’®çŠ¶æ€ï¼ˆæ ¹æ®æ˜¯å¦å¯æ”¾ç½®ï¼‰
   void updateButtonState(bool canPlace);
 
 private:

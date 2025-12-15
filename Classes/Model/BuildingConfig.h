@@ -1,77 +1,77 @@
-#ifndef __BUILDING_CONFIG_H__
+ï»¿#ifndef __BUILDING_CONFIG_H__
 #define __BUILDING_CONFIG_H__
 
 #include "cocos2d.h"
 #include <string>
 #include <unordered_map>
 
-// ½¨ÖşÅäÖÃÊı¾İ
+// å»ºç­‘é…ç½®æ•°æ®
 struct BuildingConfigData {
-  // ========== »ù±¾ĞÅÏ¢ ==========
-  int type;                       // ½¨ÖşÀàĞÍID£¨Î¨Ò»±êÊ¶£¬Èç101=±øÓª£©
-  std::string name;               // ½¨ÖşÃû³Æ£¨ÖĞÎÄ£©
-  std::string category;           // ½¨Öş·ÖÀà£¨"¾ü¶Ó"/"×ÊÔ´"/"·ÀÓù"/"ÏİÚå"£©
+  // ========== åŸºæœ¬ä¿¡æ¯ ==========
+  int type;                       // å»ºç­‘ç±»å‹IDï¼ˆå”¯ä¸€æ ‡è¯†ï¼Œå¦‚101=å…µè¥ï¼‰
+  std::string name;               // å»ºç­‘åç§°ï¼ˆä¸­æ–‡ï¼‰
+  std::string category;           // å»ºç­‘åˆ†ç±»ï¼ˆ"å†›é˜Ÿ"/"èµ„æº"/"é˜²å¾¡"/"é™·é˜±"ï¼‰
 
-  // ========== ÊÓ¾õ±íÏÖ ==========
-  std::string spritePathTemplate; // ¾«ÁéÂ·¾¶Ä£°å£¨Èç "UI/Shop/military/Barracks{level}.png"£©
-  int gridWidth;                  // Õ¼ÓÃÍø¸ñ¿í¶È£¨µ¥Î»£º¸ñ×Ó£©
-  int gridHeight;                 // Õ¼ÓÃÍø¸ñ¸ß¶È£¨µ¥Î»£º¸ñ×Ó£©
-  cocos2d::Vec2 anchorOffset;     // ÃªµãÆ«ÒÆ£¨ÓÃÓÚµ÷ÕûÏÔÊ¾Î»ÖÃ£©
+  // ========== è§†è§‰è¡¨ç° ==========
+  std::string spritePathTemplate; // ç²¾çµè·¯å¾„æ¨¡æ¿ï¼ˆå¦‚ "UI/Shop/military/Barracks{level}.png"ï¼‰
+  int gridWidth;                  // å ç”¨ç½‘æ ¼å®½åº¦ï¼ˆå•ä½ï¼šæ ¼å­ï¼‰
+  int gridHeight;                 // å ç”¨ç½‘æ ¼é«˜åº¦ï¼ˆå•ä½ï¼šæ ¼å­ï¼‰
+  cocos2d::Vec2 anchorOffset;     // é”šç‚¹åç§»ï¼ˆç”¨äºè°ƒæ•´æ˜¾ç¤ºä½ç½®ï¼‰
 
-  // ========== ÓÎÏ·ÊôĞÔ ==========
-  int maxLevel;                   // ×î´óµÈ¼¶
-  int initialCost;                // ³õÊ¼½¨Ôì·ÑÓÃ
-  std::string costType;           // ·ÑÓÃÀàĞÍ£¨"½ğ±Ò"/"Ê¥Ë®"/"±¦Ê¯"£©
-  int buildTimeSeconds;           // ½¨ÔìÊ±¼ä£¨Ãë£©
+  // ========== æ¸¸æˆå±æ€§ ==========
+  int maxLevel;                   // æœ€å¤§ç­‰çº§
+  int initialCost;                // åˆå§‹å»ºé€ è´¹ç”¨
+  std::string costType;           // è´¹ç”¨ç±»å‹ï¼ˆ"é‡‘å¸"/"åœ£æ°´"/"å®çŸ³"ï¼‰
+  int buildTimeSeconds;           // å»ºé€ æ—¶é—´ï¼ˆç§’ï¼‰
 
-  // ========== À©Õ¹ÊôĞÔ£¨¿ÉÑ¡£©==========
-  int hitPoints;                  // ÉúÃüÖµ£¨·ÀÓù½¨ÖşÓÃ£©
-  int damagePerSecond;            // Ã¿ÃëÉËº¦£¨·ÀÓù½¨ÖşÓÃ£©
-  int attackRange;                // ¹¥»÷·¶Î§£¨·ÀÓù½¨ÖşÓÃ£©
-  int resourceCapacity;           // ×ÊÔ´ÈİÁ¿£¨×ÊÔ´½¨ÖşÓÃ£©
-  int productionRate;             // Éú²úËÙÂÊ£¨×ÊÔ´½¨ÖşÓÃ£¬µ¥Î»/Ğ¡Ê±£©
+  // ========== æ‰©å±•å±æ€§ï¼ˆå¯é€‰ï¼‰==========
+  int hitPoints;                  // ç”Ÿå‘½å€¼ï¼ˆé˜²å¾¡å»ºç­‘ç”¨ï¼‰
+  int damagePerSecond;            // æ¯ç§’ä¼¤å®³ï¼ˆé˜²å¾¡å»ºç­‘ç”¨ï¼‰
+  int attackRange;                // æ”»å‡»èŒƒå›´ï¼ˆé˜²å¾¡å»ºç­‘ç”¨ï¼‰
+  int resourceCapacity;           // èµ„æºå®¹é‡ï¼ˆèµ„æºå»ºç­‘ç”¨ï¼‰
+  int productionRate;             // ç”Ÿäº§é€Ÿç‡ï¼ˆèµ„æºå»ºç­‘ç”¨ï¼Œå•ä½/å°æ—¶ï¼‰
 };
 
 /**
- * @brief ½¨ÖşÅäÖÃ¹ÜÀíÆ÷£¨µ¥Àı£©
- * ¸ºÔğ¼ÓÔØºÍÌá¹©ËùÓĞ½¨ÖşµÄ¾²Ì¬ÅäÖÃ
+ * @brief å»ºç­‘é…ç½®ç®¡ç†å™¨ï¼ˆå•ä¾‹ï¼‰
+ * è´Ÿè´£åŠ è½½å’Œæä¾›æ‰€æœ‰å»ºç­‘çš„é™æ€é…ç½®
  */
 class BuildingConfig {
 public:
   static BuildingConfig* getInstance();
   static void destroyInstance();
 
-  // ========== ²éÑ¯½Ó¿Ú ==========
+  // ========== æŸ¥è¯¢æ¥å£ ==========
 
   /**
-   * @brief ¸ù¾İ½¨ÖşÀàĞÍ»ñÈ¡ÅäÖÃ
-   * @param buildingType ½¨ÖşÀàĞÍID
-   * @return ·µ»ØÅäÖÃÖ¸Õë£¬Èç¹û²»´æÔÚ·µ»Ø nullptr
+   * @brief æ ¹æ®å»ºç­‘ç±»å‹è·å–é…ç½®
+   * @param buildingType å»ºç­‘ç±»å‹ID
+   * @return è¿”å›é…ç½®æŒ‡é’ˆï¼Œå¦‚æœä¸å­˜åœ¨è¿”å› nullptr
    */
   const BuildingConfigData* getConfig(int buildingType) const;
 
   /**
-   * @brief »ñÈ¡½¨Öş¾«ÁéÂ·¾¶£¨¸ù¾İÀàĞÍºÍµÈ¼¶£©
-   * @param buildingType ½¨ÖşÀàĞÍID
-   * @param level ½¨ÖşµÈ¼¶
-   * @return ·µ»ØÍêÕûµÄ¾«ÁéÂ·¾¶
+   * @brief è·å–å»ºç­‘ç²¾çµè·¯å¾„ï¼ˆæ ¹æ®ç±»å‹å’Œç­‰çº§ï¼‰
+   * @param buildingType å»ºç­‘ç±»å‹ID
+   * @param level å»ºç­‘ç­‰çº§
+   * @return è¿”å›å®Œæ•´çš„ç²¾çµè·¯å¾„
    * @example getSpritePath(101, 2) -> "UI/Shop/military/Barracks2.png"
    */
   std::string getSpritePath(int buildingType, int level) const;
 
   /**
-   * @brief »ñÈ¡½¨ÖşÉı¼¶·ÑÓÃ
-   * @param buildingType ½¨ÖşÀàĞÍID
-   * @param currentLevel µ±Ç°µÈ¼¶
-   * @return ·µ»ØÉı¼¶µ½ÏÂÒ»¼¶µÄ·ÑÓÃ
+   * @brief è·å–å»ºç­‘å‡çº§è´¹ç”¨
+   * @param buildingType å»ºç­‘ç±»å‹ID
+   * @param currentLevel å½“å‰ç­‰çº§
+   * @return è¿”å›å‡çº§åˆ°ä¸‹ä¸€çº§çš„è´¹ç”¨
    */
   int getUpgradeCost(int buildingType, int currentLevel) const;
 
   /**
-   * @brief ¼ì²é½¨ÖşÊÇ·ñ¿ÉÒÔÉı¼¶
-   * @param buildingType ½¨ÖşÀàĞÍID
-   * @param currentLevel µ±Ç°µÈ¼¶
-   * @return ÊÇ·ñ¿ÉÒÔÉı¼¶
+   * @brief æ£€æŸ¥å»ºç­‘æ˜¯å¦å¯ä»¥å‡çº§
+   * @param buildingType å»ºç­‘ç±»å‹ID
+   * @param currentLevel å½“å‰ç­‰çº§
+   * @return æ˜¯å¦å¯ä»¥å‡çº§
    */
   bool canUpgrade(int buildingType, int currentLevel) const;
 
@@ -79,7 +79,7 @@ private:
   BuildingConfig();
   ~BuildingConfig();
 
-  void initConfigs();  // ³õÊ¼»¯ËùÓĞ½¨ÖşÅäÖÃ
+  void initConfigs();  // åˆå§‹åŒ–æ‰€æœ‰å»ºç­‘é…ç½®
 
   static BuildingConfig* _instance;
   std::unordered_map<int, BuildingConfigData> _configs;  // <buildingType, config>

@@ -1,0 +1,39 @@
+# .editorconfig
+# 团队统一编码配置 - 所有主流编辑器都会自动读取此文件
+# 支持: VS Code, Visual Studio 2019+, JetBrains 系列, Sublime Text 等
+
+root = true
+
+# 所有文件的默认设置
+[*]
+charset = utf-8-bom
+end_of_line = crlf
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# C++ 源文件
+[*.{cpp,h,hpp,c,cc,cxx}]
+charset = utf-8-bom
+indent_size = 4
+
+# CMake 文件
+[CMakeLists.txt]
+indent_size = 4
+
+[*.cmake]
+indent_size = 4
+
+# JSON 配置文件
+[*.json]
+indent_size = 2
+
+# Markdown 文档
+[*.md]
+trim_trailing_whitespace = false
+
+# Shell 脚本 (如果有 Linux/Mac 队友)
+[*.sh]
+end_of_line = lf
+charset = utf-8

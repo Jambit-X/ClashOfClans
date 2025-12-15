@@ -1,4 +1,4 @@
-#include "BuildingManager.h"
+ï»¿#include "BuildingManager.h"
 #include "Manager/VillageDataManager.h"
 #include "Model/BuildingConfig.h"
 #include "Util/GridMapUtils.h"
@@ -34,7 +34,7 @@ BuildingSprite* BuildingManager::addBuilding(const BuildingInstance& building) {
   Vec2 finalPos = worldPos + sprite->getVisualOffset();
   sprite->setPosition(finalPos);
 
-  // Ê¹ÓÃÍ³Ò»º¯Êý¼ÆËã Z-Order
+  // ä½¿ç”¨ç»Ÿä¸€å‡½æ•°è®¡ç®— Z-Order
   int zOrder = calculateZOrder(building.gridX, building.gridY);
   _parentLayer->addChild(sprite, zOrder);
 
@@ -62,19 +62,19 @@ void BuildingManager::updateBuilding(int buildingId, const BuildingInstance& bui
     Vec2 finalPos = worldPos + sprite->getVisualOffset();
     sprite->setPosition(finalPos);
 
-    // Ê¹ÓÃÍ³Ò»º¯Êý¼ÆËã Z-Order ²¢ÖØÐÂÅÅÐò
+    // ä½¿ç”¨ç»Ÿä¸€å‡½æ•°è®¡ç®— Z-Order å¹¶é‡æ–°æŽ’åº
     int zOrder = calculateZOrder(building.gridX, building.gridY);
     _parentLayer->reorderChild(sprite, zOrder);
 
-    // ×´Ì¬ÇÐ»»µ½½¨ÔìÖÐÊ±µÄÌØÊâ´¦Àí
+    // çŠ¶æ€åˆ‡æ¢åˆ°å»ºé€ ä¸­æ—¶çš„ç‰¹æ®Šå¤„ç†
     if (building.state == BuildingInstance::State::CONSTRUCTING) {
       CCLOG("BuildingManager: Building %d entering CONSTRUCTING state", buildingId);
 
-      // ³¹µ×Çå³ýÍÏ¶¯ºÍÔ¤ÀÀ×´Ì¬
+      // å½»åº•æ¸…é™¤æ‹–åŠ¨å’Œé¢„è§ˆçŠ¶æ€
       sprite->setDraggingMode(false);
       sprite->clearPlacementPreview();
 
-      // Æô¶¯½¨Ôì¶¯»­£¨»á°Ñ½¨Öþ±ä°µ»ÒÉ«£©
+      // å¯åŠ¨å»ºé€ åŠ¨ç”»ï¼ˆä¼šæŠŠå»ºç­‘å˜æš—ç°è‰²ï¼‰
       sprite->startConstruction();
     }
 
@@ -87,13 +87,13 @@ BuildingSprite* BuildingManager::getBuildingSprite(int buildingId) const {
     return (it != _buildings.end()) ? it->second : nullptr;
 }
 
-// ? ÐÞ¸´£ºÊ¹ÓÃÍø¸ñ²éÑ¯£¨O(1)£¬¾«×¼£¬ÎÞÍ¸Ã÷ÇøÓòÎÊÌâ£©
+// ? ä¿®å¤ï¼šä½¿ç”¨ç½‘æ ¼æŸ¥è¯¢ï¼ˆO(1)ï¼Œç²¾å‡†ï¼Œæ— é€æ˜ŽåŒºåŸŸé—®é¢˜ï¼‰
 BuildingSprite* BuildingManager::getBuildingAtGrid(int gridX, int gridY) const {
     CCLOG("BuildingManager::getBuildingAtGrid - Looking at grid(%d, %d)", gridX, gridY);
     
     auto dataManager = VillageDataManager::getInstance();
     
-    // ±éÀúËùÓÐ½¨Öþ£¬ÕÒµ½Õ¼¾Ý¸ÃÍø¸ñµÄ½¨Öþ
+    // éåŽ†æ‰€æœ‰å»ºç­‘ï¼Œæ‰¾åˆ°å æ®è¯¥ç½‘æ ¼çš„å»ºç­‘
     const auto& buildings = dataManager->getAllBuildings();
     for (const auto& building : buildings) {
         if (building.state == BuildingInstance::State::PLACING) continue;
@@ -101,7 +101,7 @@ BuildingSprite* BuildingManager::getBuildingAtGrid(int gridX, int gridY) const {
         auto config = BuildingConfig::getInstance()->getConfig(building.type);
         if (!config) continue;
         
-        // ¼ì²éÍø¸ñÊÇ·ñÔÚ½¨Öþ·¶Î§ÄÚ
+        // æ£€æŸ¥ç½‘æ ¼æ˜¯å¦åœ¨å»ºç­‘èŒƒå›´å†…
         if (gridX >= building.gridX && gridX < building.gridX + config->gridWidth &&
             gridY >= building.gridY && gridY < building.gridY + config->gridHeight) {
             CCLOG("  -> FOUND! Building ID=%d", building.id);
@@ -113,21 +113,21 @@ BuildingSprite* BuildingManager::getBuildingAtGrid(int gridX, int gridY) const {
     return nullptr;
 }
 
-// ? ÐÞ¸´£ºµã»÷¼ì²â¸ÄÎªÍø¸ñ²éÑ¯£¨²»ÔÙÓÃ BoundingBox£©
+// ? ä¿®å¤ï¼šç‚¹å‡»æ£€æµ‹æ”¹ä¸ºç½‘æ ¼æŸ¥è¯¢ï¼ˆä¸å†ç”¨ BoundingBoxï¼‰
 BuildingSprite* BuildingManager::getBuildingAtWorldPos(const Vec2& worldPos) const {
     CCLOG("BuildingManager::getBuildingAtWorldPos - Checking world pos (%.0f, %.0f)",
         worldPos.x, worldPos.y);
 
-    // ? 1. ×ª»»ÎªÍø¸ñ×ø±ê
+    // ? 1. è½¬æ¢ä¸ºç½‘æ ¼åæ ‡
     Vec2 gridPosFloat = GridMapUtils::pixelToGrid(worldPos);
     
-    // ? 2. ËÄÉáÎåÈëµ½ÕûÊýÍø¸ñ
+    // ? 2. å››èˆäº”å…¥åˆ°æ•´æ•°ç½‘æ ¼
     int gridX = (int)std::round(gridPosFloat.x);
     int gridY = (int)std::round(gridPosFloat.y);
     
     CCLOG("  -> Converted to grid(%d, %d)", gridX, gridY);
     
-    // ? 3. ²éÑ¯Íø¸ñ£¨O(1)£¬¾«×¼£¬ÎÞÍ¸Ã÷ÇøÓòÎÊÌâ£©
+    // ? 3. æŸ¥è¯¢ç½‘æ ¼ï¼ˆO(1)ï¼Œç²¾å‡†ï¼Œæ— é€æ˜ŽåŒºåŸŸé—®é¢˜ï¼‰
     return getBuildingAtGrid(gridX, gridY);
 }
 
@@ -141,25 +141,25 @@ void BuildingManager::update(float dt) {
       auto sprite = getBuildingSprite(building.id);
       if (!sprite) continue;
 
-      // ¼ì²éÊÇ·ñÍê³É
+      // æ£€æŸ¥æ˜¯å¦å®Œæˆ
       if (building.finishTime > 0 && currentTime >= building.finishTime) {
         CCLOG("BuildingManager: Building ID=%d construction complete", building.id);
         
-        // 1. Òþ²Ø½ø¶ÈUI
+        // 1. éšè—è¿›åº¦UI
         sprite->hideConstructionProgress();
         
-        // 2. Ê¹ÓÃ±êÖ¾Î»ÅÐ¶ÏÊÇÐÂ½¨Öþ»¹ÊÇÉý¼¶
+        // 2. ä½¿ç”¨æ ‡å¿—ä½åˆ¤æ–­æ˜¯æ–°å»ºç­‘è¿˜æ˜¯å‡çº§
         if (building.isInitialConstruction) {
-          // ÐÂ½¨Öþ£º±£³ÖµÈ¼¶
+          // æ–°å»ºç­‘ï¼šä¿æŒç­‰çº§
           CCLOG("BuildingManager: New building construction (level=%d)", building.level);
           dataManager->finishNewBuildingConstruction(building.id);
         } else {
-          // Éý¼¶£ºµÈ¼¶+1
+          // å‡çº§ï¼šç­‰çº§+1
           CCLOG("BuildingManager: Upgrade (level %d -> %d)", building.level, building.level + 1);
           dataManager->finishUpgradeBuilding(building.id);
         }
         
-        // 3. ¸üÐÂ¾«Áé
+        // 3. æ›´æ–°ç²¾çµ
         sprite->finishConstruction();
         sprite->updateState(BuildingInstance::State::BUILT);
         
@@ -171,7 +171,7 @@ void BuildingManager::update(float dt) {
         continue;
       }
 
-      // ¸üÐÂ½¨Ôì½ø¶È
+      // æ›´æ–°å»ºé€ è¿›åº¦
       if (building.finishTime > 0) {
         long long remainTime = building.finishTime - currentTime;
 

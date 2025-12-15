@@ -1,4 +1,4 @@
-#include "BattleProcessController.h"
+ï»¿#include "BattleProcessController.h"
 #include "../Layer/BattleTroopLayer.h"
 #include "../Manager/VillageDataManager.h"
 #include "../Model/BuildingConfig.h"
@@ -29,7 +29,7 @@ void BattleProcessController::startUnitAI(BattleUnitSprite* unit, BattleTroopLay
         return;
     }
 
-    // 1. ÖÇÄÜÑ°ÕÒ×î¼ÑÄ¿±ê½¨Öş£¨¿¼ÂÇ¾àÀëºÍ³ÇÇ½£©
+    // 1. æ™ºèƒ½å¯»æ‰¾æœ€ä½³ç›®æ ‡å»ºç­‘ï¼ˆè€ƒè™‘è·ç¦»å’ŒåŸå¢™ï¼‰
     const BuildingInstance* target = findBestTargetBuilding(unit->getPosition());
 
     if (!target) {
@@ -42,12 +42,12 @@ void BattleProcessController::startUnitAI(BattleUnitSprite* unit, BattleTroopLay
     Vec2 unitPos = unit->getPosition();
     Vec2 targetCenter = GridMapUtils::gridToPixelCenter(target->gridX, target->gridY);
 
-    // ========== ÖÇÄÜ¾ö²ß£º±È½ÏÆÆÇ½Â·¾¶ºÍÈÆÇ½Â·¾¶ ==========/
+    // ========== æ™ºèƒ½å†³ç­–ï¼šæ¯”è¾ƒç ´å¢™è·¯å¾„å’Œç»•å¢™è·¯å¾„ ==========/
     
-    // Â·¾¶A£ººöÂÔ³ÇÇ½£¨¼ÙÉè»á¹¥»÷³ÇÇ½)
+    // è·¯å¾„Aï¼šå¿½ç•¥åŸå¢™ï¼ˆå‡è®¾ä¼šæ”»å‡»åŸå¢™)
     std::vector<Vec2> pathWithWalls = pathfinder->findPathIgnoringWalls(unitPos, targetCenter);
     
-    // Â·¾¶B£ºÈÆ¹ı³ÇÇ½£¨³ÇÇ½×÷ÎªÕÏ°­£©
+    // è·¯å¾„Bï¼šç»•è¿‡åŸå¢™ï¼ˆåŸå¢™ä½œä¸ºéšœç¢ï¼‰
     std::vector<Vec2> pathAroundWalls = pathfinder->findPathToAttackBuilding(unitPos, *target);
     
     int pathALen = pathWithWalls.size();
@@ -59,24 +59,24 @@ void BattleProcessController::startUnitAI(BattleUnitSprite* unit, BattleTroopLay
     
     std::vector<Vec2> chosenPath;
     
-    // ¾ö²ßÂß¼­
+    // å†³ç­–é€»è¾‘
     if (pathBLen == 0) {
-        // ÎŞ·¨ÈÆÂ·£¬Ö»ÄÜÆÆÇ½
+        // æ— æ³•ç»•è·¯ï¼Œåªèƒ½ç ´å¢™
         CCLOG("  -> Decision: NO DETOUR POSSIBLE, must attack walls");
         chosenPath = pathWithWalls;
     } else if (pathALen == 0) {
-        // ÆÆÇ½Â·¾¶Ê§°Ü£¬Ê¹ÓÃÈÆÂ·
+        // ç ´å¢™è·¯å¾„å¤±è´¥ï¼Œä½¿ç”¨ç»•è·¯
         CCLOG("  -> Decision: Using detour path");
         chosenPath = pathAroundWalls;
     } else {
         int detourCost = pathBLen - pathALen;
         
         if (detourCost <= WALL_DETOUR_THRESHOLD) {
-            // ÈÆÂ·³É±¾¿É½ÓÊÜ£¬Ñ¡ÔñÈÆÂ·
+            // ç»•è·¯æˆæœ¬å¯æ¥å—ï¼Œé€‰æ‹©ç»•è·¯
             CCLOG("  -> Decision: DETOUR (cost: %d <= %d)", detourCost, WALL_DETOUR_THRESHOLD);
             chosenPath = pathAroundWalls;
         } else {
-            // ÈÆÂ·Ì«Ô¶£¬Ñ¡ÔñÆÆÇ½
+            // ç»•è·¯å¤ªè¿œï¼Œé€‰æ‹©ç ´å¢™
             CCLOG("  -> Decision: ATTACK WALLS (detour cost: %d > %d)", detourCost, WALL_DETOUR_THRESHOLD);
             chosenPath = pathWithWalls;
         }
@@ -88,7 +88,7 @@ void BattleProcessController::startUnitAI(BattleUnitSprite* unit, BattleTroopLay
         return;
     }
 
-    // ========== Ö´ĞĞÒÆ¶¯ ==========/
+    // ========== æ‰§è¡Œç§»åŠ¨ ==========/
     
     CCLOG("BattleProcessController: Starting AI for unit, path length: %lu", chosenPath.size());
 
@@ -99,12 +99,12 @@ void BattleProcessController::startUnitAI(BattleUnitSprite* unit, BattleTroopLay
 
         unit->attackTowardPosition(buildingPos, [unit]() {
             unit->playIdleAnimation();
-            // TODO: Ñ­»·¹¥»÷ºÍ¿ÛÑªÂß¼­
+            // TODO: å¾ªç¯æ”»å‡»å’Œæ‰£è¡€é€»è¾‘
         });
     });
 }
 
-// ========== ÖÇÄÜÄ¿±êÑ¡ÔñÊµÏÖ ==========
+// ========== æ™ºèƒ½ç›®æ ‡é€‰æ‹©å®ç° ==========
 
 const BuildingInstance* BattleProcessController::findBestTargetBuilding(const Vec2& unitWorldPos) {
     auto dataManager = VillageDataManager::getInstance();
@@ -116,7 +116,7 @@ const BuildingInstance* BattleProcessController::findBestTargetBuilding(const Ve
         return nullptr;
     }
 
-    // ========== µÚÒ»½×¶Î£ºÔ¤É¸Ñ¡£¨°´Ö±Ïß¾àÀëÅÅĞò£© ==========/
+    // ========== ç¬¬ä¸€é˜¶æ®µï¼šé¢„ç­›é€‰ï¼ˆæŒ‰ç›´çº¿è·ç¦»æ’åºï¼‰ ==========/
     struct Candidate {
         const BuildingInstance* building;
         float distance;
@@ -133,14 +133,14 @@ const BuildingInstance* BattleProcessController::findBestTargetBuilding(const Ve
         candidates.push_back({ &building, dist });
     }
 
-    // °´¾àÀëÅÅĞò
+    // æŒ‰è·ç¦»æ’åº
     std::sort(candidates.begin(), candidates.end(), 
               [](const Candidate& a, const Candidate& b) {
                   return a.distance < b.distance;
               });
 
-    // ========== µÚ¶ş½×¶Î£ºÀ©´óËÑË÷·¶Î§ ==========/
-    // »ù´¡ËÑË÷5¸ö + ãĞÖµ2¸ö = 7¸öºòÑ¡½¨Öş
+    // ========== ç¬¬äºŒé˜¶æ®µï¼šæ‰©å¤§æœç´¢èŒƒå›´ ==========/
+    // åŸºç¡€æœç´¢5ä¸ª + é˜ˆå€¼2ä¸ª = 7ä¸ªå€™é€‰å»ºç­‘
     int searchCount = std::min((int)candidates.size(), EXPANDED_SEARCH_COUNT);
     
     CCLOG("BattleProcessController: Evaluating top %d candidates (base=%d + threshold=%d)",
@@ -149,24 +149,24 @@ const BuildingInstance* BattleProcessController::findBestTargetBuilding(const Ve
     std::vector<TargetCandidate> evaluatedTargets;
     evaluatedTargets.reserve(searchCount);
 
-    // ========== µÚÈı½×¶Î£ºÆÀ¹ÀÃ¿¸öºòÑ¡½¨Öş ==========/
+    // ========== ç¬¬ä¸‰é˜¶æ®µï¼šè¯„ä¼°æ¯ä¸ªå€™é€‰å»ºç­‘ ==========/
     for (int i = 0; i < searchCount; ++i) {
         const auto* building = candidates[i].building;
         float directDist = candidates[i].distance;
         
         Vec2 bPos = GridMapUtils::gridToPixelCenter(building->gridX, building->gridY);
         
-        // ÏÈ³¢ÊÔÈÆÇ½Â·¾¶
+        // å…ˆå°è¯•ç»•å¢™è·¯å¾„
         auto pathAround = pathfinder->findPathToAttackBuilding(unitWorldPos, *building);
         
         if (!pathAround.empty()) {
-            // ¿ÉÒÔÈÆÇ½µ½´ï
+            // å¯ä»¥ç»•å¢™åˆ°è¾¾
             float score = calculateBuildingScore(directDist, pathAround.size(), false);
             evaluatedTargets.push_back({ 
                 building, 
                 directDist, 
                 (int)pathAround.size(), 
-                false,  // ²»ĞèÒªÆÆÇ½
+                false,  // ä¸éœ€è¦ç ´å¢™
                 score 
             });
             
@@ -176,16 +176,16 @@ const BuildingInstance* BattleProcessController::findBestTargetBuilding(const Ve
             continue;
         }
         
-        // ÔÙ³¢ÊÔÆÆÇ½Â·¾¶
+        // å†å°è¯•ç ´å¢™è·¯å¾„
         auto pathThrough = pathfinder->findPathIgnoringWalls(unitWorldPos, bPos);
         if (!pathThrough.empty()) {
-            // ¿ÉÒÔÆÆÇ½µ½´ï
+            // å¯ä»¥ç ´å¢™åˆ°è¾¾
             float score = calculateBuildingScore(directDist, pathThrough.size(), true);
             evaluatedTargets.push_back({ 
                 building, 
                 directDist, 
                 (int)pathThrough.size(), 
-                true,  // ĞèÒªÆÆÇ½
+                true,  // éœ€è¦ç ´å¢™
                 score 
             });
             
@@ -193,7 +193,7 @@ const BuildingInstance* BattleProcessController::findBestTargetBuilding(const Ve
                   i, building->gridX, building->gridY, directDist, 
                   (int)pathThrough.size(), score);
         } else {
-            // ÍêÈ«ÎŞ·¨µ½´ï
+            // å®Œå…¨æ— æ³•åˆ°è¾¾
             CCLOG("  [%d] Building at (%d,%d): UNREACHABLE, skipping", 
                   i, building->gridX, building->gridY);
         }
@@ -204,7 +204,7 @@ const BuildingInstance* BattleProcessController::findBestTargetBuilding(const Ve
         return nullptr;
     }
 
-    // ========== µÚËÄ½×¶Î£ºÑ¡ÔñÆÀ·Ö×îµÍµÄÄ¿±ê ==========/
+    // ========== ç¬¬å››é˜¶æ®µï¼šé€‰æ‹©è¯„åˆ†æœ€ä½çš„ç›®æ ‡ ==========/
     std::sort(evaluatedTargets.begin(), evaluatedTargets.end(), 
               [](const TargetCandidate& a, const TargetCandidate& b) {
                   return a.score < b.score;
@@ -227,15 +227,15 @@ float BattleProcessController::calculateBuildingScore(
     int pathLength, 
     bool needsBreakingWalls
 ) {
-    // »ù´¡·ÖÊı = Â·¾¶³¤¶È ¡Á 10
+    // åŸºç¡€åˆ†æ•° = è·¯å¾„é•¿åº¦ Ã— 10
     float score = pathLength * 10.0f;
     
-    // Èç¹ûĞèÒªÆÆÇ½£¬Ôö¼Ó³Í·£
+    // å¦‚æœéœ€è¦ç ´å¢™ï¼Œå¢åŠ æƒ©ç½š
     if (needsBreakingWalls) {
-        score += 100.0f;  // ÆÆÇ½³Í·££¨¿Éµ÷Õû£©
+        score += 100.0f;  // ç ´å¢™æƒ©ç½šï¼ˆå¯è°ƒæ•´ï¼‰
     }
     
-    // ¼ÓÉÏÖ±Ïß¾àÀëµÄĞ¡È¨ÖØ£¨ÓÃÓÚÂ·¾¶³¤¶ÈÏàÍ¬Ê±µÄÇø·Ö£©
+    // åŠ ä¸Šç›´çº¿è·ç¦»çš„å°æƒé‡ï¼ˆç”¨äºè·¯å¾„é•¿åº¦ç›¸åŒæ—¶çš„åŒºåˆ†ï¼‰
     score += directDist * 0.5f;
     
     return score;

@@ -1,4 +1,4 @@
-// Model/Building.cpp
+ï»¿// Model/Building.cpp
 #include "Building.h"
 
 Building::Building(int id, Type type, int width, int height)
@@ -6,14 +6,14 @@ Building::Building(int id, Type type, int width, int height)
     , _type(type)
     , _width(width)
     , _height(height)
-    , _gridX(0)             // Ä¬ÈÏ³õÊ¼×ø±êÎª 0,0
+    , _gridX(0)             // é»˜è®¤åˆå§‹åæ ‡ä¸º 0,0
     , _gridY(0)
-    , _state(State::PREVIEW) // Ä¬ÈÏ×´Ì¬Îª"Ô¤ÀÀÖÐ/ÍÏ×§ÖÐ"
+    , _state(State::PREVIEW) // é»˜è®¤çŠ¶æ€ä¸º"é¢„è§ˆä¸­/æ‹–æ‹½ä¸­"
 {
-    // ¹¹Ôìº¯ÊýÌåÎª¿Õ£¬ÒòÎª³õÊ¼»¯ÁÐ±íÒÑ¾­Íê³ÉÁËËùÓÐ¹¤×÷
+    // æž„é€ å‡½æ•°ä½“ä¸ºç©ºï¼Œå› ä¸ºåˆå§‹åŒ–åˆ—è¡¨å·²ç»å®Œæˆäº†æ‰€æœ‰å·¥ä½œ
 }
 
-// ¾²Ì¬¹¤³§·½·¨ÊµÏÖ
+// é™æ€å·¥åŽ‚æ–¹æ³•å®žçŽ°
 Building* Building::createTownHall(int id, int gridX, int gridY) {
     auto* building = new Building(id, Type::TOWN_HALL, 3, 3);
     building->setGridPosition(gridX, gridY);

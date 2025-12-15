@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "cocos2d.h"
 #include "ui/CocosGUI.h"
 #include "UI/PlacementConfirmUI.h"
@@ -7,7 +7,7 @@
 class HUDLayer : public cocos2d::Layer {
 public:
   virtual bool init();
-  virtual void cleanup() override;  // Ìí¼Ó cleanup ·½·¨
+  virtual void cleanup() override;  // æ·»åŠ  cleanup æ–¹æ³•
   CREATE_FUNC(HUDLayer);
 
   void updateResourceDisplay(int gold, int elixir);
@@ -18,13 +18,13 @@ public:
 
   virtual void update(float dt) override;
 
-  // ·ÅÖÃUIÏà¹Ø·½·¨
+  // æ”¾ç½®UIç›¸å…³æ–¹æ³•
   void startBuildingPlacement(int buildingId);
   void showPlacementUI(int buildingId);
   void hidePlacementUI();
   void updatePlacementUIState(bool canPlace);
 
-  // ========== Á¬Ğø½¨ÔìÄ£Ê½ ==========
+  // ========== è¿ç»­å»ºé€ æ¨¡å¼ ==========
   void enterContinuousBuildMode(int buildingType);
   void exitContinuousBuildMode(const std::string& reason);
   bool isInContinuousBuildMode() const { return _isContinuousBuildMode; }
@@ -32,7 +32,7 @@ public:
 private:
   void initActionMenu();
 
-  // °´Å¥²¼¾ÖÅäÖÃ
+  // æŒ‰é’®å¸ƒå±€é…ç½®
   struct ButtonLayout {
     cocos2d::Vec2 infoPos;
     cocos2d::Vec2 upgradePos;
@@ -42,18 +42,18 @@ private:
   static const ButtonLayout LAYOUT_TWO_BUTTONS;
   static const ButtonLayout LAYOUT_THREE_BUTTONS;
 
-  // ÌáÊ¾ÏûÏ¢¸´ÓÃ
+  // æç¤ºæ¶ˆæ¯å¤ç”¨
   void showTips(const std::string& text, const cocos2d::Color3B& color);
   void hideTips();
 
-  // ¼ÓËÙ°´Å¥»Øµ÷
+  // åŠ é€ŸæŒ‰é’®å›è°ƒ
   void onSpeedupClicked(int buildingId);
 
   cocos2d::Label* _goldLabel;
   cocos2d::Label* _elixirLabel;
   cocos2d::Label* _gemLabel;
   cocos2d::Label* _workerLabel;
-  // ¹¤ÈËUI¸üĞÂ·½·¨
+  // å·¥äººUIæ›´æ–°æ–¹æ³•
   void updateWorkerDisplay();
   cocos2d::Node* _actionMenuNode;
   cocos2d::Label* _buildingNameLabel;
@@ -61,7 +61,7 @@ private:
   cocos2d::ui::Button* _btnInfo;
   cocos2d::ui::Button* _btnUpgrade;
   cocos2d::ui::Button* _btnTrain;
-  cocos2d::ui::Button* _btnSpeedup;  // ¼ÓËÙ°´Å¥
+  cocos2d::ui::Button* _btnSpeedup;  // åŠ é€ŸæŒ‰é’®
 
   int _currentSelectedBuildingId = -1;
 
@@ -70,17 +70,17 @@ private:
 
   cocos2d::EventListenerTouchOneByOne* _placementTouchListener;
 
-  // ¸´ÓÃµÄÌáÊ¾Label
+  // å¤ç”¨çš„æç¤ºLabel
   cocos2d::Label* _tipsLabel;
 
-  // ========== £ºÁ¬Ğø½¨ÔìµÄ¸¨Öú·½·¨ ==========
+  // ========== ï¼šè¿ç»­å»ºé€ çš„è¾…åŠ©æ–¹æ³• ==========
   void createNextWall();           
   bool canContinueBuild();        
   void updateContinuousModeUI();   
   void setupKeyboardListener();    
   void onKeyPressed(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event* event);   
 
-  // ========== £ºÁ¬Ğø½¨ÔìÄ£Ê½µÄ×´Ì¬±äÁ¿ ==========
+  // ========== ï¼šè¿ç»­å»ºé€ æ¨¡å¼çš„çŠ¶æ€å˜é‡ ==========
   bool _isContinuousBuildMode = false;      
   int _continuousBuildingType = -1;          
   cocos2d::Label* _modeHintLabel = nullptr;  
