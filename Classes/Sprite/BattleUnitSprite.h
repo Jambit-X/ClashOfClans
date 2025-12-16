@@ -7,6 +7,16 @@
 
 USING_NS_CC;
 
+// ========== 单位类型枚举（性能优化：避免运行时字符串匹配）==========
+enum class UnitTypeID {
+    UNKNOWN = 0,
+    BARBARIAN = 1001,
+    ARCHER = 1002,
+    GOBLIN = 1003,
+    GIANT = 1004,
+    WALL_BREAKER = 1005
+};
+
 class BattleUnitSprite : public Sprite {
 public:
   static BattleUnitSprite* create(const std::string& unitType);
@@ -71,36 +81,17 @@ public:
 
   // ===== 寻路移动 =====
   
-  /**
-   * @brief 使用寻路算法移动到指定世界坐标
-   * @param targetWorldPos 目标世界坐标
-   * @param speed 移动速度（像素/秒）
-   * @param callback 完成后回调
-   */
   void moveToTargetWithPathfinding(
       const Vec2& targetWorldPos, 
       float speed = 100.0f,
       const std::function<void()>& callback = nullptr);
   
-  /**
-   * @brief 使用寻路算法移动到指定网格（根据VillageDataManager的建筑占用表避开障碍）
-   * @param targetGridX 目标网格X坐标
-   * @param targetGridY 目标网格Y坐标
-   * @param speed 移动速度（像素/秒）
-   * @param callback 完成后回调
-   */
   void moveToGridWithPathfinding(
       int targetGridX, 
       int targetGridY, 
       float speed = 100.0f,
       const std::function<void()>& callback = nullptr);
   
-  /**
-   * @brief 沿指定路径列表移动
-   * @param path 路径点列表（世界坐标）
-   * @param speed 移动速度（像素/秒）
-   * @param callback 完成后回调
-   */
   void followPath(
       const std::vector<Vec2>& path, 
       float speed = 100.0f,
@@ -109,14 +100,22 @@ public:
   // ===== 属性访问 =====
   
   std::string getUnitType() const { return _unitType; }
+  UnitTypeID getUnitTypeID() const { return _unitTypeID; }  // 高效获取单位类型
   AnimationType getCurrentAnimation() const { return _currentAnimation; }
   bool isAnimating() const { return _isAnimating; }
+  
+  // ===== 状态标志 =====
+  
+  bool isChangingTarget() const { return _isChangingTarget; }
+  void setChangingTarget(bool changing) { _isChangingTarget = changing; }
 
 protected:
   std::string _unitType;
+  UnitTypeID _unitTypeID = UnitTypeID::UNKNOWN;  // 缓存的单位类型ID（初始化时解析一次）
   AnimationType _currentAnimation;
   bool _isAnimating;
   Vec2 _currentGridPos;  // 当前网格坐标
+  bool _isChangingTarget = false;  // 是否正在切换目标
   
   static const int ANIMATION_TAG = 1000;
   static const int MOVE_TAG = 1001;
@@ -127,6 +126,9 @@ protected:
   
   // 计算角度（0度=右，逆时针）
   float getAngleFromDirection(const Vec2& direction);
+  
+  // 解析单位类型字符串为枚举（只在初始化时调用一次）
+  static UnitTypeID parseUnitType(const std::string& unitType);
 };
 
 #endif // __BATTLE_UNIT_SPRITE_H__

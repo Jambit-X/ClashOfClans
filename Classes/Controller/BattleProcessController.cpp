@@ -23,6 +23,23 @@ static float calculatePathLength(const std::vector<Vec2>& path) {
     return totalDist;
 }
 
+static int getDamageByUnitType(UnitTypeID typeID) {
+    switch (typeID) {
+        case UnitTypeID::BARBARIAN:
+            return TroopConfig::getInstance()->getTroopById(1001).damagePerSecond;
+        case UnitTypeID::ARCHER:
+            return TroopConfig::getInstance()->getTroopById(1002).damagePerSecond;
+        case UnitTypeID::GOBLIN:
+            return TroopConfig::getInstance()->getTroopById(1003).damagePerSecond;
+        case UnitTypeID::GIANT:
+            return TroopConfig::getInstance()->getTroopById(1004).damagePerSecond;
+        case UnitTypeID::WALL_BREAKER:
+            return TroopConfig::getInstance()->getTroopById(1005).damagePerSecond;
+        default:
+            return TroopConfig::getInstance()->getTroopById(1001).damagePerSecond;
+    }
+}
+
 // ==========================================
 // 生命周期管理
 // ==========================================
@@ -42,58 +59,164 @@ void BattleProcessController::destroyInstance() {
 }
 
 // ==========================================
-// 战斗状态重置（退出战斗时调用）
+// 战斗状态重置
 // ==========================================
 
 void BattleProcessController::resetBattleState() {
-    CCLOG("BattleProcessController: Resetting battle state - restoring all building HP");
+    CCLOG("BattleProcessController: Resetting battle state");
 
     auto dataManager = VillageDataManager::getInstance();
     auto& buildings = const_cast<std::vector<BuildingInstance>&>(dataManager->getAllBuildings());
 
     int restoredCount = 0;
-
     for (auto& building : buildings) {
         auto config = BuildingConfig::getInstance()->getConfig(building.type);
-        if (config) {
-            int maxHP = config->hitPoints > 0 ? config->hitPoints : 100;
+        int maxHP = (config && config->hitPoints > 0) ? config->hitPoints : 100;
 
-            if (building.currentHP != maxHP || building.isDestroyed) {
-                CCLOG("BattleProcessController: Restoring building %d (type=%d) HP: %d -> %d",
-                    building.id, building.type, building.currentHP, maxHP);
-                building.currentHP = maxHP;
-                building.isDestroyed = false;
-                restoredCount++;
-            }
-        }
-        else {
-            if (building.currentHP != 100 || building.isDestroyed) {
-                building.currentHP = 100;
-                building.isDestroyed = false;
-                restoredCount++;
-            }
+        if (building.currentHP != maxHP || building.isDestroyed) {
+            building.currentHP = maxHP;
+            building.isDestroyed = false;
+            restoredCount++;
         }
     }
 
-    CCLOG("BattleProcessController: Battle state reset complete - restored %d buildings", restoredCount);
+    CCLOG("BattleProcessController: Restored %d buildings", restoredCount);
     dataManager->saveToFile("village.json");
 }
 
 // ==========================================
-// 核心 AI 逻辑入口 (startUnitAI)
+// 核心攻击逻辑（提取公共代码）
+// ==========================================
+
+void BattleProcessController::executeAttack(
+    BattleUnitSprite* unit,
+    BattleTroopLayer* troopLayer,
+    int targetID,
+    bool isForcedTarget,
+    const std::function<void()>& onTargetDestroyed,
+    const std::function<void()>& onContinueAttack
+) {
+    auto dm = VillageDataManager::getInstance();
+    BuildingInstance* liveTarget = dm->getBuildingById(targetID);
+
+    // 防止重复处理
+    if (unit->isChangingTarget()) {
+        CCLOG("【DEBUG】executeAttack: Unit is already changing target, skipping");
+        return;
+    }
+
+    // 目标已摧毁
+    if (!liveTarget || liveTarget->isDestroyed || liveTarget->currentHP <= 0) {
+        CCLOG("【DEBUG】executeAttack: Target ID=%d is gone/destroyed, calling onTargetDestroyed", targetID);
+        
+        unit->setChangingTarget(true);
+        onTargetDestroyed();
+        
+        unit->runAction(Sequence::create(
+            DelayTime::create(0.1f),
+            CallFunc::create([unit]() {
+                unit->setChangingTarget(false);
+            }),
+            nullptr
+        ));
+        return;
+    }
+
+    // 计算伤害
+    int dps = getDamageByUnitType(unit->getUnitTypeID());
+    
+    CCLOG("【DEBUG】executeAttack: Unit deals %d damage to building ID=%d (HP: %d -> %d)",
+          dps, targetID, liveTarget->currentHP, liveTarget->currentHP - dps);
+
+    // 二次检查
+    if (liveTarget->isDestroyed || liveTarget->currentHP <= 0) {
+        onTargetDestroyed();
+        return;
+    }
+
+    liveTarget->currentHP -= dps;
+
+    // 目标被摧毁
+    if (liveTarget->currentHP <= 0) {
+        liveTarget->isDestroyed = true;
+        liveTarget->currentHP = 0;
+        
+        CCLOG("【DEBUG】🔴 Building ID=%d DESTROYED!", targetID);
+        FindPathUtil::getInstance()->updatePathfindingMap();
+        
+        onTargetDestroyed();
+    }
+    else {
+        // 继续攻击
+        unit->runAction(Sequence::create(
+            CallFunc::create([onContinueAttack]() {
+                onContinueAttack();
+            }),
+            nullptr
+        ));
+    }
+}
+
+// ==========================================
+// 砍城墙时检查是否有更好的路径
+// ==========================================
+
+bool BattleProcessController::shouldAbandonWallForBetterPath(BattleUnitSprite* unit, int currentWallID) {
+    Vec2 unitPos = unit->getPosition();
+    
+    // 找到当前最佳目标
+    const BuildingInstance* bestTarget = findBestTargetBuilding(unitPos);
+    if (!bestTarget) return false;
+    
+    Vec2 targetCenter = GridMapUtils::gridToPixelCenter(bestTarget->gridX, bestTarget->gridY);
+    
+    // 尝试寻路到目标
+    auto pathfinder = FindPathUtil::getInstance();
+    std::vector<Vec2> pathAround = pathfinder->findPathToAttackBuilding(unitPos, *bestTarget);
+    
+    if (pathAround.empty()) {
+        return false;  // 还是没有路径，继续砍墙
+    }
+    
+    float pathLength = calculatePathLength(pathAround);
+    float directDist = unitPos.distance(targetCenter);
+    float detourCost = pathLength - directDist;
+    
+    // 如果绕路代价可接受，说明有更好的路径了
+    if (detourCost <= PIXEL_DETOUR_THRESHOLD && pathLength <= directDist * 2.0f) {
+        CCLOG("【DEBUG】shouldAbandonWallForBetterPath: Found better path! detour=%.0f, abandoning wall ID=%d",
+              detourCost, currentWallID);
+        return true;
+    }
+    
+    return false;
+}
+
+
+
+// ==========================================
+// 核心 AI 逻辑入口
 // ==========================================
 
 void BattleProcessController::startUnitAI(BattleUnitSprite* unit, BattleTroopLayer* troopLayer) {
     if (!unit) {
+        CCLOG("【DEBUG】startUnitAI: Unit is null!");
         return;
     }
+
+    CCLOG("【DEBUG】🔵 startUnitAI called for unit at (%.0f, %.0f)",
+          unit->getPosition().x, unit->getPosition().y);
 
     const BuildingInstance* target = findBestTargetBuilding(unit->getPosition());
 
     if (!target) {
+        CCLOG("【DEBUG】startUnitAI: No valid target found, playing idle");
         unit->playIdleAnimation();
         return;
     }
+
+    CCLOG("【DEBUG】startUnitAI: Found target building ID=%d (HP=%d) at grid(%d, %d)",
+          target->id, target->currentHP, target->gridX, target->gridY);
 
     auto pathfinder = FindPathUtil::getInstance();
     Vec2 unitPos = unit->getPosition();
@@ -103,26 +226,26 @@ void BattleProcessController::startUnitAI(BattleUnitSprite* unit, BattleTroopLay
     float distAround = calculatePathLength(pathAround);
     float distDirect = unitPos.distance(targetCenter);
 
+    CCLOG("【DEBUG】startUnitAI: Direct dist=%.0f, Path dist=%.0f", distDirect, distAround);
+
     if (!pathAround.empty()) {
         float detourCost = distAround - distDirect;
-        const float PIXEL_DETOUR_THRESHOLD = 800.0f;
         
-        if (detourCost > PIXEL_DETOUR_THRESHOLD || distAround > distDirect * 2.0f) {
-            // 绕路代价太大，继续到破墙逻辑
-        }
-        else {
-            // 有路径且绕路代价可接受，直接走
+        if (detourCost <= PIXEL_DETOUR_THRESHOLD && distAround <= distDirect * 2.0f) {
+            CCLOG("【DEBUG】startUnitAI: Path acceptable, following path");
             unit->followPath(pathAround, 100.0f, [this, unit, troopLayer]() {
                 startCombatLoop(unit, troopLayer);
             });
             return;
         }
+        CCLOG("【DEBUG】startUnitAI: Detour too costly (%.0f), checking for walls", detourCost);
     }
 
-    // 需要破墙的情况
+    // 需要破墙
     const BuildingInstance* wallToBreak = getFirstWallInLine(unitPos, targetCenter);
 
     if (wallToBreak) {
+        CCLOG("【DEBUG】startUnitAI: Found wall ID=%d blocking path", wallToBreak->id);
         std::vector<Vec2> pathToWall = pathfinder->findPathToAttackBuilding(unitPos, *wallToBreak);
 
         if (pathToWall.empty()) {
@@ -135,7 +258,7 @@ void BattleProcessController::startUnitAI(BattleUnitSprite* unit, BattleTroopLay
         }
     }
     else {
-        // 没有墙挡住，直接走向目标
+        CCLOG("【DEBUG】startUnitAI: No wall blocking, moving directly");
         std::vector<Vec2> directPath = { targetCenter };
         unit->followPath(directPath, 100.0f, [this, unit, troopLayer]() {
             startCombatLoop(unit, troopLayer);
@@ -143,7 +266,10 @@ void BattleProcessController::startUnitAI(BattleUnitSprite* unit, BattleTroopLay
     }
 }
 
-// ... (其他辅助函数保持不变)
+// ==========================================
+// 辅助方法
+// ==========================================
+
 const BuildingInstance* BattleProcessController::getFirstWallInLine(const Vec2& startPixel, const Vec2& endPixel) {
     auto dataManager = VillageDataManager::getInstance();
     auto pathfinder = FindPathUtil::getInstance();
@@ -179,7 +305,6 @@ const BuildingInstance* BattleProcessController::getFirstWallInLine(const Vec2& 
         if (b && b->type == 303 && !b->isDestroyed && b->currentHP > 0) {
             return b;
         }
-
         current += direction;
     }
 
@@ -190,18 +315,15 @@ const BuildingInstance* BattleProcessController::findBestTargetBuilding(const Ve
     auto dataManager = VillageDataManager::getInstance();
     const auto& buildings = dataManager->getAllBuildings();
 
-    if (buildings.empty()) {
-        return nullptr;
-    }
+    if (buildings.empty()) return nullptr;
 
     const BuildingInstance* bestBuilding = nullptr;
     float minDistanceSq = FLT_MAX;
 
     for (const auto& building : buildings) {
-        if (building.isDestroyed) continue;
-        if (building.currentHP <= 0) continue;
+        if (building.isDestroyed || building.currentHP <= 0) continue;
         if (building.state == BuildingInstance::State::PLACING) continue;
-        if (building.type == 303) continue;
+        if (building.type == 303) continue;  // 跳过城墙
 
         auto config = BuildingConfig::getInstance()->getConfig(building.type);
         if (!config) continue;
@@ -233,157 +355,104 @@ void BattleProcessController::startCombatLoop(BattleUnitSprite* unit, BattleTroo
     const BuildingInstance* target = findNearestBuilding(unit->getPosition());
 
     if (!target) {
+        CCLOG("【DEBUG】startCombatLoop: No target found, playing idle");
         unit->playIdleAnimation();
         return;
     }
 
     BuildingInstance* mutableTarget = dm->getBuildingById(target->id);
-    if (!mutableTarget) {
-        startUnitAI(unit, troopLayer);
-        return;
-    }
-
-    if (mutableTarget->isDestroyed || mutableTarget->currentHP <= 0) {
+    if (!mutableTarget || mutableTarget->isDestroyed || mutableTarget->currentHP <= 0) {
+        CCLOG("【DEBUG】startCombatLoop: Target destroyed, restarting AI");
         startUnitAI(unit, troopLayer);
         return;
     }
 
     Vec2 buildingPos = GridMapUtils::gridToPixelCenter(mutableTarget->gridX, mutableTarget->gridY);
+    Vec2 unitPos = unit->getPosition();
+    float distance = unitPos.distance(buildingPos);
+    
+    // 检查攻击范围
+    if (distance > ATTACK_RANGE) {
+        CCLOG("【DEBUG】startCombatLoop: Too far (dist=%.0f), need to move closer", distance);
+        startUnitAI(unit, troopLayer);
+        return;
+    }
+    
+    CCLOG("【DEBUG】startCombatLoop: Attacking building ID=%d (HP=%d), dist=%.0f",
+          mutableTarget->id, mutableTarget->currentHP, distance);
 
-    unit->attackTowardPosition(buildingPos, [this, unit, troopLayer, mutableTarget]() {
-        auto dmInner = VillageDataManager::getInstance();
-        BuildingInstance* liveTarget = dmInner->getBuildingById(mutableTarget->id);
-
-        if (!liveTarget || liveTarget->isDestroyed || liveTarget->currentHP <= 0) {
-            startUnitAI(unit, troopLayer);
-            return;
-        }
-
-        TroopInfo troopInfo = TroopConfig::getInstance()->getTroopById(1001);
-
-        std::string ut = unit->getUnitType();
-        if (ut.find("Barbarian") != std::string::npos || ut.find("barbarian") != std::string::npos || ut.find("野蛮人") != std::string::npos) {
-            troopInfo = TroopConfig::getInstance()->getTroopById(1001);
-        }
-        else if (ut.find("Archer") != std::string::npos || ut.find("archer") != std::string::npos || ut.find("弓箭手") != std::string::npos) {
-            troopInfo = TroopConfig::getInstance()->getTroopById(1002);
-        }
-        else if (ut.find("Goblin") != std::string::npos || ut.find("goblin") != std::string::npos || ut.find("哥布林") != std::string::npos) {
-            troopInfo = TroopConfig::getInstance()->getTroopById(1003);
-        }
-        else if (ut.find("Giant") != std::string::npos || ut.find("giant") != std::string::npos || ut.find("巨人") != std::string::npos) {
-            troopInfo = TroopConfig::getInstance()->getTroopById(1004);
-        }
-        else if (ut.find("Wall_Breaker") != std::string::npos || ut.find("炸弹人") != std::string::npos) {
-            troopInfo = TroopConfig::getInstance()->getTroopById(1005);
-        }
-
-        int dps = troopInfo.damagePerSecond;
-
-        if (liveTarget->isDestroyed || liveTarget->currentHP <= 0) {
-            startUnitAI(unit, troopLayer);
-            return;
-        }
-
-        liveTarget->currentHP -= dps;
-
-        if (liveTarget->currentHP <= 0) {
-            liveTarget->isDestroyed = true;
-            liveTarget->currentHP = 0;
-            FindPathUtil::getInstance()->updatePathfindingMap();
-            startUnitAI(unit, troopLayer);
-            return;
-        }
-        else {
-            unit->runAction(Sequence::create(
-                CallFunc::create([this, unit, troopLayer]() {
-                    startCombatLoop(unit, troopLayer);
-                }),
-                nullptr
-            ));
-        }
+    int targetID = mutableTarget->id;
+    
+    unit->attackTowardPosition(buildingPos, [this, unit, troopLayer, targetID]() {
+        executeAttack(unit, troopLayer, targetID, false,
+            [this, unit, troopLayer]() { startUnitAI(unit, troopLayer); },
+            [this, unit, troopLayer]() { startCombatLoop(unit, troopLayer); }
+        );
     });
 }
 
 void BattleProcessController::startCombatLoopWithForcedTarget(BattleUnitSprite* unit, BattleTroopLayer* troopLayer, const BuildingInstance* forcedTarget) {
-    if (!unit || !troopLayer || !forcedTarget) {
-        return;
-    }
+    if (!unit || !troopLayer || !forcedTarget) return;
 
-    auto dataManager = VillageDataManager::getInstance();
+    auto dm = VillageDataManager::getInstance();
     int targetID = forcedTarget->id;
 
-    auto maybe = dataManager->getBuildingById(targetID);
-    if (!maybe || maybe->isDestroyed || maybe->currentHP <= 0) {
-        unit->playIdleAnimation();
+    BuildingInstance* liveTarget = dm->getBuildingById(targetID);
+    if (!liveTarget || liveTarget->isDestroyed || liveTarget->currentHP <= 0) {
+        CCLOG("【DEBUG】startCombatLoopWithForcedTarget: Target destroyed, restarting AI");
         startUnitAI(unit, troopLayer);
         return;
     }
 
-    const BuildingInstance* safeTarget = dataManager->getBuildingById(targetID);
-    Vec2 targetPos = GridMapUtils::gridToPixelCenter(safeTarget->gridX, safeTarget->gridY);
+    // 每次攻击前检查是否有更好的路径
+    if (shouldAbandonWallForBetterPath(unit, targetID)) {
+        CCLOG("【DEBUG】startCombatLoopWithForcedTarget: Better path found! Abandoning wall ID=%d", targetID);
+        startUnitAI(unit, troopLayer);
+        return;
+    }
+
+    Vec2 targetPos = GridMapUtils::gridToPixelCenter(liveTarget->gridX, liveTarget->gridY);
+    Vec2 unitPos = unit->getPosition();
+    float distance = unitPos.distance(targetPos);
+    
+    // 检查攻击范围
+    if (distance > ATTACK_RANGE) {
+        CCLOG("【DEBUG】startCombatLoopWithForcedTarget: Too far (dist=%.0f), moving closer", distance);
+        
+        auto pathfinder = FindPathUtil::getInstance();
+        std::vector<Vec2> pathToTarget = pathfinder->findPathToAttackBuilding(unitPos, *liveTarget);
+        
+        if (!pathToTarget.empty()) {
+            unit->followPath(pathToTarget, 100.0f, [this, unit, troopLayer, forcedTarget]() {
+                startCombatLoopWithForcedTarget(unit, troopLayer, forcedTarget);
+            });
+        } else {
+            std::vector<Vec2> directPath = { targetPos };
+            unit->followPath(directPath, 100.0f, [this, unit, troopLayer, forcedTarget]() {
+                startCombatLoopWithForcedTarget(unit, troopLayer, forcedTarget);
+            });
+        }
+        return;
+    }
+    
+    CCLOG("【DEBUG】startCombatLoopWithForcedTarget: Attacking wall ID=%d (HP=%d), dist=%.0f",
+          targetID, liveTarget->currentHP, distance);
 
     unit->attackTowardPosition(targetPos, [this, unit, troopLayer, targetID]() {
-        auto dm = VillageDataManager::getInstance();
-        BuildingInstance* liveTarget = dm->getBuildingById(targetID);
-
-        if (!liveTarget || liveTarget->isDestroyed || liveTarget->currentHP <= 0) {
-            startUnitAI(unit, troopLayer);
-            return;
-        }
-
-        TroopInfo troopInfo = TroopConfig::getInstance()->getTroopById(1001);
-
-        std::string ut = unit->getUnitType();
-        if (ut.find("Barbarian") != std::string::npos || ut.find("barbarian") != std::string::npos || ut.find("野蛮人") != std::string::npos) {
-            troopInfo = TroopConfig::getInstance()->getTroopById(1001);
-        }
-        else if (ut.find("Archer") != std::string::npos || ut.find("archer") != std::string::npos || ut.find("弓箭手") != std::string::npos) {
-            troopInfo = TroopConfig::getInstance()->getTroopById(1002);
-        }
-        else if (ut.find("Goblin") != std::string::npos || ut.find("goblin") != std::string::npos || ut.find("哥布林") != std::string::npos) {
-            troopInfo = TroopConfig::getInstance()->getTroopById(1003);
-        }
-        else if (ut.find("Giant") != std::string::npos || ut.find("giant") != std::string::npos || ut.find("巨人") != std::string::npos) {
-            troopInfo = TroopConfig::getInstance()->getTroopById(1004);
-        }
-        else if (ut.find("Wall_Breaker") != std::string::npos || ut.find("炸弹人") != std::string::npos) {
-            troopInfo = TroopConfig::getInstance()->getTroopById(1005);
-        }
-
-        int dps = troopInfo.damagePerSecond;
-
-        if (liveTarget->isDestroyed || liveTarget->currentHP <= 0) {
-            startUnitAI(unit, troopLayer);
-            return;
-        }
-
-        liveTarget->currentHP -= dps;
-
-        if (liveTarget->currentHP <= 0) {
-            liveTarget->isDestroyed = true;
-            liveTarget->currentHP = 0;
-            
-            // 关键：更新寻路地图，移除被摧毁的墙
-            FindPathUtil::getInstance()->updatePathfindingMap();
-            
-            startUnitAI(unit, troopLayer);
-            return;
-        }
-        else {
-            unit->runAction(Sequence::create(
-                CallFunc::create([this, unit, troopLayer, targetID]() {
-                    auto dm = VillageDataManager::getInstance();
-                    auto t = dm->getBuildingById(targetID);
-                    if (t && !t->isDestroyed && t->currentHP > 0) {
-                        startCombatLoopWithForcedTarget(unit, troopLayer, t);
-                    }
-                    else {
-                        startUnitAI(unit, troopLayer);
-                    }
-                }),
-                nullptr
-            ));
-        }
+        executeAttack(unit, troopLayer, targetID, true,
+            [this, unit, troopLayer]() {
+                CCLOG("【DEBUG】Wall destroyed, restarting AI");
+                startUnitAI(unit, troopLayer);
+            },
+            [this, unit, troopLayer, targetID]() {
+                auto dm = VillageDataManager::getInstance();
+                auto t = dm->getBuildingById(targetID);
+                if (t && !t->isDestroyed && t->currentHP > 0) {
+                    startCombatLoopWithForcedTarget(unit, troopLayer, t);
+                } else {
+                    startUnitAI(unit, troopLayer);
+                }
+            }
+        );
     });
 }

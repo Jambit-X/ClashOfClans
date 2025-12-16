@@ -19,6 +19,7 @@ BattleUnitSprite* BattleUnitSprite::create(const std::string& unitType) {
 
 bool BattleUnitSprite::init(const std::string& unitType) {
   _unitType = unitType;
+  _unitTypeID = parseUnitType(unitType);  // 初始化时解析一次
   _currentAnimation = AnimationType::IDLE;
   _isAnimating = false;
   _currentGridPos = Vec2::ZERO;
@@ -37,8 +38,34 @@ bool BattleUnitSprite::init(const std::string& unitType) {
   }
 
   this->setAnchorPoint(Vec2(0.5f, 0.0f));
-  CCLOG("BattleUnitSprite: Created %s", unitType.c_str());
+  CCLOG("BattleUnitSprite: Created %s (TypeID=%d)", unitType.c_str(), static_cast<int>(_unitTypeID));
   return true;
+}
+
+// ========== 静态方法：解析单位类型字符串为枚举（只在初始化时调用一次）==========
+UnitTypeID BattleUnitSprite::parseUnitType(const std::string& unitType) {
+    // 转换为小写进行比较
+    std::string lower = unitType;
+    std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+    
+    if (lower.find("barbarian") != std::string::npos || lower.find("野蛮人") != std::string::npos) {
+        return UnitTypeID::BARBARIAN;
+    }
+    if (lower.find("archer") != std::string::npos || lower.find("弓箭手") != std::string::npos) {
+        return UnitTypeID::ARCHER;
+    }
+    if (lower.find("goblin") != std::string::npos || lower.find("哥布林") != std::string::npos) {
+        return UnitTypeID::GOBLIN;
+    }
+    if (lower.find("giant") != std::string::npos || lower.find("巨人") != std::string::npos) {
+        return UnitTypeID::GIANT;
+    }
+    if (lower.find("wall_breaker") != std::string::npos || lower.find("wallbreaker") != std::string::npos || lower.find("炸弹人") != std::string::npos) {
+        return UnitTypeID::WALL_BREAKER;
+    }
+    
+    CCLOG("BattleUnitSprite::parseUnitType: Unknown unit type '%s'", unitType.c_str());
+    return UnitTypeID::UNKNOWN;
 }
 
 // ===== 基础动画控制 =====
