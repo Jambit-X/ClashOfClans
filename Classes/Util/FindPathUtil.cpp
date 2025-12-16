@@ -69,7 +69,7 @@ std::vector<Vec2> FindPathUtil::findPathToAttackBuilding(const Vec2& unitWorldPo
     // 3. 收集该建筑周围所有可用的攻击位（Valid Attack Spots）
     struct CandidateSpot {
         int x, y;
-        int distCost;
+        float distSq;  // 使用欧几里得距离的平方，更准确
     };
     std::vector<CandidateSpot> candidates;
 
@@ -81,8 +81,11 @@ std::vector<Vec2> FindPathUtil::findPathToAttackBuilding(const Vec2& unitWorldPo
 
             // 只有该格子可通行，才视为有效的攻击位
             if (isWalkable(x, y)) {
-                int dist = std::abs(x - startX) + std::abs(y - startY);
-                candidates.push_back({ x, y, dist });
+                // 使用欧几里得距离平方，更准确地反映实际距离
+                float dx = static_cast<float>(x - startX);
+                float dy = static_cast<float>(y - startY);
+                float distSq = dx * dx + dy * dy;
+                candidates.push_back({ x, y, distSq });
             }
         }
     }
@@ -91,13 +94,13 @@ std::vector<Vec2> FindPathUtil::findPathToAttackBuilding(const Vec2& unitWorldPo
         return {};
     }
 
-    // 4. 按照距离排序，优先尝试最近的点
+    // 4. 按照欧几里得距离排序，优先尝试最近的点
     std::sort(candidates.begin(), candidates.end(), [](const CandidateSpot& a, const CandidateSpot& b) {
-        return a.distCost < b.distCost;
+        return a.distSq < b.distSq;
     });
 
-    // 5. 尝试寻路（最多尝试前 3 个最近的点）
-    int attempts = std::min((int)candidates.size(), 3);
+    // 5. 尝试寻路（最多尝试前 5 个最近的点，增加成功率）
+    int attempts = std::min((int)candidates.size(), 5);
 
     for (int i = 0; i < attempts; ++i) {
         int targetX = candidates[i].x;
@@ -138,19 +141,22 @@ void FindPathUtil::updatePathfindingMap() {
     const auto& buildings = dataManager->getAllBuildings();
 
     for (const auto& b : buildings) {
+        // 跳过正在放置的建筑
         if (b.state == BuildingInstance::State::PLACING) continue;
+        
+        // 关键：跳过已摧毁的建筑
+        if (b.isDestroyed || b.currentHP <= 0) continue;
 
         auto config = BuildingConfig::getInstance()->getConfig(b.type);
         if (!config) continue;
 
-        // ========== 关键修改：区分城墙和普通建筑 ==========
+        // 区分城墙和普通建筑
         GridType gridType;
         if (b.type == 303) {  // 城墙的 BuildingType
             gridType = GridType::WALL;
         } else {
             gridType = GridType::BUILDING;
         }
-        // ================================================
 
         for (int x = b.gridX; x < b.gridX + config->gridWidth; ++x) {
             for (int y = b.gridY; y < b.gridY + config->gridHeight; ++y) {
@@ -160,8 +166,6 @@ void FindPathUtil::updatePathfindingMap() {
             }
         }
     }
-    
-    CCLOG("FindPathUtil: Pathfinding map updated (walls are marked separately)");
 }
 
 bool FindPathUtil::isWalkable(int gridX, int gridY) const {

@@ -187,6 +187,20 @@ void BuildingManager::update(float dt) {
         sprite->updateConstructionProgress(progress);
       }
     }
+    // 同步渲染：如果建筑被标记为 isDestroyed，在 sprite 上渲染为红色方块
+    for (const auto& b : buildings) {
+      auto s = getBuildingSprite(b.id);
+      if (!s) continue;
+      if (b.isDestroyed) {
+        // 如果已摧毁，用红色遮罩覆盖并半透明显示
+        s->setColor(Color3B::RED);
+        s->setOpacity(200);
+      } else {
+        // 恢复正常显示
+        s->setColor(Color3B::WHITE);
+        s->setOpacity(255);
+      }
+    }
   }
 }
 

@@ -241,6 +241,14 @@ BuildingInstance* VillageDataManager::getBuildingById(int id) {
   return nullptr;
 }
 
+// O(1) 网格查询实现
+BuildingInstance* VillageDataManager::getBuildingAtGrid(int gridX, int gridY) {
+  if (gridX < 0 || gridY < 0 || gridX >= GridMapUtils::GRID_WIDTH || gridY >= GridMapUtils::GRID_HEIGHT) return nullptr;
+  int occupyingId = _gridOccupancy[gridX][gridY];
+  if (occupyingId == 0) return nullptr;
+  return getBuildingById(occupyingId);
+}
+
 int VillageDataManager::addBuilding(int type, int level, int gridX, int gridY,
                                     BuildingInstance::State state,
                                     long long finishTime,
@@ -257,12 +265,26 @@ int VillageDataManager::addBuilding(int type, int level, int gridX, int gridY,
 
   _data.buildings.push_back(building);
 
+  // 初始化 currentHP
+  auto cfg = BuildingConfig::getInstance()->getConfig(building.type);
+  if (cfg) {
+    // 设置为配置里定义的生命值，若未定义则使用 100 作为兜底
+    _data.buildings.back().currentHP = cfg->hitPoints > 0 ? cfg->hitPoints : 100;
+  } else {
+    _data.buildings.back().currentHP = 100;
+  }
+  
+  // 【关键修复】初始化 isDestroyed 为 false（新建筑不应该是红色）
+  _data.buildings.back().isDestroyed = false;
+
   if (state != BuildingInstance::State::PLACING) {
     updateGridOccupancy();
   }
 
-  CCLOG("VillageDataManager: Added building ID=%d, type=%d, level=%d, initial=%s",
-        building.id, type, level, isInitialConstruction ? "YES" : "NO");
+  CCLOG("VillageDataManager: Added building ID=%d, type=%d, level=%d, initial=%s, HP=%d, isDestroyed=%s",
+        building.id, type, level, isInitialConstruction ? "YES" : "NO",
+        _data.buildings.back().currentHP,
+        _data.buildings.back().isDestroyed ? "true" : "false");
 
   return building.id;
 }
@@ -506,7 +528,11 @@ void VillageDataManager::updateGridOccupancy() {
   }
 
   for (const auto& building : _data.buildings) {
+    // 跳过放置中或已摧毁的建筑（它们不应占用网格）
     if (building.state == BuildingInstance::State::PLACING) {
+      continue;
+    }
+    if (building.isDestroyed) {
       continue;
     }
 
@@ -602,6 +628,8 @@ void VillageDataManager::saveToFile(const std::string& filename) {
     buildingObj.AddMember("state", (int)building.state, allocator);
     buildingObj.AddMember("finishTime", building.finishTime, allocator);
     buildingObj.AddMember("isInitialConstruction", building.isInitialConstruction, allocator);
+    // 保存运行时血量，注意：不要保存 isDestroyed（战斗临时状态不应持久化）
+    buildingObj.AddMember("currentHP", building.currentHP, allocator);
     buildingsArray.PushBack(buildingObj, allocator);
   }
   doc.AddMember("buildings", buildingsArray, allocator);
@@ -752,6 +780,17 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
       } else {
         building.isInitialConstruction = false;
       }
+
+      // 初始化 currentHP：优先使用存档中的字段（如果存在），否则取配置的 hitPoints
+      if (buildingObj.HasMember("currentHP") && buildingObj["currentHP"].IsInt()) {
+        building.currentHP = buildingObj["currentHP"].GetInt();
+      } else {
+        auto cfg = BuildingConfig::getInstance()->getConfig(building.type);
+        building.currentHP = (cfg && cfg->hitPoints > 0) ? cfg->hitPoints : 100;
+      }
+
+      // 战斗临时状态：不从存档读入 isDestroyed，默认 false
+      building.isDestroyed = false;
 
       _data.buildings.push_back(building);
 

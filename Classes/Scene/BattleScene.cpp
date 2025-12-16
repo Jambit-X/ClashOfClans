@@ -140,10 +140,20 @@ void BattleScene::onNextOpponentClicked() {
 }
 
 void BattleScene::onEndBattleClicked() {
+    CCLOG("BattleScene: Ending battle, resetting building states");
+    
+    // 【关键修复】退出战斗前恢复所有建筑状态
+    BattleProcessController::getInstance()->resetBattleState();
+    
     switchState(BattleState::RESULT);
 }
 
 void BattleScene::onReturnHomeClicked() {
+    CCLOG("BattleScene: Returning home, resetting building states");
+    
+    // 【关键修复】返回村庄前恢复所有建筑状态
+    BattleProcessController::getInstance()->resetBattleState();
+    
     auto homeScene = VillageScene::createScene();
     Director::getInstance()->replaceScene(TransitionFade::create(0.5f, homeScene));
 }

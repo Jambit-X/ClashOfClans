@@ -43,6 +43,9 @@ bool BattleMapLayer::init() {
     // 注意：这里我们故意不设置"建筑点击回调"，也不创建 MoveBuildingController
     // 从而实现"只读"效果
 
+    // 【新增】启动定时更新，用于实时反映建筑受损状态（isDestroyed）
+    this->scheduleUpdate();
+
     return true;
 }
 
@@ -66,4 +69,14 @@ Sprite* BattleMapLayer::createMapSprite() {
     mapSprite->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
     mapSprite->setPosition(Vec2::ZERO);
     return mapSprite;
+}
+
+void BattleMapLayer::update(float dt) {
+    Layer::update(dt);
+    
+    // 【关键修复】调用 BuildingManager 的更新方法，实时同步建筑的 isDestroyed 状态
+    // 这会让战斗中被摧毁的建筑立即变红
+    if (_buildingManager) {
+        _buildingManager->update(dt);
+    }
 }

@@ -72,7 +72,7 @@ bool VillageLayer::init() {
   // 7. 启动建筑更新
   this->schedule([this](float dt) {
     _buildingManager->update(dt);
-  }, 1.0f, "building_update");
+  }, 0.0f, "building_update");
 
   // 启动建造完成检测（每秒检查）
   this->schedule([this](float dt) {

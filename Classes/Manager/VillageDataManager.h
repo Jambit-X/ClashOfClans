@@ -29,6 +29,8 @@ public:
   // ========== 建筑接口 ==========
   const std::vector<BuildingInstance>& getAllBuildings() const;
   BuildingInstance* getBuildingById(int id);
+  // O(1) 网格查询：返回占据指定格子的建筑指针（或 nullptr）
+  BuildingInstance* getBuildingAtGrid(int gridX, int gridY);
 
   // 修改：添加 isInitialConstruction 参数
   int addBuilding(int type, int level, int gridX, int gridY,
