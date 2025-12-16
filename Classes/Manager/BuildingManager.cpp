@@ -5,9 +5,10 @@
 
 USING_NS_CC;
 
-BuildingManager::BuildingManager(Layer* parentLayer)
-    : _parentLayer(parentLayer) {
+BuildingManager::BuildingManager(Layer* parentLayer, bool isBattleScene)
+    : _parentLayer(parentLayer), _isBattleScene(isBattleScene) {
     loadBuildingsFromData();
+    CCLOG("BuildingManager: Created for %s scene", isBattleScene ? "BATTLE" : "VILLAGE");
 }
 
 BuildingManager::~BuildingManager() {
@@ -187,20 +188,25 @@ void BuildingManager::update(float dt) {
         sprite->updateConstructionProgress(progress);
       }
     }
-    // 同步渲染：如果建筑被标记为 isDestroyed，在 sprite 上渲染为红色方块
-    for (const auto& b : buildings) {
-      auto s = getBuildingSprite(b.id);
-      if (!s) continue;
-      if (b.isDestroyed) {
-        // 如果已摧毁，用红色遮罩覆盖并半透明显示
-        s->setColor(Color3B::RED);
-        s->setOpacity(200);
-      } else {
-        // 恢复正常显示
-        s->setColor(Color3B::WHITE);
-        s->setOpacity(255);
+    // ========== 核心修复：只在战斗场景才处理 HP 状态 ==========
+    if (_isBattleScene) {
+      // 同步渲染：如果建筑被标记为 isDestroyed，在 sprite 上渲染为红色方块
+      for (const auto& b : buildings) {
+        auto s = getBuildingSprite(b.id);
+        if (!s) continue;
+
+        if (b.isDestroyed) {
+          // 如果已摧毁，用红色遮罩覆盖并半透明显示
+          s->setColor(Color3B::RED);
+          s->setOpacity(200);
+        } else {
+          // 恢复正常显示
+          s->setColor(Color3B::WHITE);
+          s->setOpacity(255);
+        }
       }
     }
+    // =========================================================
   }
 }
 

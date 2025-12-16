@@ -33,8 +33,8 @@ bool BattleMapLayer::init() {
         this->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
     }
 
-    // 2. 初始化建筑管理器 (只读模式，不传递 Layer 进行交互)
-    _buildingManager = new BuildingManager(this);
+    // 2. 初始化建筑管理器（战斗场景：isBattleScene = true）
+    _buildingManager = new BuildingManager(this, true);
     // 注意：BuildingManager 的构造函数已经调用了 loadBuildingsFromData()，不要重复调用
 
     // 3. 初始化地图移动控制器 (仅拖拽缩放)
