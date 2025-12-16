@@ -280,18 +280,18 @@ void MoveBuildingController::updatePreviewPosition(const Vec2& worldPos) {
   // 实时更新网格坐标（用于碰撞检测）
   sprite->setGridPos(posInfo.gridPos);
 
-  // 显示视觉反馈（根据状态）
+  // ========== 修复：显示视觉反馈（根据状态）==========
   if (isConstructing) {
-    // 建造中的建筑：不改变颜色，只改变透明度表示合法性
+    // 建造中的建筑：使用透明度 + 轻微变色表示合法性
     if (posInfo.isValid) {
       sprite->setOpacity(255);  // 可放置：保持原透明度
+      sprite->setColor(Color3B(100, 100, 100));  // 暗灰色（建造中的基础色）
     } else {
-      sprite->setOpacity(180);  // 不可放置：稍微变透明
+      sprite->setOpacity(180);  // 不可放置：变透明
+      sprite->setColor(Color3B(120, 60, 60));  // 暗红色（表示无效位置）
     }
-    // 保持暗灰色（建造动画的颜色）
-    sprite->setColor(Color3B(80, 80, 80));
   } else {
-    // 已完成的建筑：正常的绿/红预览
+    // 已完成的建筑：正常的绿/红预览（重要！）
     sprite->setPlacementPreview(posInfo.isValid);
   }
 

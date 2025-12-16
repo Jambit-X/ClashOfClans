@@ -29,8 +29,8 @@ bool VillageLayer::init() {
   // 2. 初始化基本属性
   initializeBasicProperties();
 
-  // 3. 初始化建筑管理器
-  _buildingManager = new BuildingManager(this);
+  // 3. 初始化建筑管理器（村庄场景：isBattleScene = false）
+  _buildingManager = new BuildingManager(this, false);
 
   //  4. 先初始化建筑移动控制器（优先级更高）
   _moveBuildingController = new MoveBuildingController(this, _buildingManager);

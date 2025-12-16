@@ -11,7 +11,7 @@ USING_NS_CC;
 // 建筑管理器（负责建筑精灵的创建、更新、删除）
 class BuildingManager {
 public:
-  BuildingManager(Layer* parentLayer);
+  BuildingManager(Layer* parentLayer, bool isBattleScene = false);  // 添加场景标识参数
   ~BuildingManager();
 
   // 从数据创建所有建筑
@@ -46,9 +46,12 @@ public:
   Vec2 worldToGrid(const Vec2& worldPos) const;
   // 在 BuildingManager 类中添加
   void removeBuildingSprite(int buildingId);
+
 private:
   Layer* _parentLayer;                                      // 父层
   std::unordered_map<int, BuildingSprite*> _buildings;    // 建筑映射表 <buildingId, sprite>
+  bool _isBattleScene = false;  // 是否为战斗场景
+
   // 统一的 Z-Order 计算函数
   static int calculateZOrder(int gridX, int gridY) {
     return gridX - gridY + 45;
