@@ -1,18 +1,41 @@
 ﻿#include "BuildingManager.h"
 #include "Manager/VillageDataManager.h"
 #include "Model/BuildingConfig.h"
+#include "Model/BattleMapData.h"
 #include "Util/GridMapUtils.h"
 
 USING_NS_CC;
 
 BuildingManager::BuildingManager(Layer* parentLayer, bool isBattleScene)
     : _parentLayer(parentLayer), _isBattleScene(isBattleScene) {
-    loadBuildingsFromData();
+    
+    // 战斗场景：优先加载战斗地图数据
+    if (_isBattleScene) {
+        auto dataManager = VillageDataManager::getInstance();
+        if (dataManager->hasBattleMapData()) {
+            loadFromBattleMapData();
+        } else {
+            // 没有预生成的战斗地图，自动生成一个
+            dataManager->generateRandomBattleMap(0);
+            loadFromBattleMapData();
+        }
+    } else {
+        // 村庄场景：加载玩家村庄数据
+        loadBuildingsFromData();
+    }
+    
     CCLOG("BuildingManager: Created for %s scene", isBattleScene ? "BATTLE" : "VILLAGE");
 }
 
 BuildingManager::~BuildingManager() {
+    // 【修复】先从场景中移除所有建筑精灵，再清除映射
+    for (auto& pair : _buildings) {
+        if (pair.second) {
+            pair.second->removeFromParent();
+        }
+    }
     _buildings.clear();
+    CCLOG("BuildingManager: Destroyed and removed all building sprites");
 }
 
 void BuildingManager::loadBuildingsFromData() {
@@ -24,8 +47,20 @@ void BuildingManager::loadBuildingsFromData() {
             addBuilding(building);
         }
     }
-    CCLOG("BuildingManager: Loaded %lu buildings", _buildings.size());
+    CCLOG("BuildingManager: Loaded %lu buildings from village data", _buildings.size());
 }
+
+void BuildingManager::loadFromBattleMapData() {
+    auto dataManager = VillageDataManager::getInstance();
+    const auto& mapData = dataManager->getBattleMapData();
+    
+    for (const auto& building : mapData.buildings) {
+        addBuilding(building);
+    }
+    CCLOG("BuildingManager: Loaded %zu buildings from battle map (difficulty=%d)", 
+          _buildings.size(), mapData.difficulty);
+}
+
 
 BuildingSprite* BuildingManager::addBuilding(const BuildingInstance& building) {
   auto sprite = BuildingSprite::create(building);
@@ -190,19 +225,23 @@ void BuildingManager::update(float dt) {
     }
     // ========== 核心修复：只在战斗场景才处理 HP 状态 ==========
     if (_isBattleScene) {
-      // 同步渲染：如果建筑被标记为 isDestroyed，在 sprite 上渲染为红色方块
+      // 同步渲染：处理建筑的 HP 和摧毁状态
       for (const auto& b : buildings) {
         auto s = getBuildingSprite(b.id);
         if (!s) continue;
 
         if (b.isDestroyed) {
-          // 如果已摧毁，用红色遮罩覆盖并半透明显示
-          s->setColor(Color3B::RED);
-          s->setOpacity(200);
+          // 如果已摧毁，显示废墟贴图并隐藏血条
+          s->showDestroyedRubble();
         } else {
           // 恢复正常显示
           s->setColor(Color3B::WHITE);
           s->setOpacity(255);
+          
+          // 【新增】更新血条显示
+          auto config = BuildingConfig::getInstance()->getConfig(b.type);
+          int maxHP = (config && config->hitPoints > 0) ? config->hitPoints : 100;
+          s->updateHealthBar(b.currentHP, maxHP);
         }
       }
     }

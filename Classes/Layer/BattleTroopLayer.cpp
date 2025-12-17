@@ -48,7 +48,14 @@ BattleUnitSprite* BattleTroopLayer::spawnUnit(const std::string& unitType, int g
     unit->playIdleAnimation();
     
     // 添加到层级
-    this->addChild(unit);
+    // 【修改】添加到父节点 (MapLayer) 以便与建筑进行统一 Z 序排序
+    auto mapLayer = this->getParent();
+    if (mapLayer) {
+        mapLayer->addChild(unit);
+    } else {
+        // Fallback (防崩): 如果还没加到 MapLayer，就加到自己身上
+        this->addChild(unit); 
+    }
     _units.push_back(unit);
     
     CCLOG("BattleTroopLayer: Spawned %s at grid(%d, %d)", unitType.c_str(), gridX, gridY);

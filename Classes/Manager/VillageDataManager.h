@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "../Model/VillageData.h"
+#include "../Model/BattleMapData.h"
 #include <functional>
 #include <ctime>
 #include "../Model/TroopConfig.h"
@@ -181,6 +182,16 @@ public:
   int getGems() const { return getGem(); }
   void addGems(int amount) { addGem(amount); }
 
+  // ========== 战斗地图 ==========
+  void setBattleMapData(const BattleMapData& data);
+  const BattleMapData& getBattleMapData() const;
+  void generateRandomBattleMap(int difficulty = 0);
+  bool hasBattleMapData() const;
+  
+  // 战斗模式切换
+  void setInBattleMode(bool inBattle);
+  bool isInBattleMode() const;
+  void updateBattleGridOccupancy();  // 更新战斗地图的网格占用
 
 private:
   VillageDataManager();
@@ -193,6 +204,11 @@ private:
   int _nextBuildingId;
 
   std::vector<std::vector<int>> _gridOccupancy;
+  std::vector<std::vector<int>> _battleGridOccupancy;  // 战斗地图专用网格占用
 
   ResourceCallback _resourceCallback;
+  
+  // 战斗地图数据
+  BattleMapData _battleMapData;
+  bool _inBattleMode = false;  // 战斗模式标志
 };

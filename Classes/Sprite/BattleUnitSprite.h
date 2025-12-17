@@ -4,6 +4,7 @@
 
 #include "cocos2d.h"
 #include "Manager/AnimationManager.h"
+#include "../Util/GridMapUtils.h"
 
 USING_NS_CC;
 
@@ -22,6 +23,7 @@ class BattleUnitSprite : public Sprite {
 public:
   static BattleUnitSprite* create(const std::string& unitType);
   virtual bool init(const std::string& unitType);
+  virtual void update(float dt) override;
 
   // 基础动画控制
   void playAnimation(AnimationType animType, bool loop = false,
@@ -116,6 +118,8 @@ protected:
   AnimationType _currentAnimation;
   bool _isAnimating;
   Vec2 _currentGridPos;  // 当前网格坐标
+  int _lastGridX = -999; // 上一次更新 Z-Order 的 X 坐标
+  int _lastGridY = -999; // 上一次更新 Z-Order 的 Y 坐标
   bool _isChangingTarget = false;  // 是否正在切换目标
   
   static const int ANIMATION_TAG = 1000;

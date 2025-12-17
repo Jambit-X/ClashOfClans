@@ -2,7 +2,8 @@
 #define __BATTLE_SCENE_H__
 
 #include "cocos2d.h"
-#include <functional> // 需要包含这个头文件
+#include <functional>
+#include <map>
 
 // 前置声明
 namespace cocos2d {
@@ -25,17 +26,29 @@ public:
     static cocos2d::Scene* createScene();
     virtual bool init();
     virtual void update(float dt);
-    virtual void onExit() override; // 【新增】场景退出时清理资源
+    virtual void onExit() override;
     CREATE_FUNC(BattleScene);
 
     void switchState(BattleState newState);
     BattleState getCurrentState() const { return _currentState; }
 
     // --- 外部交互回调 ---
-    void onNextOpponentClicked(); // 点击“寻找对手”
-    // void onStartBattleClicked(); // [已删除]
-    void onEndBattleClicked();    // 点击“结束战斗”
-    void onReturnHomeClicked();   // 点击“回营”
+    void onNextOpponentClicked();
+    void onEndBattleClicked();
+    void onReturnHomeClicked();
+
+    // ========== 兵种追踪系统 ==========
+    int getRemainingTroopCount(int troopId) const;
+    const std::map<int, int>& getUsedTroops() const { return _usedTroops; }
+    const std::map<int, int>& getTroopLevels() const { return _troopLevels; }
+
+    // ========== 资源掠夺系统 ==========
+    void addLootedGold(int amount);
+    void addLootedElixir(int amount);
+    int getLootedGold() const { return _lootedGold; }
+    int getLootedElixir() const { return _lootedElixir; }
+    int getTotalLootableGold() const { return _totalLootableGold; }
+    int getTotalLootableElixir() const { return _totalLootableElixir; }
 
 private:
     BattleState _currentState = BattleState::PREPARE;
@@ -45,9 +58,27 @@ private:
     BattleHUDLayer* _hudLayer = nullptr;
     BattleResultLayer* _resultLayer = nullptr;
 
-    //监听点击,生成兵种,并触发 AI。
+    // ========== 兵种追踪数据 ==========
+    std::map<int, int> _remainingTroops;  // 剩余可用数量
+    std::map<int, int> _usedTroops;       // 已消耗统计
+    std::map<int, int> _troopLevels;      // 兵种等级缓存
+    void initBattleTroops();              // 初始化战斗兵种数据
+
+    // ========== 资源掠夺数据 ==========
+    int _lootedGold = 0;           // 已掠夺金币
+    int _lootedElixir = 0;         // 已掠夺圣水
+    int _totalLootableGold = 0;    // 总可掠夺金币
+    int _totalLootableElixir = 0;  // 总可掠夺圣水
+    int _goldPerStorage = 0;       // 每个储金罐的资源
+    int _elixirPerStorage = 0;     // 每个圣水瓶的资源
+    cocos2d::EventListenerCustom* _buildingDestroyedListener = nullptr;
+    void setupBuildingDestroyedListener();
+    void onBuildingDestroyed(cocos2d::EventCustom* event);
+    void checkAllBuildingsDestroyed();  // 检查是否所有建筑都已被摧毁
+
+    // 监听点击,生成兵种,并触发 AI
     void setupTouchListener();
-    void cleanupTouchListener(); // 【新增】清理触摸监听器
+    void cleanupTouchListener();
     bool onTouchBegan(cocos2d::Touch* touch, cocos2d::Event* event);
     void onTouchMoved(cocos2d::Touch* touch, cocos2d::Event* event);
     void onTouchEnded(cocos2d::Touch* touch, cocos2d::Event* event);
@@ -55,22 +86,17 @@ private:
     // 触摸状态跟踪
     cocos2d::Vec2 _touchStartPos;
     bool _isTouchMoving;
-    cocos2d::EventListenerTouchOneByOne* _touchListener = nullptr; // 【新增】保存监听器指针
+    cocos2d::EventListenerTouchOneByOne* _touchListener = nullptr;
     
-    // 辅助方法：判断触摸是否在 UI 区域
+    // 辅助方法
     bool isTouchOnUI(const cocos2d::Vec2& touchPos);
+    void showPlacementTip(const std::string& message, const cocos2d::Vec2& pos);
 
     // --- 云层遮罩相关 ---
     cocos2d::Sprite* _cloudSprite = nullptr;
-    bool _isSearching = false; // 防止重复点击标志位
+    bool _isSearching = false;
 
     void loadEnemyVillage();
-
-    /**
-     * @brief 执行云层搜索动画
-     * @param onMapReloadCallback 当云层完全遮住屏幕时，执行的回调（通常用于刷新地图）
-     * @param isInitialEntry 是否是刚进入场景（如果是，则直接显示云层并只执行淡出）
-     */
     void performCloudTransition(std::function<void()> onMapReloadCallback, bool isInitialEntry = false);
 };
 

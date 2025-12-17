@@ -1,5 +1,6 @@
 ﻿#include "BattleMapLayer.h"
 #include "Manager/BuildingManager.h"
+#include "Manager/VillageDataManager.h"
 #include "Controller/MoveMapController.h"
 
 USING_NS_CC;
@@ -46,17 +47,41 @@ bool BattleMapLayer::init() {
     // 【新增】启动定时更新，用于实时反映建筑受损状态（isDestroyed）
     this->scheduleUpdate();
 
+    // 【新增】监听目标锁定事件，显示 Beacon
+    auto listener = EventListenerCustom::create("EVENT_UNIT_TARGET_LOCKED", [this](EventCustom* event) {
+        if (!_buildingManager) return;
+        // 安全转换 ID
+        intptr_t rawId = reinterpret_cast<intptr_t>(event->getUserData());
+        int targetID = static_cast<int>(rawId);
+        
+        BuildingSprite* b = _buildingManager->getBuildingSprite(targetID);
+        if (b) {
+            b->showTargetBeacon();
+        }
+    });
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
+
     return true;
 }
 
 void BattleMapLayer::reloadMap() {
-    // 简单的刷新逻辑：清除现有建筑，重新加载
-    // 在真实逻辑中，这里应该先去 VillageDataManager 切换敌方数据源
+    CCLOG("BattleMapLayer: Reloading map with new random data...");
+    
+    // 1. 生成新的随机地图
+    auto dataManager = VillageDataManager::getInstance();
+    dataManager->generateRandomBattleMap(0);  // 随机难度
+    
+    // 2. 清理旧的 BuildingManager
     if (_buildingManager) {
-        // 先简单地刷新一下日志
-        CCLOG("BattleMapLayer: Reloading map data...");
-        // 实际项目中需要: _buildingManager->reloadFromData(newEnemyData);
+        delete _buildingManager;
+        _buildingManager = nullptr;
     }
+    
+    // 3. 创建新的 BuildingManager（会自动加载新的战斗地图数据）
+    _buildingManager = new BuildingManager(this, true);
+    
+    CCLOG("BattleMapLayer: Map reloaded with %zu buildings", 
+          dataManager->getBattleMapData().buildings.size());
 }
 
 Sprite* BattleMapLayer::createMapSprite() {

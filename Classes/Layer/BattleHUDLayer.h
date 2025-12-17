@@ -25,6 +25,13 @@ public:
     // 【新增】清除兵种选择状态
     void clearTroopSelection();
 
+    // 【新增】更新指定兵种的数量显示
+    void updateTroopCount(int troopId, int newCount);
+
+    // 【新增】资源显示接口
+    void initLootDisplay(int totalGold, int totalElixir);
+    void updateLootDisplay(int lootedGold, int lootedElixir, int totalGold, int totalElixir);
+
 private:
     // UI 元素
     cocos2d::Label* _timerLabel;
@@ -33,8 +40,15 @@ private:
     cocos2d::ui::Button* _btnReturn;   // 绿色回营 (finishbattle.png)
     cocos2d::Node* _troopBarNode;      // 底部兵种条容器
 
+    // 【新增】资源显示UI
+    cocos2d::Sprite* _goldIcon = nullptr;
+    cocos2d::Sprite* _elixirIcon = nullptr;
+    cocos2d::Label* _goldLabel = nullptr;
+    cocos2d::Label* _elixirLabel = nullptr;
+
     int _selectedTroopId = -1; // 当前选中的兵种ID
     std::map<int, cocos2d::ui::Button*> _troopButtons; // 存储按钮以便控制高亮
+    std::map<int, cocos2d::Label*> _troopCountLabels;  // 【新增】存储数量标签以便更新
     void onTroopSelected(int troopId);
 
     void initTopInfo();

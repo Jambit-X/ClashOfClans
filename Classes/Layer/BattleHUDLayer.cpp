@@ -20,6 +20,7 @@ bool BattleHUDLayer::init() {
 
 void BattleHUDLayer::initTopInfo() {
     auto visibleSize = Director::getInstance()->getVisibleSize();
+    Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
     // 倒计时背景
     auto timerBg = LayerColor::create(Color4B(0, 0, 0, 100), 120, 40);
@@ -30,12 +31,40 @@ void BattleHUDLayer::initTopInfo() {
     _timerLabel->setPosition(60, 20);
     timerBg->addChild(_timerLabel);
 
-    // 资源掠夺信息
-    auto lootLabel = Label::createWithTTF("可掠夺: 金币 1000  圣水 1000", FONT_PATH, 20);
-    lootLabel->setAnchorPoint(Vec2(0, 1));
-    lootLabel->setPosition(20, visibleSize.height - 20);
-    lootLabel->enableOutline(Color4B::BLACK, 1);
-    this->addChild(lootLabel);
+    // 【改造】资源掠夺信息 - 使用图标+数值格式
+    // 金币图标
+    _goldIcon = Sprite::create("ImageElements/coin_icon.png");
+    if (_goldIcon) {
+        _goldIcon->setScale(0.4f);
+        _goldIcon->setAnchorPoint(Vec2(1, 0.5f));
+        _goldIcon->setPosition(Vec2(origin.x + 50, origin.y + visibleSize.height - 30));
+        this->addChild(_goldIcon);
+    }
+    
+    // 金币数值标签
+    _goldLabel = Label::createWithTTF("0/0", "fonts/Marker Felt.ttf", 22);
+    _goldLabel->setAnchorPoint(Vec2(0, 0.5f));
+    _goldLabel->setPosition(Vec2(origin.x + 55, origin.y + visibleSize.height - 30));
+    _goldLabel->setColor(Color3B(255, 215, 0));  // 金色
+    _goldLabel->enableOutline(Color4B::BLACK, 2);
+    this->addChild(_goldLabel);
+
+    // 圣水图标
+    _elixirIcon = Sprite::create("ImageElements/elixir_icon.png");
+    if (_elixirIcon) {
+        _elixirIcon->setScale(0.4f);
+        _elixirIcon->setAnchorPoint(Vec2(1, 0.5f));
+        _elixirIcon->setPosition(Vec2(origin.x + 200, origin.y + visibleSize.height - 30));
+        this->addChild(_elixirIcon);
+    }
+    
+    // 圣水数值标签
+    _elixirLabel = Label::createWithTTF("0/0", "fonts/Marker Felt.ttf", 22);
+    _elixirLabel->setAnchorPoint(Vec2(0, 0.5f));
+    _elixirLabel->setPosition(Vec2(origin.x + 205, origin.y + visibleSize.height - 30));
+    _elixirLabel->setColor(Color3B(255, 0, 255));  // 紫红色
+    _elixirLabel->enableOutline(Color4B::BLACK, 2);
+    this->addChild(_elixirLabel);
 }
 
 void BattleHUDLayer::initBottomButtons() {
@@ -129,6 +158,16 @@ void BattleHUDLayer::initTroopBar() {
    numLabel->setColor(Color3B::WHITE);
             numLabel->enableOutline(Color4B::BLACK, 2);
           btn->addChild(numLabel);
+            _troopCountLabels[troopId] = numLabel; // 【新增】保存引用以便更新
+
+            // 等级标签 - 放在卡片左下角，使用白色大字体
+            int level = dataManager->getTroopLevel(troopId);
+            auto levelLabel = Label::createWithTTF(StringUtils::format("Lv.%d", level), "fonts/simhei.ttf", 24);
+            levelLabel->setAnchorPoint(Vec2(0, 0));
+            levelLabel->setPosition(Vec2(5, 5));
+            levelLabel->setColor(Color3B::WHITE);
+            levelLabel->enableOutline(Color4B::BLACK, 3);
+            btn->addChild(levelLabel);
 
    startX += CARD_SPACING;
         }
@@ -227,4 +266,58 @@ void BattleHUDLayer::updateTimer(int seconds) {
 
 BattleScene* BattleHUDLayer::getBattleScene() {
     return dynamic_cast<BattleScene*>(this->getScene());
+}
+
+// 【新增】更新兵种数量显示
+void BattleHUDLayer::updateTroopCount(int troopId, int newCount) {
+    // 更新数量标签
+    if (_troopCountLabels.count(troopId)) {
+        auto label = _troopCountLabels[troopId];
+        label->setString(StringUtils::format("x%d", newCount));
+        
+        // 如果数量为0，标签变红
+        if (newCount <= 0) {
+            label->setColor(Color3B::GRAY);
+        }
+    }
+    
+    // 更新按钮状态
+    if (_troopButtons.count(troopId)) {
+        auto btn = _troopButtons[troopId];
+        
+        if (newCount <= 0) {
+            // 灰色化处理
+            btn->setColor(Color3B(100, 100, 100));
+            btn->setEnabled(false);
+            
+            // 如果当前选中的是这个兵种，清除选择
+            if (_selectedTroopId == troopId) {
+                _selectedTroopId = -1;
+            }
+            
+            CCLOG("BattleHUDLayer: Troop %d depleted, button disabled", troopId);
+        }
+    }
+}
+
+// ========== 资源显示方法 ==========
+
+void BattleHUDLayer::initLootDisplay(int totalGold, int totalElixir) {
+    if (_goldLabel) {
+        _goldLabel->setString(StringUtils::format("0/%d", totalGold));
+    }
+    if (_elixirLabel) {
+        _elixirLabel->setString(StringUtils::format("0/%d", totalElixir));
+    }
+    CCLOG("BattleHUDLayer: Loot display initialized - Gold: 0/%d, Elixir: 0/%d", totalGold, totalElixir);
+}
+
+void BattleHUDLayer::updateLootDisplay(int lootedGold, int lootedElixir, 
+                                        int totalGold, int totalElixir) {
+    if (_goldLabel) {
+        _goldLabel->setString(StringUtils::format("%d/%d", lootedGold, totalGold));
+    }
+    if (_elixirLabel) {
+        _elixirLabel->setString(StringUtils::format("%d/%d", lootedElixir, totalElixir));
+    }
 }

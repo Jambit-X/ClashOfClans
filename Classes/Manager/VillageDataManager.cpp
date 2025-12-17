@@ -13,10 +13,16 @@ USING_NS_CC;
 VillageDataManager* VillageDataManager::_instance = nullptr;
 
 VillageDataManager::VillageDataManager()
-  : _nextBuildingId(1) {
+  : _nextBuildingId(1), _inBattleMode(false) {
 
   _gridOccupancy.resize(GridMapUtils::GRID_WIDTH);
   for (auto& row : _gridOccupancy) {
+    row.resize(GridMapUtils::GRID_HEIGHT, 0);
+  }
+  
+  // 初始化战斗地图网格占用
+  _battleGridOccupancy.resize(GridMapUtils::GRID_WIDTH);
+  for (auto& row : _battleGridOccupancy) {
     row.resize(GridMapUtils::GRID_HEIGHT, 0);
   }
 
@@ -229,13 +235,26 @@ bool VillageDataManager::removeTroop(int troopId, int count) {
 // ========== 建筑接口 ==========
 
 const std::vector<BuildingInstance>& VillageDataManager::getAllBuildings() const {
+  // 根据战斗模式返回不同数据源
+  if (_inBattleMode) {
+    return _battleMapData.buildings;
+  }
   return _data.buildings;
 }
 
 BuildingInstance* VillageDataManager::getBuildingById(int id) {
-  for (auto& building : _data.buildings) {
-    if (building.id == id) {
-      return &building;
+  // 根据战斗模式在不同数据源中查找
+  if (_inBattleMode) {
+    for (auto& building : _battleMapData.buildings) {
+      if (building.id == id) {
+        return &building;
+      }
+    }
+  } else {
+    for (auto& building : _data.buildings) {
+      if (building.id == id) {
+        return &building;
+      }
     }
   }
   return nullptr;
@@ -244,7 +263,10 @@ BuildingInstance* VillageDataManager::getBuildingById(int id) {
 // O(1) 网格查询实现
 BuildingInstance* VillageDataManager::getBuildingAtGrid(int gridX, int gridY) {
   if (gridX < 0 || gridY < 0 || gridX >= GridMapUtils::GRID_WIDTH || gridY >= GridMapUtils::GRID_HEIGHT) return nullptr;
-  int occupyingId = _gridOccupancy[gridX][gridY];
+  
+  // 根据战斗模式使用不同的网格占用表
+  const auto& occupancy = _inBattleMode ? _battleGridOccupancy : _gridOccupancy;
+  int occupyingId = occupancy[gridX][gridY];
   if (occupyingId == 0) return nullptr;
   return getBuildingById(occupyingId);
 }
@@ -1113,3 +1135,80 @@ void VillageDataManager::finishResearchImmediately() {
   
   CCLOG("VillageDataManager: Research finished instantly with gems");
 }
+
+// ========== 战斗地图实现 ==========
+
+#include "../Util/RandomBattleMapGenerator.h"
+
+void VillageDataManager::setBattleMapData(const BattleMapData& data) {
+  _battleMapData = data;
+  CCLOG("VillageDataManager: Battle map data set with %zu buildings", data.buildings.size());
+}
+
+const BattleMapData& VillageDataManager::getBattleMapData() const {
+  return _battleMapData;
+}
+
+void VillageDataManager::generateRandomBattleMap(int difficulty) {
+  _battleMapData = RandomBattleMapGenerator::generate(difficulty);
+  CCLOG("VillageDataManager: Generated random battle map (difficulty=%d, buildings=%zu)",
+        _battleMapData.difficulty, _battleMapData.buildings.size());
+}
+
+bool VillageDataManager::hasBattleMapData() const {
+  return !_battleMapData.buildings.empty();
+}
+
+// ========== 战斗模式切换实现 ==========
+
+void VillageDataManager::setInBattleMode(bool inBattle) {
+  if (_inBattleMode == inBattle) return;
+  
+  _inBattleMode = inBattle;
+  
+  if (inBattle) {
+    // 进入战斗模式时，更新战斗地图的网格占用
+    updateBattleGridOccupancy();
+    CCLOG("VillageDataManager: Entered BATTLE MODE (buildings=%zu)", _battleMapData.buildings.size());
+  } else {
+    // 退出战斗模式时，清理战斗网格占用
+    for (auto& row : _battleGridOccupancy) {
+      std::fill(row.begin(), row.end(), 0);
+    }
+    CCLOG("VillageDataManager: Exited BATTLE MODE, back to village");
+  }
+}
+
+bool VillageDataManager::isInBattleMode() const {
+  return _inBattleMode;
+}
+
+void VillageDataManager::updateBattleGridOccupancy() {
+  // 清空战斗网格占用
+  for (auto& row : _battleGridOccupancy) {
+    std::fill(row.begin(), row.end(), 0);
+  }
+  
+  // 根据战斗地图的建筑填充网格占用
+  for (const auto& building : _battleMapData.buildings) {
+    // 跳过已摧毁的建筑
+    if (building.isDestroyed) {
+      continue;
+    }
+    
+    auto config = BuildingConfig::getInstance()->getConfig(building.type);
+    if (!config) continue;
+    
+    for (int x = building.gridX; x < building.gridX + config->gridWidth; ++x) {
+      for (int y = building.gridY; y < building.gridY + config->gridHeight; ++y) {
+        if (x >= 0 && x < GridMapUtils::GRID_WIDTH &&
+            y >= 0 && y < GridMapUtils::GRID_HEIGHT) {
+          _battleGridOccupancy[x][y] = building.id;
+        }
+      }
+    }
+  }
+  
+  CCLOG("VillageDataManager: Battle grid occupancy updated");
+}
+
