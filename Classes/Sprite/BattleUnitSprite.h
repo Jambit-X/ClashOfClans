@@ -14,7 +14,8 @@ enum class UnitTypeID {
     ARCHER = 1002,
     GOBLIN = 1003,
     GIANT = 1004,
-    WALL_BREAKER = 1005
+    WALL_BREAKER = 1005,
+    BALLOON = 1006
 };
 
 class BattleUnitSprite : public Sprite {

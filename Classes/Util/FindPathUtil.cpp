@@ -51,13 +51,11 @@ FindPathUtil::~FindPathUtil() {
 // ====================================================================
 // 🔥 核心逻辑实现：智能攻击寻路 🔥
 // ====================================================================
-std::vector<Vec2> FindPathUtil::findPathToAttackBuilding(const Vec2& unitWorldPos, const BuildingInstance& building) {
-    // 1. 获取单位当前的网格坐标
+std::vector<Vec2> FindPathUtil::findPathToAttackBuilding(const Vec2& unitWorldPos, const BuildingInstance& building, int attackRange) {
     Vec2 startGridPos = GridMapUtils::pixelToGrid(unitWorldPos);
     int startX = static_cast<int>(std::floor(startGridPos.x));
     int startY = static_cast<int>(std::floor(startGridPos.y));
 
-    // 2. 获取建筑尺寸信息
     auto config = BuildingConfig::getInstance()->getConfig(building.type);
     if (!config) return {};
 
@@ -66,22 +64,37 @@ std::vector<Vec2> FindPathUtil::findPathToAttackBuilding(const Vec2& unitWorldPo
     int bW = config->gridWidth;
     int bH = config->gridHeight;
 
-    // 3. 收集该建筑周围所有可用的攻击位（Valid Attack Spots）
     struct CandidateSpot {
         int x, y;
-        float distSq;  // 使用欧几里得距离的平方，更准确
+        float distSq;
     };
     std::vector<CandidateSpot> candidates;
 
-    // 遍历建筑外围一圈
-    for (int x = bX - 1; x <= bX + bW; ++x) {
-        for (int y = bY - 1; y <= bY + bH; ++y) {
-            // 排除建筑内部占用的格子
+    for (int x = bX - attackRange; x <= bX + bW + attackRange - 1; ++x) {
+        for (int y = bY - attackRange; y <= bY + bH + attackRange - 1; ++y) {
             if (x >= bX && x < bX + bW && y >= bY && y < bY + bH) continue;
 
-            // 只有该格子可通行，才视为有效的攻击位
+            int distToBuilding = 0;
+            
+            if (x < bX) {
+                distToBuilding = std::max(distToBuilding, bX - x);
+            } else if (x >= bX + bW) {
+                distToBuilding = std::max(distToBuilding, x - (bX + bW) + 1);
+            }
+            
+            if (y < bY) {
+                distToBuilding = std::max(distToBuilding, bY - y);
+            } else if (y >= bY + bH) {
+                distToBuilding = std::max(distToBuilding, y - (bY + bH) + 1);
+            }
+            
+            if (attackRange == 0) {
+                if (distToBuilding != 0) continue;
+            } else {
+                if (distToBuilding > attackRange || distToBuilding == 0) continue;
+            }
+
             if (isWalkable(x, y)) {
-                // 使用欧几里得距离平方，更准确地反映实际距离
                 float dx = static_cast<float>(x - startX);
                 float dy = static_cast<float>(y - startY);
                 float distSq = dx * dx + dy * dy;
@@ -94,32 +107,26 @@ std::vector<Vec2> FindPathUtil::findPathToAttackBuilding(const Vec2& unitWorldPo
         return {};
     }
 
-    // 4. 按照欧几里得距离排序，优先尝试最近的点
     std::sort(candidates.begin(), candidates.end(), [](const CandidateSpot& a, const CandidateSpot& b) {
         return a.distSq < b.distSq;
     });
 
-    // 5. 尝试寻路（最多尝试前 5 个最近的点，增加成功率）
     int attempts = std::min((int)candidates.size(), 5);
 
     for (int i = 0; i < attempts; ++i) {
         int targetX = candidates[i].x;
         int targetY = candidates[i].y;
 
-        // 调用底层 A*
         std::vector<Vec2> gridPath = findPathGrid(Vec2(startX, startY), Vec2(targetX, targetY));
 
         if (!gridPath.empty()) {
-            // 转换为世界坐标并返回
             std::vector<Vec2> worldPath;
             worldPath.reserve(gridPath.size());
 
-            // 移除起点（单位已经在起点了）
             for (size_t k = 1; k < gridPath.size(); ++k) {
                 worldPath.push_back(GridMapUtils::gridToPixelCenter((int)gridPath[k].x, (int)gridPath[k].y));
             }
 
-            // 如果路径很短（比如已经在旁边了），可能 gridPath 只有起点
             if (worldPath.empty() && gridPath.size() >= 1) {
                 worldPath.push_back(GridMapUtils::gridToPixelCenter(targetX, targetY));
             }
