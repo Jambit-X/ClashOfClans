@@ -21,10 +21,10 @@ public:
 
     // =============================================================
     // 🔥 核心接口：智能寻找攻击路径 🔥
-    // 输入：单位当前世界坐标，目标建筑实例
+    // 输入：单位当前世界坐标，目标建筑实例，攻击范围（1=近战，2=弓箭手）
     // 输出：一系列世界坐标点（路径），如果无法到达返回空
     // =============================================================
-    std::vector<cocos2d::Vec2> findPathToAttackBuilding(const cocos2d::Vec2& unitWorldPos, const BuildingInstance& targetBuilding);
+    std::vector<cocos2d::Vec2> findPathToAttackBuilding(const cocos2d::Vec2& unitWorldPos, const BuildingInstance& targetBuilding, int attackRange = 1);
 
     // 计算"破墙路径"的长度（把城墙当作可通行）
     std::vector<cocos2d::Vec2> findPathIgnoringWalls(const cocos2d::Vec2& startWorldPos, const cocos2d::Vec2& endWorldPos);

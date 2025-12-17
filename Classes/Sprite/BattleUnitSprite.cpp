@@ -44,7 +44,6 @@ bool BattleUnitSprite::init(const std::string& unitType) {
 
 // ========== 静态方法：解析单位类型字符串为枚举（只在初始化时调用一次）==========
 UnitTypeID BattleUnitSprite::parseUnitType(const std::string& unitType) {
-    // 转换为小写进行比较
     std::string lower = unitType;
     std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
     
@@ -62,6 +61,9 @@ UnitTypeID BattleUnitSprite::parseUnitType(const std::string& unitType) {
     }
     if (lower.find("wall_breaker") != std::string::npos || lower.find("wallbreaker") != std::string::npos || lower.find("炸弹人") != std::string::npos) {
         return UnitTypeID::WALL_BREAKER;
+    }
+    if (lower.find("balloon") != std::string::npos || lower.find("气球") != std::string::npos) {
+        return UnitTypeID::BALLOON;
     }
     
     CCLOG("BattleUnitSprite::parseUnitType: Unknown unit type '%s'", unitType.c_str());

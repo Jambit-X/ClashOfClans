@@ -23,6 +23,9 @@ public:
     void startCombatLoopWithForcedTarget(BattleUnitSprite* unit, BattleTroopLayer* troopLayer, const BuildingInstance* forcedTarget);
     void resetBattleState();
 
+    // ========== 常量 =========
+    static constexpr float PIXEL_DETOUR_THRESHOLD = 800.0f;
+
 private:
     BattleProcessController() = default;
     ~BattleProcessController() = default;
@@ -32,9 +35,10 @@ private:
     
     static BattleProcessController* _instance;
 
-    // ========== 目标选择 ==========C
-    const BuildingInstance* findBestTargetBuilding(const cocos2d::Vec2& unitWorldPos);
-    const BuildingInstance* findNearestBuilding(const cocos2d::Vec2& unitWorldPos);
+    // ========== 目标选择 ==========
+    const BuildingInstance* findTargetWithResourcePriority(const cocos2d::Vec2& unitWorldPos, UnitTypeID unitType);
+    const BuildingInstance* findTargetWithDefensePriority(const cocos2d::Vec2& unitWorldPos, UnitTypeID unitType);
+    const BuildingInstance* findNearestBuilding(const cocos2d::Vec2& unitWorldPos, UnitTypeID unitType);
     const BuildingInstance* getFirstWallInLine(const cocos2d::Vec2& startPixel, const cocos2d::Vec2& endPixel);
 
     // ========== 核心攻击逻辑 =========
@@ -48,8 +52,4 @@ private:
     );
     
     bool shouldAbandonWallForBetterPath(BattleUnitSprite* unit, int currentWallID);
-
-    // ========== 常量 =========
-    static constexpr float ATTACK_RANGE = 150.0f;
-    static constexpr float PIXEL_DETOUR_THRESHOLD = 800.0f;
 };
