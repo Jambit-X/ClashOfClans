@@ -37,6 +37,18 @@ public:
   void hideSelectionEffect();   // 隐藏选中效果
   bool isSelected() const { return _isSelected; }
 
+  // 血条显示（战斗场景用）
+  void updateHealthBar(int currentHP, int maxHP);  // 更新血条（受伤时自动显示）
+  void showHealthBar();                             // 显示血条
+  void hideHealthBar();                             // 隐藏血条
+
+  // 摧毁效果（战斗场景用）
+  void showDestroyedRubble();      // 显示废墟贴图
+  bool isShowingRubble() const { return _isShowingRubble; }
+
+  // 【修复】目标标记（战斗场景用）- 移到 public
+  void showTargetBeacon();      // 显示目标锁定标记
+
   // Getter
   int getBuildingId() const { return _buildingId; }
   int getBuildingType() const { return _buildingType; }
@@ -56,6 +68,9 @@ private:
   // 选中效果辅助方法
   void createSelectionGlow();   // 创建光圈
 
+  // 血条辅助方法
+  void initHealthBar();         // 初始化血条 UI（惰性创建）
+
   int _buildingId;
   int _buildingType;
   int _buildingLevel;
@@ -67,12 +82,24 @@ private:
   cocos2d::Node* _constructionUIContainer;  // UI 容器
 
   //  子元素指针（便于访问）
-  cocos2d::Sprite* _progressBg;            // 进度条背景
+  cocos2d::Sprite* _progressBg;    // 进度条背景
   cocos2d::ProgressTimer* _progressBar;     // 进度条
-  cocos2d::Label* _countdownLabel;          // 倒计时
+  cocos2d::Label* _countdownLabel;        // 倒计时
   cocos2d::Label* _percentLabel;            // 百分比标签
 
   // 选中效果
   cocos2d::DrawNode* _selectionGlow;        // 底部光圈
-  bool _isSelected;                          // 选中状态
+  bool _isSelected;      // 选中状态
+
+  // 血条 UI（战斗场景用）
+  cocos2d::Node* _healthBarContainer;       // 血条容器
+  cocos2d::Sprite* _healthBarBg;          // 血条背景（灰色）
+  cocos2d::ProgressTimer* _healthBar;       // 血条本体
+  int _cachedMaxHP;       // 缓存的最大 HP
+
+  // 摧毁状态
+  bool _isShowingRubble = false;         // 是否正在显示废墟贴图
+
+  // 目标标记
+  cocos2d::Sprite* _targetBeacon = nullptr;
 };

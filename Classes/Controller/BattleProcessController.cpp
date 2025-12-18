@@ -152,6 +152,12 @@ void BattleProcessController::executeAttack(
         
         FindPathUtil::getInstance()->updatePathfindingMap();
         
+        // 【新增】发送建筑摧毁事件
+        Director::getInstance()->getEventDispatcher()->dispatchCustomEvent(
+            "EVENT_BUILDING_DESTROYED", 
+            static_cast<void*>(liveTarget)
+        );
+        
         onTargetDestroyed();
     }
     else {
@@ -229,6 +235,11 @@ void BattleProcessController::startUnitAI(BattleUnitSprite* unit, BattleTroopLay
         unit->playIdleAnimation();
         return;
     }
+
+    // 【新增】发送目标锁定事件，通知显示 Beacon
+    EventCustom event("EVENT_UNIT_TARGET_LOCKED");
+    event.setUserData(reinterpret_cast<void*>(static_cast<intptr_t>(target->id)));
+    Director::getInstance()->getEventDispatcher()->dispatchEvent(&event);
 
     auto pathfinder = FindPathUtil::getInstance();
     Vec2 targetCenter = GridMapUtils::gridToPixelCenter(target->gridX, target->gridY);

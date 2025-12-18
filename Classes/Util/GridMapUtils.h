@@ -115,6 +115,20 @@ public:
      * @return 最终渲染位置（世界坐标）
      */
     static cocos2d::Vec2 getVisualPosition(int gridX, int gridY, const cocos2d::Vec2& visualOffset);
+
+    // ========== Z-Order 计算 ==========
+    
+    /**
+     * @brief 计算统一的渲染层级 (Z-Order)
+     * @param gridX 网格X坐标
+     * @param gridY 网格Y坐标
+     * @return Z-Order 值
+     */
+    static int calculateZOrder(int gridX, int gridY) {
+        // 核心公式：X越大越靠前 (+) Y越大越靠后 (-)
+        // +45 是为了保证结果为正数 (假设Grid最大44)
+        return gridX - gridY + 45; 
+    }
 };
 
 #endif // __GRID_MAP_UTILS_H__

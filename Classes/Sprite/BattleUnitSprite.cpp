@@ -39,7 +39,25 @@ bool BattleUnitSprite::init(const std::string& unitType) {
 
   this->setAnchorPoint(Vec2(0.5f, 0.0f));
   CCLOG("BattleUnitSprite: Created %s (TypeID=%d)", unitType.c_str(), static_cast<int>(_unitTypeID));
+  // 开启定时更新
+  this->scheduleUpdate();
+
   return true;
+}
+
+void BattleUnitSprite::update(float dt) {
+    if (_currentGridPos.x != _lastGridX || _currentGridPos.y != _lastGridY) {
+        // 只有当网格坐标变化时才更新 Z-Order (优化性能)
+        int gridX = (int)std::round(_currentGridPos.x);
+        int gridY = (int)std::round(_currentGridPos.y);
+        
+        // 使用统一公式计算 Z-Order
+        int zOrder = GridMapUtils::calculateZOrder(gridX, gridY);
+        this->setLocalZOrder(zOrder);
+        
+        _lastGridX = gridX;
+        _lastGridY = gridY;
+    }
 }
 
 // ========== 静态方法：解析单位类型字符串为枚举（只在初始化时调用一次）==========

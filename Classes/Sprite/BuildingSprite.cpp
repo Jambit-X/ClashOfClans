@@ -34,6 +34,12 @@ bool BuildingSprite::init(const BuildingInstance& building) {
   _selectionGlow = nullptr;
   _isSelected = false;
 
+  // 初始化血条成员
+  _healthBarContainer = nullptr;
+  _healthBarBg = nullptr;
+  _healthBar = nullptr;
+  _cachedMaxHP = 0;
+
   loadSprite(_buildingType, _buildingLevel);
 
   // 预先创建 UI 容器（只创建一次）
@@ -414,4 +420,191 @@ void BuildingSprite::hideSelectionEffect() {
   }
   
   CCLOG("BuildingSprite: Selection effect hidden (ID=%d)", _buildingId);
+}
+
+// ========== 血条显示实现 ==========
+
+void BuildingSprite::initHealthBar() {
+  if (_healthBarContainer) return;  // 已存在则不重复创建
+
+  // 获取建筑配置，根据网格宽度计算血条长度
+  auto config = BuildingConfig::getInstance()->getConfig(_buildingType);
+  int gridWidth = config ? config->gridWidth : 2;
+  
+  // 血条宽度：根据建筑格子数动态计算（最小40，最大120）
+  float barWidth = std::max(40.0f, std::min(120.0f, gridWidth * 30.0f));
+  const float barHeight = 8.0f;
+
+  // 创建容器
+  _healthBarContainer = Node::create();
+  _healthBarContainer->setVisible(false);  // 默认隐藏
+  this->addChild(_healthBarContainer, 99);  // 高 ZOrder
+
+  auto spriteSize = this->getContentSize();
+
+  // 1. 创建血条背景（深灰色）
+  _healthBarBg = Sprite::create();
+  _healthBarBg->setTextureRect(Rect(0, 0, barWidth, barHeight));
+  _healthBarBg->setColor(Color3B(40, 40, 40));
+  _healthBarBg->setOpacity(200);
+  _healthBarBg->setPosition(Vec2(spriteSize.width / 2, spriteSize.height + 15));
+  _healthBarContainer->addChild(_healthBarBg, 1);
+
+  // 2. 创建血条本体（初始绿色）
+  auto healthSprite = Sprite::create();
+  healthSprite->setTextureRect(Rect(0, 0, barWidth, barHeight));
+  healthSprite->setColor(Color3B(50, 205, 50));  // 绿色
+
+  _healthBar = ProgressTimer::create(healthSprite);
+  _healthBar->setType(ProgressTimer::Type::BAR);
+  _healthBar->setMidpoint(Vec2(0, 0.5f));       // 从左边开始
+  _healthBar->setBarChangeRate(Vec2(1, 0));     // 水平方向变化
+  _healthBar->setPercentage(100.0f);
+  _healthBar->setPosition(Vec2(spriteSize.width / 2, spriteSize.height + 15));
+  _healthBarContainer->addChild(_healthBar, 2);
+
+  CCLOG("BuildingSprite: Health bar initialized (ID=%d, width=%.0f)", _buildingId, barWidth);
+}
+
+void BuildingSprite::updateHealthBar(int currentHP, int maxHP) {
+  // 满血或无效数据时隐藏血条
+  if (currentHP >= maxHP || maxHP <= 0 || currentHP < 0) {
+    hideHealthBar();
+    return;
+  }
+
+  // 惰性创建血条 UI
+  if (!_healthBarContainer) {
+    initHealthBar();
+  }
+
+  // 显示血条
+  showHealthBar();
+
+  // 计算百分比
+  float percent = (float)currentHP / (float)maxHP * 100.0f;
+  percent = std::max(0.0f, std::min(100.0f, percent));
+
+  // 更新进度
+  if (_healthBar) {
+    _healthBar->setPercentage(percent);
+    
+    // 根据血量比例改变颜色
+    Color3B barColor;
+    if (percent > 50.0f) {
+      // 绿色 (50-100%)
+      barColor = Color3B(50, 205, 50);
+    } else if (percent > 25.0f) {
+      // 黄色 (25-50%)
+      barColor = Color3B(255, 200, 0);
+    } else {
+      // 红色 (0-25%)
+      barColor = Color3B(220, 50, 50);
+    }
+    _healthBar->getSprite()->setColor(barColor);
+  }
+}
+
+void BuildingSprite::showHealthBar() {
+  if (_healthBarContainer) {
+    _healthBarContainer->setVisible(true);
+  }
+}
+
+void BuildingSprite::hideHealthBar() {
+  if (_healthBarContainer) {
+    _healthBarContainer->setVisible(false);
+  }
+}
+
+// ========== 摧毁效果实现 ==========
+
+void BuildingSprite::showDestroyedRubble() {
+  if (_isShowingRubble) return;  // 避免重复切换
+  _isShowingRubble = true;
+
+  // 获取建筑的网格尺寸
+  auto config = BuildingConfig::getInstance()->getConfig(_buildingType);
+  int gridWidth = config ? config->gridWidth : 2;
+  int gridHeight = config ? config->gridHeight : 2;
+  
+  // 使用较大的尺寸来选择废墟图片
+  int maxSize = std::max(gridWidth, gridHeight);
+  
+  // 根据尺寸选择对应的废墟图片
+  // 1x1 -> broken1x1, 2x2 -> broken2x2, 3x3及以上 -> broken3x3
+  std::string rubblePath;
+  if (maxSize <= 1) {
+    rubblePath = "buildings/broken/broken1x1.png";
+  } else if (maxSize <= 2) {
+    rubblePath = "buildings/broken/broken2x2.png";
+  } else {
+    rubblePath = "buildings/broken/broken3x3.png";
+  }
+  
+  // 加载废墟贴图
+  auto texture = Director::getInstance()->getTextureCache()->addImage(rubblePath);
+  if (texture) {
+    this->setTexture(texture);
+    auto rect = Rect(0, 0, texture->getContentSize().width, texture->getContentSize().height);
+    this->setTextureRect(rect);
+    
+    // 恢复正常颜色和不透明度
+    this->setColor(Color3B::WHITE);
+    this->setOpacity(255);
+    
+    CCLOG("BuildingSprite: Showing rubble for building ID=%d, size=%dx%d (max=%d), path=%s", 
+          _buildingId, gridWidth, gridHeight, maxSize, rubblePath.c_str());
+  } else {
+    // 如果废墟图片加载失败，使用原来的红色半透明效果作为后备
+    this->setColor(Color3B::RED);
+    this->setOpacity(200);
+    CCLOG("BuildingSprite: Failed to load rubble texture: %s, using fallback", rubblePath.c_str());
+  }
+  
+  // 隐藏血条
+  hideHealthBar();
+}
+
+// ========== 目标标记实现 ==========
+
+void BuildingSprite::showTargetBeacon() {
+  if (!_targetBeacon) {
+    _targetBeacon = Sprite::create("UI/battle/beacon/beacon.png");
+    if (_targetBeacon) {
+      auto size = this->getContentSize();
+      // 【修复】beacon 显示在建筑的视觉中心附近
+      // visualOffset.y 通常是负值，所以加上它可以让 beacon 向下移动到正确位置
+      float beaconY = size.height * 0.5f + _visualOffset.y;  // 显示在建筑中心偏上
+      _targetBeacon->setPosition(Vec2(size.width / 2, beaconY)); 
+      this->addChild(_targetBeacon, 101); // 确保在最上层
+    }
+  }
+
+  if (_targetBeacon) {
+    _targetBeacon->setVisible(true);
+    _targetBeacon->stopAllActions();
+    _targetBeacon->setOpacity(255);
+    _targetBeacon->setScale(0.1f); // 初始很小
+
+    // 弹跳出现效果
+    auto scaleUp = ScaleTo::create(0.2f, 1.2f);
+    auto scaleNormal = ScaleTo::create(0.1f, 1.0f);
+    
+    // 持续一段时间后淡出，模拟"Ping"的效果
+    auto sequence = Sequence::create(
+        scaleUp, 
+        scaleNormal,
+        DelayTime::create(3.0f),  // 显示 3 秒
+        FadeOut::create(0.5f),
+        Hide::create(),
+        nullptr
+    );
+    
+    _targetBeacon->runAction(sequence);
+    
+    CCLOG("BuildingSprite: Showing target beacon for ID=%d", _buildingId);
+  } else {
+    CCLOG("BuildingSprite: Failed to create beacon sprite");
+  }
 }

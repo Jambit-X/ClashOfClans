@@ -46,7 +46,7 @@ if(APPLE OR WINDOWS)
     cocos_mark_multi_resources(common_res_files RES_TO "Resources" FOLDERS ${GAME_RES_FOLDER})
 endif()
 
-# add cross-platforms source files and header files 
+# add cross-platforms source files and header files
 list(APPEND GAME_SOURCE
      Classes/AppDelegate/AppDelegate.cpp
      Classes/Scene/StartupScene.cpp
@@ -87,6 +87,7 @@ list(APPEND GAME_SOURCE
      Classes/Util/FindPathUtil.cpp
      Classes/Util/DebugHelper.cpp
      Classes/Layer/DebugLayer.cpp
+     Classes/Util/RandomBattleMapGenerator.cpp
      )
 list(APPEND GAME_HEADER
      ../proj.win32/Constants.h
@@ -130,6 +131,8 @@ list(APPEND GAME_HEADER
      Classes/Util/FindPathUtil.h
      Classes/Util/DebugHelper.h
      Classes/Layer/DebugLayer.h
+     Classes/Model/BattleMapData.h
+     Classes/Util/RandomBattleMapGenerator.h
      )
 
 if(ANDROID)

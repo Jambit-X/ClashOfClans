@@ -40,6 +40,10 @@ private:
     void onResetSave();
     void onForceSave();
 
+    // 战斗地图回调
+    void initBattleMapSection();
+    void onGenerateRandomMap();
+
     // UI 成员
     cocos2d::Node* _panel;
     cocos2d::Label* _goldValueLabel;
@@ -53,3 +57,4 @@ private:
     // 建筑列表滚动视图
     cocos2d::ui::ScrollView* _buildingScrollView;
 };
+

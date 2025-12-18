@@ -58,6 +58,7 @@ void DebugLayer::initPanel() {
     initResourceSection();
     initBuildingSection();
     initSaveSection();
+    initBattleMapSection();
 }
 
 void DebugLayer::initResourceSection() {
@@ -264,4 +265,36 @@ void DebugLayer::onForceSave() {
 void DebugLayer::onResetSave() {
     DebugHelper::resetSaveData();
     _selectedBuildingLabel->setString("存档已清除，请重启游戏");
+}
+
+void DebugLayer::initBattleMapSection() {
+    auto label = Label::createWithSystemFont("战斗地图", "Arial", 18);
+    label->setAnchorPoint(Vec2(0, 0.5));
+    label->setPosition(Vec2(20, 70));
+    label->setColor(Color3B::YELLOW);
+    _panel->addChild(label);
+
+    // 生成随机地图按钮
+    auto randomMapBtn = Button::create();
+    randomMapBtn->setTitleText("[ 🎲 生成随机战斗地图 ]");
+    randomMapBtn->setPosition(Vec2(300, 40));
+    randomMapBtn->setTitleFontSize(16);
+    randomMapBtn->setTitleColor(Color3B(0, 255, 255));
+    randomMapBtn->addClickEventListener([this](Ref*) { this->onGenerateRandomMap(); });
+    _panel->addChild(randomMapBtn);
+}
+
+void DebugLayer::onGenerateRandomMap() {
+    // 生成随机难度的地图
+    auto dataManager = VillageDataManager::getInstance();
+    dataManager->generateRandomBattleMap(0);  // 0 = 随机难度
+    
+    // 显示提示
+    auto& mapData = dataManager->getBattleMapData();
+    std::string msg = "已生成难度 " + std::to_string(mapData.difficulty) + 
+                      " 地图 (" + std::to_string(mapData.buildings.size()) + " 个建筑)";
+    _selectedBuildingLabel->setString(msg);
+    _selectedBuildingLabel->setColor(Color3B(0, 255, 255));
+    
+    CCLOG("DebugLayer: Generated random battle map");
 }

@@ -4,6 +4,7 @@
 #include "cocos2d.h"
 #include "Sprite/BuildingSprite.h"
 #include "Model/VillageData.h"
+#include "../Util/GridMapUtils.h"
 #include <unordered_map>
 
 USING_NS_CC;
@@ -16,6 +17,9 @@ public:
 
   // 从数据创建所有建筑
   void loadBuildingsFromData();
+  
+  // 从战斗地图数据创建建筑
+  void loadFromBattleMapData();
 
   // 添加建筑精灵
   BuildingSprite* addBuilding(const BuildingInstance& building);
@@ -54,7 +58,7 @@ private:
 
   // 统一的 Z-Order 计算函数
   static int calculateZOrder(int gridX, int gridY) {
-    return gridX - gridY + 45;
+    return GridMapUtils::calculateZOrder(gridX, gridY);
   }
 };
 
