@@ -17,6 +17,9 @@ public:
     // 重新加载地图 (用于"寻找下一个")
     void reloadMap();
 
+    // 获取 BuildingManager
+    BuildingManager* getBuildingManager() const { return _buildingManager; }
+
 private:
     cocos2d::Sprite* _mapSprite;
     BuildingManager* _buildingManager;
@@ -24,6 +27,9 @@ private:
 
     void initializeMap();
     cocos2d::Sprite* createMapSprite();
+
+    // 【新增】输出建筑布局信息
+    void logBuildingLayout(const std::string& context);
 };
 
 #endif // __BATTLE_MAP_LAYER_H__

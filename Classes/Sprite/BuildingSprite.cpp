@@ -1,7 +1,6 @@
 ﻿#include "BuildingSprite.h"
 #include "../Model/BuildingConfig.h"
-// 不再需要 ConstructionAnimation
-// #include "../Component/ConstructionAnimation.h"
+
 
 USING_NS_CC;
 
@@ -520,50 +519,55 @@ void BuildingSprite::hideHealthBar() {
 // ========== 摧毁效果实现 ==========
 
 void BuildingSprite::showDestroyedRubble() {
-  if (_isShowingRubble) return;  // 避免重复切换
-  _isShowingRubble = true;
+    if (_isShowingRubble) return;
+    _isShowingRubble = true;
 
-  // 获取建筑的网格尺寸
-  auto config = BuildingConfig::getInstance()->getConfig(_buildingType);
-  int gridWidth = config ? config->gridWidth : 2;
-  int gridHeight = config ? config->gridHeight : 2;
-  
-  // 使用较大的尺寸来选择废墟图片
-  int maxSize = std::max(gridWidth, gridHeight);
-  
-  // 根据尺寸选择对应的废墟图片
-  // 1x1 -> broken1x1, 2x2 -> broken2x2, 3x3及以上 -> broken3x3
-  std::string rubblePath;
-  if (maxSize <= 1) {
-    rubblePath = "buildings/broken/broken1x1.png";
-  } else if (maxSize <= 2) {
-    rubblePath = "buildings/broken/broken2x2.png";
-  } else {
-    rubblePath = "buildings/broken/broken3x3.png";
-  }
-  
-  // 加载废墟贴图
-  auto texture = Director::getInstance()->getTextureCache()->addImage(rubblePath);
-  if (texture) {
-    this->setTexture(texture);
-    auto rect = Rect(0, 0, texture->getContentSize().width, texture->getContentSize().height);
-    this->setTextureRect(rect);
+    // 获取建筑的网格尺寸
+    auto config = BuildingConfig::getInstance()->getConfig(_buildingType);
+    int gridWidth = config ? config->gridWidth : 2;
+    int gridHeight = config ? config->gridHeight : 2;
     
-    // 恢复正常颜色和不透明度
-    this->setColor(Color3B::WHITE);
+    int maxSize = std::max(gridWidth, gridHeight);
+    
+    std::string rubblePath;
+    if (maxSize <= 1) {
+        rubblePath = "buildings/broken/broken1x1.png";
+    } else if (maxSize <= 2) {
+        rubblePath = "buildings/broken/broken2x2.png";
+    } else {
+        rubblePath = "buildings/broken/broken3x3.png";
+    }
+    
+    // 1. 显示主贴图（用于加载废墟纹理）
+    this->setVisible(true);
     this->setOpacity(255);
     
-    CCLOG("BuildingSprite: Showing rubble for building ID=%d, size=%dx%d (max=%d), path=%s", 
-          _buildingId, gridWidth, gridHeight, maxSize, rubblePath.c_str());
-  } else {
-    // 如果废墟图片加载失败，使用原来的红色半透明效果作为后备
-    this->setColor(Color3B::RED);
-    this->setOpacity(200);
-    CCLOG("BuildingSprite: Failed to load rubble texture: %s, using fallback", rubblePath.c_str());
-  }
-  
-  // 隐藏血条
-  hideHealthBar();
+    // 2. 加载废墟贴图
+    auto texture = Director::getInstance()->getTextureCache()->addImage(rubblePath);
+    if (texture) {
+        this->setTexture(texture);
+        auto rect = Rect(0, 0, texture->getContentSize().width, texture->getContentSize().height);
+        this->setTextureRect(rect);
+        
+        this->setColor(Color3B::WHITE);
+        
+        CCLOG("BuildingSprite: Showing rubble for building ID=%d, size=%dx%d, path=%s", 
+              _buildingId, gridWidth, gridHeight, rubblePath.c_str());
+    } else {
+        this->setColor(Color3B::RED);
+        this->setOpacity(200);
+        CCLOG("BuildingSprite: Failed to load rubble texture: %s", rubblePath.c_str());
+    }
+    
+    // 3. 【新增】隐藏防御动画（如果存在）
+    auto defenseAnim = this->getChildByName("DefenseAnim");
+    if (defenseAnim) {
+        defenseAnim->setVisible(false);
+        CCLOG("BuildingSprite: Defense animation hidden (ID=%d)", _buildingId);
+    }
+    
+    // 4. 隐藏血条
+    hideHealthBar();
 }
 
 // ========== 目标标记实现 ==========
@@ -607,4 +611,23 @@ void BuildingSprite::showTargetBeacon() {
   } else {
     CCLOG("BuildingSprite: Failed to create beacon sprite");
   }
+}
+
+
+void BuildingSprite::setMainTextureVisible(bool visible) {
+    if (visible) {
+        // 显示主贴图
+        this->setVisible(true);
+        this->setOpacity(255);
+    } else {
+        // 完全隐藏主贴图的渲染
+        // 方法1：设置为完全透明
+        this->setOpacity(0);
+
+        // 方法2：禁用纹理绘制（更彻底）
+        this->setTextureRect(Rect(0, 0, 0, 0));
+    }
+
+    CCLOG("BuildingSprite: Main texture visibility set to %s (ID=%d)",
+          visible ? "VISIBLE" : "HIDDEN", _buildingId);
 }

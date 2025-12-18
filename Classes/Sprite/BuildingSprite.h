@@ -49,6 +49,9 @@ public:
   // 【修复】目标标记（战斗场景用）- 移到 public
   void showTargetBeacon();      // 显示目标锁定标记
 
+  // 控制主贴图可见性（用于防御建筑动画切换）
+  void setMainTextureVisible(bool visible);
+
   // Getter
   int getBuildingId() const { return _buildingId; }
   int getBuildingType() const { return _buildingType; }
@@ -56,8 +59,9 @@ public:
   BuildingInstance::State getBuildingState() const { return _buildingState; }
   cocos2d::Vec2 getVisualOffset() const { return _visualOffset; }
 
-private:
   void loadSprite(int type, int level);
+
+private:
   void updateVisuals();
 
   //  新增：UI 管理方法

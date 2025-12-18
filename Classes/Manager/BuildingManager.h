@@ -9,6 +9,9 @@
 
 USING_NS_CC;
 
+class BuildingSprite;
+class DefenseBuildingAnimation;  // 前向声明
+
 // 建筑管理器（负责建筑精灵的创建、更新、删除）
 class BuildingManager {
 public:
@@ -51,15 +54,24 @@ public:
   // 在 BuildingManager 类中添加
   void removeBuildingSprite(int buildingId);
 
+  // 获取防御建筑动画
+  DefenseBuildingAnimation* getDefenseAnimation(int buildingId) const;
+
 private:
   Layer* _parentLayer;                                      // 父层
   std::unordered_map<int, BuildingSprite*> _buildings;    // 建筑映射表 <buildingId, sprite>
   bool _isBattleScene = false;  // 是否为战斗场景
 
+  // 防御建筑动画映射表
+  std::map<int, DefenseBuildingAnimation*> _defenseAnims;
+
   // 统一的 Z-Order 计算函数
   static int calculateZOrder(int gridX, int gridY) {
     return GridMapUtils::calculateZOrder(gridX, gridY);
   }
+
+  // 创建防御建筑动画
+  void createDefenseAnimation(BuildingSprite* sprite, const BuildingInstance& building);
 };
 
 #endif // __BUILDING_MANAGER_H__

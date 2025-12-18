@@ -55,8 +55,8 @@ void AnimationManager::preloadBattleAnimations() {
     // ✅ 预加载哥布林动画
     loadSpriteFrames("Animation/troop/goblin/goblin.plist");
 
-    // 预加载加农炮动画
-    // loadSpriteFrames("Animation/cannon/cannon.plist");
+    // ✅ 预加载加农炮动画
+    loadSpriteFrames("Animation/defence_architecture/cannon/atlas.plist");
 
     CCLOG("AnimationManager: All battle animations preloaded");
 }

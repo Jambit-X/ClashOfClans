@@ -7,10 +7,12 @@
 #include "Layer/BattleTroopLayer.h"
 #include "Controller/BattleProcessController.h"
 #include "Manager/VillageDataManager.h"
+#include "Manager/BuildingManager.h"
 #include "Model/BuildingConfig.h"
 #include "Util/FindPathUtil.h"
 #include "Util/GridMapUtils.h"
 #include "Util/RandomBattleMapGenerator.h"
+#include "Component/DefenseBuildingAnimation.h"
 
 USING_NS_CC;
 
@@ -37,50 +39,45 @@ bool BattleScene::init() {
         // 【新增】把 TroopLayer 加为 MapLayer 的子节点，Tag 设为 999
         auto troopLayer = BattleTroopLayer::create();
         troopLayer->setTag(999);
-        _mapLayer->addChild(troopLayer, 10); // Z=10 (里面的兵会加到mapLayer上，所以这个层级无所谓了)
+        _mapLayer->addChild(troopLayer, 10);
     }
-
-
 
     // 2. UI 层 (Z=10)
     _hudLayer = BattleHUDLayer::create();
     if (_hudLayer) this->addChild(_hudLayer, 10);
 
     // 3. 初始化云层遮罩 (Z=100, 放在最高层以遮挡一切)
-    // 路径: Resources/UI/battle/battle-prepare/cloud.jpg
     _cloudSprite = Sprite::create("UI/battle/battle-prepare/cloud.jpg");
     if (_cloudSprite) {
         auto visibleSize = Director::getInstance()->getVisibleSize();
         _cloudSprite->setPosition(visibleSize.width / 2, visibleSize.height / 2);
 
-        // 计算缩放以覆盖全屏 (scale 稍微大一点防止黑边)
         float scaleX = visibleSize.width / _cloudSprite->getContentSize().width;
         float scaleY = visibleSize.height / _cloudSprite->getContentSize().height;
         float finalScale = std::max(scaleX, scaleY) * 1.1f;
         _cloudSprite->setScale(finalScale);
 
-        // 初始状态：完全不透明 (模拟刚点进战斗时的搜索状态)
         _cloudSprite->setOpacity(255);
         _cloudSprite->setVisible(true);
 
         this->addChild(_cloudSprite, 100);
     }
 
-    // 4. 加载敌人数据
-    loadEnemyVillage();
-    
-    // 【关键修复】进入战斗模式，切换数据源
+    // 4. 【关键修复】先切换到战斗模式，再加载敌人数据
     VillageDataManager::getInstance()->setInBattleMode(true);
     CCLOG("BattleScene: Entered battle mode, data source switched to battle map");
 
-    // ========== 关键修复：更新寻路地图 ==========
+    // 加载敌人数据（这会触发 reloadMap 并输出正确的建筑布局）
+    loadEnemyVillage();
+
+    // ========== 更新寻路地图 ==========(
     FindPathUtil::getInstance()->updatePathfindingMap();
     CCLOG("BattleScene: Pathfinding map updated for battle");
     // ===========================================
 
     switchState(BattleState::PREPARE);
 
-    // 5. 启动时执行一次"进入动画"（延迟一下再淡出，让玩家看清搜索云层）
+    // 5. 启动时执行一次"进入动画"
     float randomStartDelay = cocos2d::RandomHelper::random_real(0.5f, 1.0f);
     this->scheduleOnce([this](float) {
         performCloudTransition(nullptr, true);
@@ -93,6 +90,66 @@ bool BattleScene::init() {
     
     // 【新增】设置建筑摧毁事件监听
     setupBuildingDestroyedListener();
+
+    // ========== 安全的测试代码：使用 schedule 的自动管理 ==========
+    this->scheduleOnce([this](float) {
+        auto buildingManager = _mapLayer->getBuildingManager();
+        if (!buildingManager) {
+            CCLOG("❌ BattleScene: BuildingManager is null!");
+            return;
+        }
+
+        auto dataManager = VillageDataManager::getInstance();
+        const auto& buildings = dataManager->getAllBuildings();
+
+        CCLOG("🔫 STARTING CANNON ROTATION TEST");
+
+        for (const auto& building : buildings) {
+            if (building.type == 301) {  // 加农炮
+                // 【关键修复】每次在 lambda 内部重新获取 anim 指针
+                std::string scheduleKey = "test_cannon_" + std::to_string(building.id);
+                int buildingId = building.id;  // 按值捕获 ID,而不是整个对象
+
+                this->schedule([this, buildingId](float dt) {
+                    // 每次回调时重新获取指针,确保安全
+                    auto buildingManager = _mapLayer->getBuildingManager();
+                    if (!buildingManager) return;
+
+                    auto anim = buildingManager->getDefenseAnimation(buildingId);
+                    if (!anim) {
+                        // 如果动画对象已被销毁,取消该 schedule
+                        this->unschedule("test_cannon_" + std::to_string(buildingId));
+                        return;
+                    }
+
+                    // 获取建筑数据
+                    auto dataManager = VillageDataManager::getInstance();
+                    auto buildingPtr = dataManager->getBuildingById(buildingId);
+                    if (!buildingPtr) {
+                        this->unschedule("test_cannon_" + std::to_string(buildingId));
+                        return;
+                    }
+
+                    static std::map<int, float> angles;
+                    float& angle = angles[buildingId];
+
+                    angle += 2.0f;
+                    if (angle >= 360.0f) angle = 0.0f;
+
+                    Vec2 buildingPos = GridMapUtils::gridToPixel(buildingPtr->gridX, buildingPtr->gridY);
+                    Vec2 fakeTarget = Vec2(
+                        buildingPos.x + 200 * cos(CC_DEGREES_TO_RADIANS(angle)),
+                        buildingPos.y + 200 * sin(CC_DEGREES_TO_RADIANS(angle))
+                    );
+
+                    anim->aimAt(fakeTarget);
+                }, 0.05f, scheduleKey);
+
+                CCLOG("✅ Started rotation test for cannon ID=%d", building.id);
+            }
+        }
+    }, 2.0f, "test_all_cannons");
+    // ============================================================
     
     return true;
 }
