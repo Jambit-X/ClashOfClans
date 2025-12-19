@@ -9,18 +9,20 @@ USING_NS_CC;
 
 // 动画类型枚举
 enum class AnimationType {
-  IDLE,              // 待机
-  WALK,              // 向右走
-  WALK_UP,           // 向右上走
-  WALK_DOWN,         // 向右下走
-  RUN,
-  ATTACK,            // 向右攻击
-  ATTACK_UP,         // 向右上攻击
-  ATTACK_DOWN,       // 向右下攻击
-  DEATH,
-  SPAWN,             // 还没有
-  VICTORY,
-  HURT
+    IDLE,              // 向右待机
+    IDLE_UP,           // 向右上待机
+    IDLE_DOWN,         // 向右下待机
+    WALK,              // 向右走
+    WALK_UP,           // 向右上走
+    WALK_DOWN,         // 向右下走
+    RUN,
+    ATTACK,            // 向右攻击
+    ATTACK_UP,         // 向右上攻击
+    ATTACK_DOWN,       // 向右下攻击
+    DEATH,
+    SPAWN,
+    VICTORY,
+    HURT
 };
 
 // 添加移动方向枚举
@@ -38,10 +40,30 @@ enum class MoveDirection {
 // 动画配置数据
 struct AnimationConfig {
   std::string framePrefix;
+  // 方式 1: 连续帧（原有方式）
   int startFrame;        // 起始帧号
   int frameCount;        // 帧数量
+
+  // 方式 2: 非连续帧（新增）
+  std::vector<int> frameIndices;  // 指定帧序号列表，例如 {1, 5, 9, 12}
   float frameDelay;
   bool loop;
+
+  // 构造函数 1: 连续帧（保持向后兼容）
+  AnimationConfig(const std::string& prefix, int start, int count, float delay, bool isLoop)
+      : framePrefix(prefix), startFrame(start), frameCount(count), frameDelay(delay), loop(isLoop) {}
+
+  // 构造函数 2: 非连续帧（新增）
+  AnimationConfig(const std::string& prefix, const std::vector<int>& indices, float delay, bool isLoop)
+      : framePrefix(prefix), startFrame(0), frameCount(0), frameIndices(indices), frameDelay(delay), loop(isLoop) {}
+
+  // 默认构造函数
+  AnimationConfig() : startFrame(0), frameCount(0), frameDelay(0.1f), loop(false) {}
+
+  // 判断是否使用非连续帧
+  bool isNonContinuous() const {
+      return !frameIndices.empty();
+  }
 };
 
 // 动画管理器（单例）

@@ -524,6 +524,10 @@ void BattleScene::onTouchEnded(cocos2d::Touch* touch, cocos2d::Event* event) {
             name = "Goblin";
         } else if (troopId == 1004) {
             name = "Giant";
+        } else if (troopId == 1005) {
+            name = "Wall_Breaker";
+        } else if (troopId == 1006) {
+            name = "Balloon";
         } else {
             CCLOG("BattleScene: Unknown troop ID %d, defaulting to Barbarian", troopId);
         }

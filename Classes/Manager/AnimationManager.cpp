@@ -52,10 +52,13 @@ void AnimationManager::preloadBattleAnimations() {
     // 预加载巨人动画
     loadSpriteFrames("Animation/troop/giant/giant.plist");
 
-    // ✅ 预加载哥布林动画
+    // 预加载哥布林动画
     loadSpriteFrames("Animation/troop/goblin/goblin.plist");
 
-    // ✅ 预加载加农炮动画
+    // 预加载炸弹兵动画
+    loadSpriteFrames("Animation/troop/wall_breaker/wall_breaker.plist");
+
+    // 预加载加农炮动画
     loadSpriteFrames("Animation/defence_architecture/cannon/atlas.plist");
 
     CCLOG("AnimationManager: All battle animations preloaded");
@@ -82,22 +85,44 @@ Animation* AnimationManager::createAnimation(const std::string& unitType, Animat
 
     const AnimationConfig& config = it->second;
 
-    // 创建帧序列（使用 startFrame 和 frameCount）
+    // 创建帧序列
     Vector<SpriteFrame*> frames;
     auto cache = SpriteFrameCache::getInstance();
 
-    for (int i = 0; i < config.frameCount; ++i) {
-        int frameIndex = config.startFrame + i;
-        // 匹配实际格式：barbarian25.0.png, barbarian26.0.png, ...
-        std::string frameName = config.framePrefix + StringUtils::format("%d.0.png", frameIndex);
+    // ========== ✅ 支持两种模式 ==========
+    if (config.isNonContinuous()) {
+        // 模式 2: 非连续帧（使用 frameIndices）
+        CCLOG("AnimationManager: Creating animation '%s' with non-continuous frames", key.c_str());
 
-        SpriteFrame* frame = cache->getSpriteFrameByName(frameName);
+        for (int frameIndex : config.frameIndices) {
+            std::string frameName = config.framePrefix + StringUtils::format("%d.0.png", frameIndex);
+            SpriteFrame* frame = cache->getSpriteFrameByName(frameName);
 
-        if (frame) {
-            frames.pushBack(frame);
-        } else {
-            CCLOG("AnimationManager: Frame not found: %s", frameName.c_str());
+            if (frame) {
+                frames.pushBack(frame);
+            } else {
+                CCLOG("AnimationManager: Frame not found: %s", frameName.c_str());
+            }
         }
+
+        CCLOG("AnimationManager: Loaded %d non-continuous frames", (int)frames.size());
+    } else {
+        // 模式 1: 连续帧（原有逻辑）
+        for (int i = 0; i < config.frameCount; ++i) {
+            int frameIndex = config.startFrame + i;
+            std::string frameName = config.framePrefix + StringUtils::format("%d.0.png", frameIndex);
+
+            SpriteFrame* frame = cache->getSpriteFrameByName(frameName);
+
+            if (frame) {
+                frames.pushBack(frame);
+            } else {
+                CCLOG("AnimationManager: Frame not found: %s", frameName.c_str());
+            }
+        }
+
+        CCLOG("AnimationManager: Created animation '%s' with %d frames (frames %d-%d)",
+              key.c_str(), (int)frames.size(), config.startFrame, config.startFrame + config.frameCount - 1);
     }
 
     if (frames.empty()) {
@@ -106,8 +131,6 @@ Animation* AnimationManager::createAnimation(const std::string& unitType, Animat
     }
 
     Animation* animation = Animation::createWithSpriteFrames(frames, config.frameDelay);
-    CCLOG("AnimationManager: Created animation '%s' with %d frames (frames %d-%d)",
-          key.c_str(), (int)frames.size(), config.startFrame, config.startFrame + config.frameCount - 1);
     return animation;
 }
 
@@ -134,7 +157,7 @@ Animate* AnimationManager::createOnceAnimate(const std::string& unitType, Animat
     return Animate::create(animation);
 }
 
-// 配置管理
+// 配置管理 - 连续帧版本（保持向后兼容）
 void AnimationManager::registerAnimationConfig(
     const std::string& unitType,
     AnimationType animType,
@@ -142,8 +165,14 @@ void AnimationManager::registerAnimationConfig(
 ) {
     std::string key = getConfigKey(unitType, animType);
     _animConfigs[key] = config;
-    CCLOG("AnimationManager: Registered config: %s (frames: %d-%d)",
-          key.c_str(), config.startFrame, config.startFrame + config.frameCount - 1);
+
+    if (config.isNonContinuous()) {
+        CCLOG("AnimationManager: Registered config: %s (non-continuous frames: %zu frames)",
+              key.c_str(), config.frameIndices.size());
+    } else {
+        CCLOG("AnimationManager: Registered config: %s (frames: %d-%d)",
+              key.c_str(), config.startFrame, config.startFrame + config.frameCount - 1);
+    }
 }
 
 void AnimationManager::initializeDefaultConfigs() {
@@ -151,9 +180,19 @@ void AnimationManager::initializeDefaultConfigs() {
 
     // ===== 野蛮人动画配置 =====
 
-    // 待机动画：帧 25
+    // ✅ 修正：向右待机（帧 25）
     registerAnimationConfig("Barbarian", AnimationType::IDLE, {
-        "barbarian", 25, 1, 0.3f, true
+        "barbarian", {26, 29}, 0.3f, false
+                            });
+
+    // ✅ 新增：向右上待机（帧 26）
+    registerAnimationConfig("Barbarian", AnimationType::IDLE_UP, {
+        "barbarian", {27, 30} , 0.3f, true
+                            });
+
+    // ✅ 新增：向右下待机（帧 28）
+    registerAnimationConfig("Barbarian", AnimationType::IDLE_DOWN, {
+        "barbarian", {25, 28}, 0.3f, true
                             });
 
     // 向右行走：帧 9-16
@@ -193,9 +232,19 @@ void AnimationManager::initializeDefaultConfigs() {
 
     // ===== 弓箭手动画配置 =====
 
-    // 待机动画：帧 27-29（面向右站定）
+    // ✅ 修正：向右待机（帧 27-29）
     registerAnimationConfig("Archer", AnimationType::IDLE, {
         "archer", 27, 3, 0.3f, true
+                            });
+
+    // ✅ 新增：向右上待机（帧 30-32）
+    registerAnimationConfig("Archer", AnimationType::IDLE_UP, {
+        "archer", 30, 3, 0.3f, true
+                            });
+
+    // ✅ 新增：向右下待机（帧 33-35）
+    registerAnimationConfig("Archer", AnimationType::IDLE_DOWN, {
+        "archer", 33, 3, 0.3f, true
                             });
 
     // 向右行走：帧 9-16
@@ -213,19 +262,19 @@ void AnimationManager::initializeDefaultConfigs() {
         "archer", 1, 8, 0.1f, true
                             });
 
-    // 向右攻击（射箭）：帧 45-48（暂时只用后半段）
+    // 向右攻击（射箭）：帧 45-48
     registerAnimationConfig("Archer", AnimationType::ATTACK, {
-        "archer", 45, 4, 0.08f, false
+        "archer", {35, 36, 37, 45, 46, 47, 48}, 0.08f, false
                             });
 
-    // 向右上攻击（射箭）：帧 49-51（暂时只用后半段）
+    // 向右上攻击（射箭）：帧 49-51
     registerAnimationConfig("Archer", AnimationType::ATTACK_UP, {
-        "archer", 49, 3, 0.08f, false
+        "archer", {38, 39, 40, 49, 50, 51, 52}, 0.08f, false
                             });
 
-    // 向右下攻击（射箭）：帧 41-44（暂时只用后半段）
+    // 向右下攻击（射箭）：帧 41-44
     registerAnimationConfig("Archer", AnimationType::ATTACK_DOWN, {
-        "archer", 41, 4, 0.08f, false
+        "archer", {32, 33, 34, 41, 42, 43, 44}, 0.08f, false
                             });
 
     // 死亡动画：帧 53-54
@@ -235,9 +284,19 @@ void AnimationManager::initializeDefaultConfigs() {
 
     // ===== 巨人动画配置 =====
 
-    // 待机动画：帧 42-43（面向右站定）
+    // ✅ 修正：向右待机（帧 42-43）
     registerAnimationConfig("Giant", AnimationType::IDLE, {
-        "giant", 42, 2, 0.4f, true
+        "giant", {38, 42, 43}, 0.4f, true
+                            });
+
+    // ✅ 新增：向右上待机（帧 44）
+    registerAnimationConfig("Giant", AnimationType::IDLE_UP, {
+        "giant", {39, 44, 45}, 0.4f, true
+                            });
+
+    // ✅ 新增：向右下待机（帧 40-41）
+    registerAnimationConfig("Giant", AnimationType::IDLE_DOWN, {
+        "giant", {37, 40, 41}, 0.4f, true
                             });
 
     // 向右行走：帧 13-24
@@ -277,9 +336,19 @@ void AnimationManager::initializeDefaultConfigs() {
 
     // ===== 哥布林动画配置 =====
 
-    // 待机动画：帧 26（面向右站定）
+    // ✅ 修正：向右待机（帧 26）
     registerAnimationConfig("Goblin", AnimationType::IDLE, {
         "goblin", 26, 1, 0.2f, true
+                            });
+
+    // ✅ 新增：向右上待机（帧 27）
+    registerAnimationConfig("Goblin", AnimationType::IDLE_UP, {
+        "goblin", 27, 1, 0.2f, true
+                            });
+
+    // ✅ 新增：向右下待机（帧 25）
+    registerAnimationConfig("Goblin", AnimationType::IDLE_DOWN, {
+        "goblin", 25, 1, 0.2f, true
                             });
 
     // 向右行走：帧 9-16
@@ -299,17 +368,17 @@ void AnimationManager::initializeDefaultConfigs() {
 
     // 向右攻击：帧 32-36
     registerAnimationConfig("Goblin", AnimationType::ATTACK, {
-        "goblin", 32, 5, 0.1f, false
+        "goblin", 61, 1, 0.1f, false
                             });
 
     // 向右上攻击：帧 37-40
     registerAnimationConfig("Goblin", AnimationType::ATTACK_UP, {
-        "goblin", 37, 4, 0.1f, false
+        "goblin", 61, 1, 0.1f, false
                             });
 
     // 向右下攻击：帧 28-31
     registerAnimationConfig("Goblin", AnimationType::ATTACK_DOWN, {
-        "goblin", 28, 4, 0.1f, false
+        "goblin", 61, 1, 0.1f, false
                             });
 
     // 死亡动画：帧 41-42
@@ -317,7 +386,58 @@ void AnimationManager::initializeDefaultConfigs() {
         "goblin", 41, 2, 0.5f, false
                             });
 
-    CCLOG("AnimationManager: Default configs initialized");
+    // ========== 炸弹兵动画配置 ==========
+
+    // 死亡墓碑：帧 1
+    registerAnimationConfig("Wall_Breaker", AnimationType::DEATH, {
+        "wall_breaker", {2, 1}, 1.0f, false
+                            });
+
+    // ✅ 向右待机（跳舞）：帧 7-10
+    registerAnimationConfig("Wall_Breaker", AnimationType::IDLE, {
+        "wall_breaker", 7, 4, 0.15f, true
+                            });
+
+    // ✅ 向右上待机（跳舞）：帧 3-6
+    registerAnimationConfig("Wall_Breaker", AnimationType::IDLE_UP, {
+        "wall_breaker", 3, 4, 0.15f, true
+                            });
+
+    // ✅ 向右下待机（跳舞）：帧 11-14
+    registerAnimationConfig("Wall_Breaker", AnimationType::IDLE_DOWN, {
+        "wall_breaker", 11, 4, 0.15f, true
+                            });
+
+    // 向右跑：帧 41-48
+    registerAnimationConfig("Wall_Breaker", AnimationType::WALK, {
+        "wall_breaker", 41, 8, 0.08f, true
+                            });
+
+    // 向右上跑：帧 33-40
+    registerAnimationConfig("Wall_Breaker", AnimationType::WALK_UP, {
+        "wall_breaker", 33, 8, 0.08f, true
+                            });
+
+    // 向右下跑：帧 49-56
+    registerAnimationConfig("Wall_Breaker", AnimationType::WALK_DOWN, {
+        "wall_breaker", 49, 8, 0.08f, true
+                            });
+
+    // ✅ 攻击动画（通用，炸弹兵攻击=爆炸）
+    // 这里暂时复用行走动画，实际爆炸效果由 AI 控制
+    registerAnimationConfig("Wall_Breaker", AnimationType::ATTACK, {
+        "wall_breaker", 41, 8, 0.08f, false
+                            });
+
+    registerAnimationConfig("Wall_Breaker", AnimationType::ATTACK_UP, {
+        "wall_breaker", 33, 8, 0.08f, false
+                            });
+
+    registerAnimationConfig("Wall_Breaker", AnimationType::ATTACK_DOWN, {
+        "wall_breaker", 49, 8, 0.08f, false
+                            });
+
+    CCLOG("AnimationManager: Default configs initialized (including Wall_Breaker)");
 }
 
 std::string AnimationManager::getConfigKey(const std::string& unitType, AnimationType animType) const {
@@ -327,6 +447,8 @@ std::string AnimationManager::getConfigKey(const std::string& unitType, Animatio
 std::string AnimationManager::animTypeToString(AnimationType type) const {
     switch (type) {
         case AnimationType::IDLE:        return "IDLE";
+        case AnimationType::IDLE_UP:     return "IDLE_UP";        
+        case AnimationType::IDLE_DOWN:   return "IDLE_DOWN";      
         case AnimationType::WALK:        return "WALK";
         case AnimationType::WALK_UP:     return "WALK_UP";
         case AnimationType::WALK_DOWN:   return "WALK_DOWN";

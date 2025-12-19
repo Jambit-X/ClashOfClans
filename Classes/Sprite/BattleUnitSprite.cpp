@@ -19,56 +19,142 @@ BattleUnitSprite* BattleUnitSprite::create(const std::string& unitType) {
 }
 
 bool BattleUnitSprite::init(const std::string& unitType) {
-  _unitType = unitType;
-  _unitTypeID = parseUnitType(unitType);  // 初始化时解析一次
-  _currentAnimation = AnimationType::IDLE;
-  _isAnimating = false;
-  _currentGridPos = Vec2::ZERO;
+    _unitType = unitType;
+    _unitTypeID = parseUnitType(unitType);
+    _currentAnimation = AnimationType::IDLE;
+    _isAnimating = false;
+    _currentGridPos = Vec2::ZERO;
 
-  // ===== 初始化生命值 =====
-  auto troopConfig = TroopConfig::getInstance();
-  
-  // 根据 unitTypeID 获取对应的兵种ID
-  int troopID = 0;
-  switch (_unitTypeID) {
-    case UnitTypeID::BARBARIAN:    troopID = 1001; break;
-    case UnitTypeID::ARCHER:       troopID = 1002; break;
-    case UnitTypeID::GOBLIN:       troopID = 1003; break;
-    case UnitTypeID::GIANT:        troopID = 1004; break;
-    case UnitTypeID::WALL_BREAKER: troopID = 1005; break;
-    case UnitTypeID::BALLOON:      troopID = 1006; break;
-    default:
-      CCLOG("BattleUnitSprite: Unknown unit type, defaulting to Barbarian HP");
-      troopID = 1001;
-      break;
-  }
-  
-  TroopInfo troopInfo = troopConfig->getTroopById(troopID);
-  _maxHP = troopInfo.hitpoints;
-  _currentHP = _maxHP;
-  
-  CCLOG("BattleUnitSprite: Initialized %s with HP: %d/%d", 
-        unitType.c_str(), _currentHP, _maxHP);
+    // 初始化生命值
+    auto troopConfig = TroopConfig::getInstance();
 
-  std::string unitTypeLower = unitType;
-  std::transform(unitTypeLower.begin(), unitTypeLower.end(),
-                 unitTypeLower.begin(), ::tolower);
+    int troopID = 0;
+    switch (_unitTypeID) {
+        case UnitTypeID::BARBARIAN:    troopID = 1001; break;
+        case UnitTypeID::ARCHER:       troopID = 1002; break;
+        case UnitTypeID::GOBLIN:       troopID = 1003; break;
+        case UnitTypeID::GIANT:        troopID = 1004; break;
+        case UnitTypeID::WALL_BREAKER: troopID = 1005; break;
+        case UnitTypeID::BALLOON:      troopID = 1006; break;
+        default:
+            CCLOG("BattleUnitSprite: Unknown unit type, defaulting to Barbarian HP");
+            troopID = 1001;
+            break;
+    }
 
-  std::string firstFrameName = unitTypeLower + "1.0.png";
+    TroopInfo troopInfo = troopConfig->getTroopById(troopID);
+    _maxHP = troopInfo.hitpoints;
+    _currentHP = _maxHP;
 
-  bool success = Sprite::initWithSpriteFrameName(firstFrameName);
+    CCLOG("BattleUnitSprite: Initialized %s with HP: %d/%d",
+          unitType.c_str(), _currentHP, _maxHP);
 
-  if (!success) {
-    CCLOG("BattleUnitSprite: Failed to load first frame: %s", firstFrameName.c_str());
-    return false;
-  }
+    // ========== ✅ 气球兵特殊处理:直接加载独立图片 ==========
+    bool success = false;
+    if (_unitTypeID == UnitTypeID::BALLOON) {
+        // 气球兵使用独立图片,不使用精灵图集
+        success = Sprite::initWithFile("Animation/troop/balloon/balloon.png");
 
-  this->setAnchorPoint(Vec2(0.5f, 0.0f));
-  
-  this->scheduleUpdate();
-  
-  CCLOG("BattleUnitSprite: Created %s (TypeID=%d)", unitType.c_str(), static_cast<int>(_unitTypeID));
-  return true;
+        if (!success) {
+            CCLOG("BattleUnitSprite: Failed to load balloon image, trying fallback...");
+            // 尝试备用路径
+            success = Sprite::initWithFile("Animation/troop/balloon/balloon1.0.png");
+        }
+
+        if (success) {
+            CCLOG("BattleUnitSprite: Loaded balloon from independent image file");
+        }
+    } else {
+        // 其他兵种使用精灵图集
+        std::string unitTypeLower = unitType;
+        std::transform(unitTypeLower.begin(), unitTypeLower.end(),
+                       unitTypeLower.begin(), ::tolower);
+
+        std::string firstFrameName = unitTypeLower + "1.0.png";
+        success = Sprite::initWithSpriteFrameName(firstFrameName);
+    }
+    // ========================================================
+
+    if (!success) {
+        CCLOG("BattleUnitSprite: Failed to load sprite for %s", unitType.c_str());
+        return false;
+    }
+
+    this->setAnchorPoint(Vec2(0.5f, 0.0f));
+
+    // ========== ✅ 气球兵特殊效果:上下飘动 ==========
+    if (_unitTypeID == UnitTypeID::BALLOON) {
+        auto floatUp = MoveBy::create(1.0f, Vec2(0, 10));   // 向上飘 10 像素
+        auto floatDown = MoveBy::create(1.0f, Vec2(0, -10)); // 向下飘 10 像素
+        auto floatSequence = Sequence::create(floatUp, floatDown, nullptr);
+        auto floatForever = RepeatForever::create(floatSequence);
+        floatForever->setTag(9999); // 使用特殊 Tag,避免与移动动作冲突
+        this->runAction(floatForever);
+
+        CCLOG("BattleUnitSprite: Balloon floating animation started");
+    }
+
+    // 根据兵种类型设置缩放比例
+    float scale = getScaleForUnitType(_unitTypeID);
+    this->setScale(scale);
+    CCLOG("BattleUnitSprite: Set scale to %.2f for %s", scale, unitType.c_str());
+
+    // ========== ✅ 炸弹兵特殊处理:添加炸弹子精灵 ==========
+    if (_unitTypeID == UnitTypeID::WALL_BREAKER) {
+        // 从精灵图集加载炸弹帧
+        auto bombFrame = SpriteFrameCache::getInstance()->getSpriteFrameByName("wall_breaker61.0.png");
+
+        if (bombFrame) {
+            _bombSprite = Sprite::createWithSpriteFrame(bombFrame);
+
+            if (_bombSprite) {
+                // 设置炸弹的位置(相对于炸弹兵中心)
+                // 根据实际情况调整偏移量,让炸弹显示在炸弹兵手中
+                _bombSprite->setPosition(Vec2(20, 30));  // X偏移0,Y向上偏移30像素
+
+                // 炸弹的缩放比例(可以根据视觉效果调整)
+                _bombSprite->setScale(0.8f);
+                
+                // 设置锚点(默认0.5,0.5即中心点)
+                _bombSprite->setAnchorPoint(Vec2(0.5f, 0.5f));
+
+                // 将炸弹作为子节点添加到炸弹兵身上
+                // zOrder=1 确保炸弹显示在炸弹兵上层
+                this->addChild(_bombSprite, 1);
+
+                CCLOG("BattleUnitSprite: Bomb sprite attached to Wall_Breaker");
+            } else {
+                CCLOG("BattleUnitSprite: Failed to create bomb sprite");
+            }
+        } else {
+            CCLOG("BattleUnitSprite: Bomb frame 'wall_breaker61.0.png' not found in sprite frame cache");
+        }
+    }
+
+    this->scheduleUpdate();
+
+    CCLOG("BattleUnitSprite: Created %s (TypeID=%d)", unitType.c_str(), static_cast<int>(_unitTypeID));
+    return true;
+}
+
+// ========== ✅ 新增：根据兵种类型返回缩放比例 ==========
+float BattleUnitSprite::getScaleForUnitType(UnitTypeID typeID) {
+    switch (typeID) {
+        case UnitTypeID::BARBARIAN:
+            return 0.8f;  // 野蛮人：缩小到80%
+        case UnitTypeID::ARCHER:
+            return 0.75f; // 弓箭手：缩小到75%
+        case UnitTypeID::GOBLIN:
+            return 0.7f;  // 哥布林：缩小到70%（体型较小）
+        case UnitTypeID::GIANT:
+            return 1.2f;  // 巨人：放大到120%（体型较大）
+        case UnitTypeID::WALL_BREAKER:
+            return 0.65f; // 炸弹兵：缩小到65%（体型很小）
+        case UnitTypeID::BALLOON:
+            return 1.0f;  // 气球兵：保持原始大小
+        default:
+            return 1.0f;  // 默认：不缩放
+    }
 }
 
 void BattleUnitSprite::update(float dt) {
@@ -132,47 +218,97 @@ UnitTypeID BattleUnitSprite::parseUnitType(const std::string& unitType) {
 // ===== 基础动画控制 =====
 
 void BattleUnitSprite::playAnimation(
-  AnimationType animType,
-  bool loop,
-  const std::function<void()>& callback
+    AnimationType animType,
+    bool loop,
+    const std::function<void()>& callback
 ) {
-  stopCurrentAnimation();
+    stopCurrentAnimation();
 
-  auto animMgr = AnimationManager::getInstance();
-
-  _currentAnimation = animType;
-  _isAnimating = true;
-
-  if (loop) {
-    auto action = animMgr->createLoopAnimate(_unitType, animType);
-    if (!action) {
-      CCLOG("BattleUnitSprite: Failed to create loop animation");
-      _isAnimating = false;
-      return;
-    }
-    action->setTag(ANIMATION_TAG);
-    this->runAction(action);
-  } else {
-    auto animate = animMgr->createOnceAnimate(_unitType, animType);
-    if (!animate) {
-      CCLOG("BattleUnitSprite: Failed to create animation");
-      _isAnimating = false;
-      return;
-    }
-
-    if (callback) {
-      auto callbackFunc = CallFunc::create([this, callback]() {
+    // ========== ✅ 气球兵特殊处理:没有帧动画,直接返回 ==========
+    if (_unitTypeID == UnitTypeID::BALLOON) {
+        _currentAnimation = animType;
         _isAnimating = false;
-        callback();
-      });
-      auto seq = Sequence::create(animate, callbackFunc, nullptr);
-      seq->setTag(ANIMATION_TAG);
-      this->runAction(seq);
-    } else {
-      animate->setTag(ANIMATION_TAG);
-      this->runAction(animate);
+
+        // 如果是死亡动画,切换到墓碑图片
+        if (animType == AnimationType::DEATH) {
+            auto tombstoneTexture = Director::getInstance()->getTextureCache()->addImage(
+                "Animation/troop/balloon/balloon_death.png"
+            );
+
+            if (tombstoneTexture) {
+                this->setTexture(tombstoneTexture);
+                auto rect = Rect(0, 0, tombstoneTexture->getContentSize().width,
+                                 tombstoneTexture->getContentSize().height);
+                this->setTextureRect(rect);
+                CCLOG("BattleUnitSprite: Balloon switched to tombstone texture");
+            }
+
+            // 延迟触发回调
+            if (callback) {
+                this->runAction(Sequence::create(
+                    DelayTime::create(0.5f),
+                    CallFunc::create(callback),
+                    nullptr
+                ));
+            }
+        } else {
+            // 其他动画(待机/行走)不需要做任何事,直接触发回调
+            if (callback) {
+                callback();
+            }
+        }
+        return;
     }
-  }
+    // ============================================================
+
+    // 其他兵种的正常动画逻辑
+    auto animMgr = AnimationManager::getInstance();
+
+    _currentAnimation = animType;
+    _isAnimating = true;
+
+    // ========== ✅ 炸弹兵死亡时移除炸弹 ==========
+    if (_unitTypeID == UnitTypeID::WALL_BREAKER && animType == AnimationType::DEATH) {
+        if (_bombSprite) {
+            // 炸弹飞出的动画(可选)
+            _bombSprite->runAction(Sequence::create(
+                RemoveSelf::create(),  // 移除炸弹
+                nullptr
+            ));
+            _bombSprite = nullptr;
+        }
+    }
+
+    if (loop) {
+        auto action = animMgr->createLoopAnimate(_unitType, animType);
+        if (!action) {
+            CCLOG("BattleUnitSprite: Failed to create loop animation");
+            _isAnimating = false;
+            return;
+        }
+        action->setTag(ANIMATION_TAG);
+        this->runAction(action);
+    } else {
+        auto animate = animMgr->createOnceAnimate(_unitType, animType);
+        if (!animate) {
+            CCLOG("BattleUnitSprite: Failed to create animation");
+            _isAnimating = false;
+            return;
+        }
+
+        if (callback) {
+            auto callbackFunc = CallFunc::create([this, callback]() {
+                _isAnimating = false;
+                callback();
+            });
+            auto seq = Sequence::create(animate, callbackFunc, nullptr);
+            seq->setTag(ANIMATION_TAG);
+            this->runAction(seq);
+        } else {
+            animate->setTag(ANIMATION_TAG);
+            this->runAction(animate);
+        }
+    }
 }
 
 void BattleUnitSprite::stopCurrentAnimation() {
@@ -180,8 +316,59 @@ void BattleUnitSprite::stopCurrentAnimation() {
   _isAnimating = false;
 }
 
+// ✅ 修改：根据上次移动方向选择待机动画
+// ========== 修复：待机动画也支持镜像翻转 ==========
 void BattleUnitSprite::playIdleAnimation() {
-  playAnimation(AnimationType::IDLE, true);
+    AnimationType idleAnimType = AnimationType::IDLE;  // 默认向右
+    bool flipX = false;
+
+    // 如果有上次移动方向记录,根据方向选择待机动画
+    if (_lastMoveDirection != Vec2::ZERO) {
+        float angle = getAngleFromDirection(_lastMoveDirection);
+
+        // 归一化角度到 [0, 360)
+        while (angle < 0) angle += 360;
+        while (angle >= 360) angle -= 360;
+
+        // ========== 8 方向判断（与行走动画保持一致）==========
+        if (angle >= 337.5f || angle < 22.5f) {
+            // 向右 (0°)
+            idleAnimType = AnimationType::IDLE;
+            flipX = false;
+        } else if (angle >= 22.5f && angle < 67.5f) {
+            // 向右上 (45°)
+            idleAnimType = AnimationType::IDLE_UP;
+            flipX = false;
+        } else if (angle >= 67.5f && angle < 112.5f) {
+            // 向上 (90°) - 使用右上动画，不翻转
+            idleAnimType = AnimationType::IDLE_UP;
+            flipX = false;
+        } else if (angle >= 112.5f && angle < 157.5f) {
+            // ✅ 向左上 (135°) - 使用右上动画 + 镜像翻转
+            idleAnimType = AnimationType::IDLE_UP;
+            flipX = true;
+        } else if (angle >= 157.5f && angle < 202.5f) {
+            // ✅ 向左 (180°) - 使用向右动画 + 镜像翻转
+            idleAnimType = AnimationType::IDLE;
+            flipX = true;
+        } else if (angle >= 202.5f && angle < 247.5f) {
+            // ✅ 向左下 (225°) - 使用右下动画 + 镜像翻转
+            idleAnimType = AnimationType::IDLE_DOWN;
+            flipX = true;
+        } else if (angle >= 247.5f && angle < 292.5f) {
+            // 向下 (270°) - 使用右下动画，不翻转
+            idleAnimType = AnimationType::IDLE_DOWN;
+            flipX = false;
+        } else {
+            // 向右下 (315°)
+            idleAnimType = AnimationType::IDLE_DOWN;
+            flipX = false;
+        }
+    }
+
+    // ✅ 应用镜像翻转
+    this->setFlippedX(flipX);
+    playAnimation(idleAnimType, true);
 }
 
 void BattleUnitSprite::playWalkAnimation() {
@@ -205,6 +392,9 @@ float BattleUnitSprite::getAngleFromDirection(const Vec2& direction) {
 void BattleUnitSprite::selectWalkAnimation(const Vec2& direction,
                                            AnimationType& outAnimType,
                                            bool& outFlipX) {
+  // 记录移动方向
+  _lastMoveDirection = direction;
+
   float angle = getAngleFromDirection(direction);
 
   while (angle < 0) angle += 360;
