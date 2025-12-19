@@ -110,6 +110,14 @@ void BuildingManager::removeBuilding(int buildingId) {
 void BuildingManager::createDefenseAnimation(BuildingSprite* sprite, const BuildingInstance& building) {
     if (!sprite) return;
 
+    // ========== 只为加农炮创建动画 ==========
+    if (building.type != 301) {
+        CCLOG("BuildingManager: Building type %d doesn't need animation, keeping static sprite", building.type);
+        return;  // 箭塔(302)等其他防御建筑直接返回,保持静态显示
+    }
+    // ======================================
+
+
     // 1. 【关键】保存原始尺寸
     auto originalSize = sprite->getContentSize();
     CCLOG("BuildingManager: Original size: (%.0f, %.0f)", originalSize.width, originalSize.height);
@@ -137,7 +145,7 @@ void BuildingManager::createDefenseAnimation(BuildingSprite* sprite, const Build
     // 5. 根据建筑类型设置默认偏移量
     if (building.type == 301) {  // 加农炮
         anim->setAnimationOffset(Vec2(0, 0));  // 你调整的偏移量
-        CCLOG("BuildingManager: Applied offset (0, -20) for cannon");
+        CCLOG("BuildingManager: Applied offset (0, 0) for cannon");
     }
     
     _defenseAnims[building.id] = anim;
