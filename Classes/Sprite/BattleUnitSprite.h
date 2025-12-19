@@ -134,6 +134,9 @@ protected:
   int _lastGridY = -999;
   bool _isChangingTarget = false;
   bool _isTargetedByBuilding = false;  // 是否被建筑锁定
+
+  // 记录上次移动方向（用于待机动画）
+  Vec2 _lastMoveDirection = Vec2::ZERO;
   
   // 生命值系统
   int _currentHP = 0;
@@ -141,6 +144,9 @@ protected:
   
   static const int ANIMATION_TAG = 1000;
   static const int MOVE_TAG = 1001;
+
+  // 炸弹兵的炸弹子精灵
+  cocos2d::Sprite* _bombSprite = nullptr;
 
   // 根据移动方向选择动画类型和是否需要翻转
   void selectWalkAnimation(const Vec2& direction, AnimationType& outAnimType, bool& outFlipX);
@@ -151,6 +157,8 @@ protected:
   
   // 解析单位类型字符串为枚举（只在初始化时调用一次）
   static UnitTypeID parseUnitType(const std::string& unitType);
+  // 根据兵种类型获取缩放比例
+  static float getScaleForUnitType(UnitTypeID typeID);
 };
 
 #endif // __BATTLE_UNIT_SPRITE_H__
