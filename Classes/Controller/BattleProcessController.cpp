@@ -4,6 +4,7 @@
 #include "../Model/BuildingConfig.h"
 #include "../Util/GridMapUtils.h"
 #include "../Util/FindPathUtil.h"
+#include "2d/CCParticleExamples.h"
 #include <cmath>
 #include <set>
 
@@ -138,6 +139,23 @@ void BattleProcessController::executeAttack(
             }),
             nullptr
         ));
+        return;
+    }
+
+    // ========== ✅ 炸弹兵自爆特判 ==========
+    if (unit->getUnitTypeID() == UnitTypeID::WALL_BREAKER) {
+        CCLOG("BattleProcessController: Wall Breaker executing suicide attack");
+
+        // 执行自爆攻击
+        performWallBreakerSuicideAttack(unit, liveTarget, troopLayer, [onTargetDestroyed]() {
+            // 炸弹兵死后，不继续攻击，直接调用目标摧毁回调
+            // 注意：这里不管目标是否被摧毁，炸弹兵都已经死了
+            if (onTargetDestroyed) {
+                onTargetDestroyed();
+            }
+        });
+
+        // 立即返回，不执行后续的普通攻击逻辑
         return;
     }
 
@@ -553,35 +571,30 @@ std::vector<BattleUnitSprite*> BattleProcessController::getAllUnitsInRange(
 
 void BattleProcessController::updateBuildingDefense(BattleTroopLayer* troopLayer) {
     if (!troopLayer) return;
-    
+
     auto dataManager = VillageDataManager::getInstance();
     auto& buildings = const_cast<std::vector<BuildingInstance>&>(dataManager->getAllBuildings());
-    
-    // 【修复】记录本帧被锁定的兵种
+
     std::set<BattleUnitSprite*> targetedUnitsThisFrame;
-    
-    // 获取deltaTime用于伤害计算
+
     float deltaTime = Director::getInstance()->getDeltaTime();
-    
+
     for (auto& building : buildings) {
         if (building.isDestroyed || building.currentHP <= 0) continue;
         if (building.state == BuildingInstance::State::PLACING) continue;
-        
+
         if (building.type != 301 && building.type != 302) continue;
-        
+
         auto config = BuildingConfig::getInstance()->getConfig(building.type);
         if (!config) continue;
-        
+
         float attackRange = config->attackRange;
-        
-        // 检查当前锁定的目标是否仍然有效
+
         BattleUnitSprite* currentTarget = static_cast<BattleUnitSprite*>(building.lockedTarget);
-        
+
         if (currentTarget) {
-            // 【修复】每次都重新获取最新的兵种列表
             auto allUnits = troopLayer->getAllUnits();
-            
-            // 验证目标是否仍在部队列表中（未死亡）
+
             bool targetStillAlive = false;
             for (auto unit : allUnits) {
                 if (unit == currentTarget) {
@@ -589,38 +602,33 @@ void BattleProcessController::updateBuildingDefense(BattleTroopLayer* troopLayer
                     break;
                 }
             }
-            
-            // 如果目标已死亡，清除锁定
+
             if (!targetStillAlive) {
-                // 【修复】先清除累积伤害，再清空指针
                 _accumulatedDamage.erase(currentTarget);
                 building.lockedTarget = nullptr;
                 currentTarget = nullptr;
             } else {
-                // 检查目标是否仍在攻击范围内
                 int centerX = building.gridX + config->gridWidth / 2;
                 int centerY = building.gridY + config->gridHeight / 2;
-                
+
                 Vec2 unitGridPos = currentTarget->getGridPosition();
                 int unitGridX = static_cast<int>(unitGridPos.x);
                 int unitGridY = static_cast<int>(unitGridPos.y);
-                
+
                 int gridDistance = std::max(
                     std::abs(unitGridX - centerX),
                     std::abs(unitGridY - centerY)
                 );
-                
+
                 int attackRangeInt = static_cast<int>(attackRange);
-                
-                // 如果目标超出范围，清除锁定
+
                 if (gridDistance > attackRangeInt) {
                     building.lockedTarget = nullptr;
                     currentTarget = nullptr;
                 }
             }
         }
-        
-        // 如果没有锁定目标，搜索新目标
+
         if (!currentTarget) {
             BattleUnitSprite* newTarget = findNearestUnitInRange(building, attackRange, troopLayer);
             if (newTarget) {
@@ -628,58 +636,61 @@ void BattleProcessController::updateBuildingDefense(BattleTroopLayer* troopLayer
                 currentTarget = newTarget;
             }
         }
-        
-        // ===== 【修复】使用累积伤害系统对锁定目标造成伤害 =====
+
         if (currentTarget) {
-            // 【修复】记录被锁定的兵种
             targetedUnitsThisFrame.insert(currentTarget);
-            
-            // 累积浮点伤害：damagePerSecond * deltaTime
+
             float damageThisFrame = config->damagePerSecond * deltaTime;
             _accumulatedDamage[currentTarget] += damageThisFrame;
-            
-            // 当累积伤害 >= 1 时，扣除生命值
+
             if (_accumulatedDamage[currentTarget] >= 1.0f) {
                 int damageToApply = static_cast<int>(_accumulatedDamage[currentTarget]);
-                
-                // 对兵种造成伤害
+
                 currentTarget->takeDamage(damageToApply);
-                
-                // 减去已应用的整数部分，保留小数部分
+
                 _accumulatedDamage[currentTarget] -= damageToApply;
-                
-                // 检查兵种是否死亡
+
+                // ========== ✅ 修改:播放死亡动画后再移除 ==========
                 if (currentTarget->isDead()) {
                     CCLOG("BattleProcessController: Unit killed by building %d", building.id);
-                    
-                    // 生成墓碑
-                    Vec2 deathPosition = currentTarget->getPosition();
-                    troopLayer->spawnTombstone(deathPosition);
-                    
-                    // 移除兵种
-                    troopLayer->removeUnit(currentTarget);
-                    
+
+                    // 取消锁定状态(恢复白色)
+                    currentTarget->setTargetedByBuilding(false);
+
+                    // ✅ 记录位置和类型（在移除前）
+                    Vec2 tombstonePos = currentTarget->getPosition();
+                    UnitTypeID unitType = currentTarget->getUnitTypeID();
+
+                    // 播放死亡动画,动画结束后移除兵种
+                    currentTarget->playDeathAnimation([troopLayer, currentTarget, tombstonePos, unitType]() {
+                        CCLOG("BattleProcessController: Death animation completed, removing unit");
+
+                        // 移除兵种
+                        troopLayer->removeUnit(currentTarget);
+
+                        // ✅ 生成墓碑（会自动淡出）
+                        troopLayer->spawnTombstone(tombstonePos, unitType);
+                    });
+
                     // 清除锁定和累积伤害
                     building.lockedTarget = nullptr;
                     _accumulatedDamage.erase(currentTarget);
-                    
-                    // 【修复】从本帧锁定列表中移除（已死亡）
+
+                    // 从本帧锁定列表中移除
                     targetedUnitsThisFrame.erase(currentTarget);
                 }
+                // ===========================================
             }
         }
     }
-    
-    // 【修复】在所有删除操作完成后，重新获取最新的兵种列表
+
     auto allUnits = troopLayer->getAllUnits();
-    
-    // 【修复】只更新状态真正改变的兵种
+
     for (auto unit : allUnits) {
         if (!unit) continue;
-        
+
         bool shouldBeTargeted = (targetedUnitsThisFrame.find(unit) != targetedUnitsThisFrame.end());
-        
-        // 只在状态改变时才调用 setTargetedByBuilding
+
         if (unit->isTargetedByBuilding() != shouldBeTargeted) {
             unit->setTargetedByBuilding(shouldBeTargeted);
         }
@@ -848,5 +859,90 @@ void BattleProcessController::startCombatLoopWithForcedTarget(BattleUnitSprite* 
                 }
             }
         );
+    });
+}
+
+// ==========================================
+// 炸弹兵自爆攻击逻辑
+// ==========================================
+void BattleProcessController::performWallBreakerSuicideAttack(
+    BattleUnitSprite* unit,
+    BuildingInstance* target,
+    BattleTroopLayer* troopLayer,
+    const std::function<void()>& onComplete
+) {
+    if (!unit || !target || !troopLayer) {
+        if (onComplete) onComplete();
+        return;
+    }
+
+    CCLOG("BattleProcessController: Wall Breaker suicide attack on building %d", target->id);
+
+    // 1. 获取炸弹兵伤害值
+    int damage = getDamageByUnitType(unit->getUnitTypeID());
+
+    // 2. 对目标建筑造成伤害
+    target->currentHP -= damage;
+
+    CCLOG("BattleProcessController: Target HP: %d (damage: %d)", target->currentHP, damage);
+
+    // 3. 检查目标是否被摧毁
+    if (target->currentHP <= 0) {
+        target->isDestroyed = true;
+        target->currentHP = 0;
+
+        // 更新寻路地图
+        FindPathUtil::getInstance()->updatePathfindingMap();
+
+        // 发送建筑摧毁事件
+        Director::getInstance()->getEventDispatcher()->dispatchCustomEvent(
+            "EVENT_BUILDING_DESTROYED",
+            static_cast<void*>(target)
+        );
+
+        CCLOG("BattleProcessController: Target destroyed!");
+    }
+
+    // 4. 播放爆炸特效
+    auto explosion = ParticleExplosion::create();
+    explosion->setPosition(unit->getPosition());
+    explosion->setDuration(0.2f);
+    explosion->setScale(0.3f);
+    explosion->setAutoRemoveOnFinish(true);
+    troopLayer->getParent()->addChild(explosion, 1000);
+
+    // 5. 屏幕震动（可选）
+    auto camera = Camera::getDefaultCamera();
+    auto shake = Sequence::create(
+        MoveBy::create(0.05f, Vec3(5, 0, 0)),
+        MoveBy::create(0.05f, Vec3(-10, 0, 0)),
+        MoveBy::create(0.05f, Vec3(5, 0, 0)),
+        nullptr
+    );
+    camera->runAction(shake);
+
+    // 6. 炸弹兵自杀
+    unit->takeDamage(9999);
+
+    // ✅ 恢复正常颜色（移除红色锁定状态）
+    unit->setColor(Color3B::WHITE);
+
+    // 7. 播放死亡动画并移除
+    unit->playDeathAnimation([troopLayer, unit, onComplete]() {
+        CCLOG("BattleProcessController: Wall Breaker death animation completed");
+
+        // ✅ 在移除前生成墓碑
+        Vec2 tombstonePos = unit->getPosition();
+        UnitTypeID unitType = unit->getUnitTypeID();
+
+        // 移除兵种
+        troopLayer->removeUnit(unit);
+
+        // 生成墓碑（会自动淡出）
+        troopLayer->spawnTombstone(tombstonePos, unitType);
+
+        if (onComplete) {
+            onComplete();
+        }
     });
 }

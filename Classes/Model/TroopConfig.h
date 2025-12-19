@@ -24,6 +24,8 @@ struct TroopInfo {
     int level;              // 等级 (目前固定为1)
 
     std::string description;
+    // 溅射伤害半径(格子单位)
+    float splashRadius = 0.0f;     // 0表示单体攻击
 };
 
 class TroopConfig {

@@ -1,5 +1,6 @@
 ﻿#include "BuildingSprite.h"
 #include "../Model/BuildingConfig.h"
+#include "Component/HealthBarComponent.h"
 
 
 USING_NS_CC;
@@ -33,11 +34,6 @@ bool BuildingSprite::init(const BuildingInstance& building) {
   _selectionGlow = nullptr;
   _isSelected = false;
 
-  // 初始化血条成员
-  _healthBarContainer = nullptr;
-  _healthBarBg = nullptr;
-  _healthBar = nullptr;
-  _cachedMaxHP = 0;
 
   loadSprite(_buildingType, _buildingLevel);
 
@@ -422,98 +418,32 @@ void BuildingSprite::hideSelectionEffect() {
 }
 
 // ========== 血条显示实现 ==========
-
-void BuildingSprite::initHealthBar() {
-  if (_healthBarContainer) return;  // 已存在则不重复创建
-
-  // 获取建筑配置，根据网格宽度计算血条长度
-  auto config = BuildingConfig::getInstance()->getConfig(_buildingType);
-  int gridWidth = config ? config->gridWidth : 2;
-  
-  // 血条宽度：根据建筑格子数动态计算（最小40，最大120）
-  float barWidth = std::max(40.0f, std::min(120.0f, gridWidth * 30.0f));
-  const float barHeight = 8.0f;
-
-  // 创建容器
-  _healthBarContainer = Node::create();
-  _healthBarContainer->setVisible(false);  // 默认隐藏
-  this->addChild(_healthBarContainer, 99);  // 高 ZOrder
-
-  auto spriteSize = this->getContentSize();
-
-  // 1. 创建血条背景（深灰色）
-  _healthBarBg = Sprite::create();
-  _healthBarBg->setTextureRect(Rect(0, 0, barWidth, barHeight));
-  _healthBarBg->setColor(Color3B(40, 40, 40));
-  _healthBarBg->setOpacity(200);
-  _healthBarBg->setPosition(Vec2(spriteSize.width / 2, spriteSize.height + 15));
-  _healthBarContainer->addChild(_healthBarBg, 1);
-
-  // 2. 创建血条本体（初始绿色）
-  auto healthSprite = Sprite::create();
-  healthSprite->setTextureRect(Rect(0, 0, barWidth, barHeight));
-  healthSprite->setColor(Color3B(50, 205, 50));  // 绿色
-
-  _healthBar = ProgressTimer::create(healthSprite);
-  _healthBar->setType(ProgressTimer::Type::BAR);
-  _healthBar->setMidpoint(Vec2(0, 0.5f));       // 从左边开始
-  _healthBar->setBarChangeRate(Vec2(1, 0));     // 水平方向变化
-  _healthBar->setPercentage(100.0f);
-  _healthBar->setPosition(Vec2(spriteSize.width / 2, spriteSize.height + 15));
-  _healthBarContainer->addChild(_healthBar, 2);
-
-  CCLOG("BuildingSprite: Health bar initialized (ID=%d, width=%.0f)", _buildingId, barWidth);
-}
-
 void BuildingSprite::updateHealthBar(int currentHP, int maxHP) {
-  // 满血或无效数据时隐藏血条
-  if (currentHP >= maxHP || maxHP <= 0 || currentHP < 0) {
-    hideHealthBar();
-    return;
-  }
+    // ✅ 惰性创建血条组件
+    if (!_healthBar) {
+        // 根据建筑网格宽度计算血条宽度
+        auto config = BuildingConfig::getInstance()->getConfig(_buildingType);
+        int gridWidth = config ? config->gridWidth : 2;
 
-  // 惰性创建血条 UI
-  if (!_healthBarContainer) {
-    initHealthBar();
-  }
+        // 配置血条参数
+        HealthBarComponent::Config barConfig;
+        barConfig.width = std::max(40.0f, std::min(120.0f, gridWidth * 30.0f));
+        barConfig.height = 8.0f;
+        barConfig.offset = Vec2(0, 15);  // 建筑顶部上方15像素
+        barConfig.highThreshold = 50.0f;
+        barConfig.mediumThreshold = 25.0f;
+        barConfig.showWhenFull = false;
 
-  // 显示血条
-  showHealthBar();
+        // 创建血条组件
+        _healthBar = HealthBarComponent::create(barConfig);
+        this->addChild(_healthBar, 99);
 
-  // 计算百分比
-  float percent = (float)currentHP / (float)maxHP * 100.0f;
-  percent = std::max(0.0f, std::min(100.0f, percent));
-
-  // 更新进度
-  if (_healthBar) {
-    _healthBar->setPercentage(percent);
-    
-    // 根据血量比例改变颜色
-    Color3B barColor;
-    if (percent > 50.0f) {
-      // 绿色 (50-100%)
-      barColor = Color3B(50, 205, 50);
-    } else if (percent > 25.0f) {
-      // 黄色 (25-50%)
-      barColor = Color3B(255, 200, 0);
-    } else {
-      // 红色 (0-25%)
-      barColor = Color3B(220, 50, 50);
+        // 更新血条位置
+        _healthBar->updatePosition(this->getContentSize());
     }
-    _healthBar->getSprite()->setColor(barColor);
-  }
-}
 
-void BuildingSprite::showHealthBar() {
-  if (_healthBarContainer) {
-    _healthBarContainer->setVisible(true);
-  }
-}
-
-void BuildingSprite::hideHealthBar() {
-  if (_healthBarContainer) {
-    _healthBarContainer->setVisible(false);
-  }
+    // 更新血条
+    _healthBar->updateHealth(currentHP, maxHP);
 }
 
 // ========== 摧毁效果实现 ==========
@@ -566,8 +496,10 @@ void BuildingSprite::showDestroyedRubble() {
         CCLOG("BuildingSprite: Defense animation hidden (ID=%d)", _buildingId);
     }
     
-    // 4. 隐藏血条
-    hideHealthBar();
+    // 4. 隐藏血条（使用新的组件方式）
+    if (_healthBar) {
+        _healthBar->hide();
+    }
 }
 
 // ========== 目标标记实现 ==========

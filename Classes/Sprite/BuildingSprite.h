@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "cocos2d.h"
 #include "../Model/VillageData.h"
+#include "Component/HealthBarComponent.h"
 
 //  不再需要 ConstructionAnimation 类
 // class ConstructionAnimation;
@@ -37,11 +38,6 @@ public:
   void hideSelectionEffect();   // 隐藏选中效果
   bool isSelected() const { return _isSelected; }
 
-  // 血条显示（战斗场景用）
-  void updateHealthBar(int currentHP, int maxHP);  // 更新血条（受伤时自动显示）
-  void showHealthBar();                             // 显示血条
-  void hideHealthBar();                             // 隐藏血条
-
   // 摧毁效果（战斗场景用）
   void showDestroyedRubble();      // 显示废墟贴图
   bool isShowingRubble() const { return _isShowingRubble; }
@@ -61,6 +57,11 @@ public:
 
   void loadSprite(int type, int level);
 
+  /**
+ * @brief 更新血条显示
+ */
+  void updateHealthBar(int currentHP, int maxHP);
+
 private:
   void updateVisuals();
 
@@ -71,9 +72,6 @@ private:
 
   // 选中效果辅助方法
   void createSelectionGlow();   // 创建光圈
-
-  // 血条辅助方法
-  void initHealthBar();         // 初始化血条 UI（惰性创建）
 
   int _buildingId;
   int _buildingType;
@@ -95,11 +93,8 @@ private:
   cocos2d::DrawNode* _selectionGlow;        // 底部光圈
   bool _isSelected;      // 选中状态
 
-  // 血条 UI（战斗场景用）
-  cocos2d::Node* _healthBarContainer;       // 血条容器
-  cocos2d::Sprite* _healthBarBg;          // 血条背景（灰色）
-  cocos2d::ProgressTimer* _healthBar;       // 血条本体
-  int _cachedMaxHP;       // 缓存的最大 HP
+  // 使用通用血条组件（替换原有的血条成员变量）
+  HealthBarComponent* _healthBar = nullptr;
 
   // 摧毁状态
   bool _isShowingRubble = false;         // 是否正在显示废墟贴图

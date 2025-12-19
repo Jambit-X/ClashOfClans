@@ -138,61 +138,94 @@ void BattleTroopLayer::removeUnit(BattleUnitSprite* unit) {
 
 // ========== 墓碑系统 ==========
 
-void BattleTroopLayer::spawnTombstone(const Vec2& position) {
+void BattleTroopLayer::spawnTombstone(const Vec2& position, UnitTypeID unitType) {
     CCLOG("===== TOMBSTONE DEBUG START =====");
     CCLOG("BattleTroopLayer::spawnTombstone - Creating tombstone at (%.1f, %.1f)", position.x, position.y);
-    
-    // 创建一个灰色方块代表墓碑
-    auto tombstone = DrawNode::create();
+
+    Sprite* tombstone = nullptr;
+
+    // 根据兵种类型加载对应的墓碑图片
+    if (unitType == UnitTypeID::BALLOON) {
+        // 气球兵使用独立墓碑图片
+        tombstone = Sprite::create("Animation/troop/balloon/balloon_death.png");
+    } else {
+        // 其他兵种从精灵图集获取墓碑帧
+        std::string frameName;
+        switch (unitType) {
+            case UnitTypeID::BARBARIAN:
+                frameName = "barbarian175.0.png"; // 野蛮人墓碑(第175帧)
+                break;
+            case UnitTypeID::ARCHER:
+                frameName = "archer53.0.png"; // 弓箭手墓碑(第53帧)
+                break;
+            case UnitTypeID::GOBLIN:
+                frameName = "goblin41.0.png"; // 哥布林墓碑(第41帧)
+                break;
+            case UnitTypeID::GIANT:
+                frameName = "giant99.0.png"; // 巨人墓碑(第99帧)
+                break;
+            case UnitTypeID::WALL_BREAKER:
+                frameName = "wall_breaker1.0.png"; // 炸弹兵墓碑(第1帧)
+                break;
+            default:
+                frameName = "barbarian175.0.png"; // 默认使用野蛮人墓碑
+                break;
+        }
+
+        auto frame = SpriteFrameCache::getInstance()->getSpriteFrameByName(frameName);
+        if (frame) {
+            tombstone = Sprite::createWithSpriteFrame(frame);
+        }
+    }
+
     if (!tombstone) {
-        CCLOG("BattleTroopLayer::spawnTombstone - ERROR: Failed to create DrawNode!");
+        CCLOG("BattleTroopLayer::spawnTombstone - ERROR: Failed to create tombstone sprite!");
         return;
     }
-    
-    // 【修复】使用更明显的大方块和颜色
-    Vec2 vertices[] = {
-        Vec2(-20, 0),    // 左下
-        Vec2(20, 0),     // 右下
-        Vec2(20, 40),    // 右上
-        Vec2(-20, 40)    // 左上
-    };
-    
-    // 【修复】使用红色而不是灰色，更容易发现
-    Color4F fillColor(1.0f, 0.0f, 0.0f, 1.0f);  // 鲜红色
-    Color4F borderColor(0.0f, 0.0f, 0.0f, 1.0f); // 黑色边框
-    
-    tombstone->drawSolidPoly(vertices, 4, fillColor);
-    tombstone->drawPoly(vertices, 4, true, borderColor);
-    
+
     // 设置位置
     tombstone->setPosition(position);
-    
-    // 【修复】确保可见性
-    tombstone->setVisible(true);
+    tombstone->setAnchorPoint(Vec2(0.5f, 0.0f)); // 底部中心锚点
+
+    // 设置缩放(与原兵种一致)
+    float scale = 0.8f;
+    switch (unitType) {
+        case UnitTypeID::BARBARIAN: scale = 0.8f; break;
+        case UnitTypeID::ARCHER: scale = 0.75f; break;
+        case UnitTypeID::GOBLIN: scale = 0.7f; break;
+        case UnitTypeID::GIANT: scale = 1.2f; break;
+        case UnitTypeID::WALL_BREAKER: scale = 0.65f; break;
+        case UnitTypeID::BALLOON: scale = 1.0f; break;
+    }
+    tombstone->setScale(scale);
+
+    // ✅ 确保墓碑显示为正常颜色（白色），而不是红色
+    tombstone->setColor(Color3B::WHITE);
     tombstone->setOpacity(255);
-    
+
     // 添加到地图层
     auto mapLayer = this->getParent();
     CCLOG("BattleTroopLayer::spawnTombstone - MapLayer: %p", mapLayer);
-    
+
     if (mapLayer) {
-        CCLOG("BattleTroopLayer::spawnTombstone - Adding to MapLayer with Z-order 999...");
-        mapLayer->addChild(tombstone, 999); // 【修复】Z-Order设为999，显示在最顶层
-        CCLOG("BattleTroopLayer::spawnTombstone - Tombstone added, checking parent...");
-        CCLOG("BattleTroopLayer::spawnTombstone - Tombstone parent: %p", tombstone->getParent());
-        CCLOG("BattleTroopLayer::spawnTombstone - Tombstone position: (%.1f, %.1f)", 
-              tombstone->getPositionX(), tombstone->getPositionY());
-        CCLOG("BattleTroopLayer::spawnTombstone - Tombstone visible: %s", tombstone->isVisible() ? "YES" : "NO");
-        CCLOG("BattleTroopLayer::spawnTombstone - Tombstone opacity: %d", tombstone->getOpacity());
+        CCLOG("BattleTroopLayer::spawnTombstone - Adding to MapLayer with Z-order 100...");
+        mapLayer->addChild(tombstone, 100); // Z-Order设为100,显示在地图上层
+        CCLOG("BattleTroopLayer::spawnTombstone - Tombstone added successfully");
     } else {
         CCLOG("BattleTroopLayer::spawnTombstone - WARNING: No MapLayer, adding to TroopLayer...");
-        this->addChild(tombstone, 999);
+        this->addChild(tombstone, 100);
     }
-    
-    // 保存到列表
-    _tombstones.push_back(tombstone);
-    
-    CCLOG("BattleTroopLayer::spawnTombstone - COMPLETE: Tombstone #%zu created", _tombstones.size());
+
+    // ✅ 墓碑自动消失：停留 3 秒后淡出
+    auto sequence = Sequence::create(
+        DelayTime::create(3.0f),         // 停留 3 秒
+        FadeOut::create(1.0f),            // 用 1 秒淡出
+        RemoveSelf::create(),             // 自动移除
+        nullptr
+    );
+    tombstone->runAction(sequence);
+
+    CCLOG("BattleTroopLayer::spawnTombstone - COMPLETE: Tombstone created and will fade out after 3s");
     CCLOG("===== TOMBSTONE DEBUG END =====");
 }
 
