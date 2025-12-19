@@ -3,6 +3,7 @@
 #include "Util/GridMapUtils.h"
 #include "Util/FindPathUtil.h"
 #include "Model/TroopConfig.h"
+#include "Manager/AnimationManager.h"
 #include <algorithm>
 #include <cmath>
 
