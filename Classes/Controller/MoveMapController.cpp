@@ -16,8 +16,11 @@ MoveMapController::MoveMapController(Layer* villageLayer)
   , _minScale(1.0f)
   , _currentScale(1.0f)
   , _isDragging(false)
-  , _touchListener(nullptr)
+  , _multiTouchListener(nullptr)
   , _mouseListener(nullptr)
+  , _isPinching(false)
+  , _initialPinchDistance(0.0f)
+  , _initialPinchScale(1.0f)
   , _onStateChanged(nullptr)
   , _onTapDetection(nullptr)
   , _onBuildingSelected(nullptr)
@@ -47,9 +50,9 @@ void MoveMapController::setupInputListeners() {
 }
 
 void MoveMapController::cleanup() {
-  if (_touchListener) {
-    Director::getInstance()->getEventDispatcher()->removeEventListener(_touchListener);
-    _touchListener = nullptr;
+  if (_multiTouchListener) {
+    Director::getInstance()->getEventDispatcher()->removeEventListener(_multiTouchListener);
+    _multiTouchListener = nullptr;
   }
   
   if (_mouseListener) {
@@ -107,67 +110,159 @@ void MoveMapController::changeState(InputState newState) {
 
 #pragma region 触摸事件处理
 void MoveMapController::setupTouchHandling() {
-  _touchListener = EventListenerTouchOneByOne::create();
-  _touchListener->setSwallowTouches(true);
+  _multiTouchListener = EventListenerTouchAllAtOnce::create();
 
-  _touchListener->onTouchBegan = CC_CALLBACK_2(MoveMapController::onTouchBegan, this);
-  _touchListener->onTouchMoved = CC_CALLBACK_2(MoveMapController::onTouchMoved, this);
-  _touchListener->onTouchEnded = CC_CALLBACK_2(MoveMapController::onTouchEnded, this);
+  _multiTouchListener->onTouchesBegan = CC_CALLBACK_2(MoveMapController::onTouchesBegan, this);
+  _multiTouchListener->onTouchesMoved = CC_CALLBACK_2(MoveMapController::onTouchesMoved, this);
+  _multiTouchListener->onTouchesEnded = CC_CALLBACK_2(MoveMapController::onTouchesEnded, this);
 
   Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(
-    _touchListener, _villageLayer);
+    _multiTouchListener, _villageLayer);
 }
 
-bool MoveMapController::onTouchBegan(Touch* touch, Event* event) {
-  CCLOG("MoveMapController::onTouchBegan - currentState=%d", (int)_currentState);
+void MoveMapController::onTouchesBegan(const std::vector<Touch*>& touches, Event* event) {
+  CCLOG("MoveMapController::onTouchesBegan - newTouchCount=%zu, currentState=%d", touches.size(), (int)_currentState);
   
   // 只在 MAP_DRAG 状态处理输入
   if (_currentState != InputState::MAP_DRAG) {
-    CCLOG("MoveMapController::onTouchBegan - Rejected: not in MAP_DRAG state");
-    return false;
+    CCLOG("MoveMapController::onTouchesBegan - Rejected: not in MAP_DRAG state");
+    return;
   }
 
-  storeTouchStartState(touch);
-  _isDragging = false;
-  return true;
+  // 添加新触点到活跃列表
+  for (auto touch : touches) {
+    _activeTouches[touch->getID()] = touch;
+  }
+  
+  CCLOG("Active touches count: %zu", _activeTouches.size());
+
+  if (_activeTouches.size() == 1) {
+    // 单指触摸 - 记录起始位置
+    storeTouchStartState(touches[0]);
+    _isDragging = false;
+    _isPinching = false;
+  } else if (_activeTouches.size() >= 2) {
+    // 双指触摸 - 开始捏合缩放
+    _isPinching = true;
+    _isDragging = false;
+    
+    // 从活跃触点获取前两个
+    std::vector<Touch*> activeTouchList;
+    for (auto& pair : _activeTouches) {
+      activeTouchList.push_back(pair.second);
+      if (activeTouchList.size() >= 2) break;
+    }
+    
+    _initialPinchDistance = getTouchDistance(activeTouchList);
+    _initialPinchScale = _currentScale;
+    _pinchCenter = getTouchCenter(activeTouchList);
+    CCLOG("Pinch began: distance=%.2f, scale=%.3f", _initialPinchDistance, _initialPinchScale);
+  }
 }
 
-void MoveMapController::onTouchMoved(Touch* touch, Event* event) {
+void MoveMapController::onTouchesMoved(const std::vector<Touch*>& touches, Event* event) {
   if (_currentState != InputState::MAP_DRAG) {
     return;
   }
 
-  // 只有拖动距离超过阈值才算拖动
-  Vec2 currentPos = touch->getLocation();
-  float distance = _touchStartPos.distance(currentPos);
-  
-  if (distance > TAP_THRESHOLD) {
-    _isDragging = true;
-    handleMapDragging(touch);
+  // 更新活跃触点位置
+  for (auto touch : touches) {
+    _activeTouches[touch->getID()] = touch;
+  }
+
+  if (_activeTouches.size() >= 2 && _isPinching) {
+    // 双指捏合缩放 - 使用活跃触点
+    std::vector<Touch*> activeTouchList;
+    for (auto& pair : _activeTouches) {
+      activeTouchList.push_back(pair.second);
+      if (activeTouchList.size() >= 2) break;
+    }
+    
+    float currentDistance = getTouchDistance(activeTouchList);
+    if (_initialPinchDistance > 0) {
+      float scaleFactor = currentDistance / _initialPinchDistance;
+      float newScale = _initialPinchScale * scaleFactor;
+      
+      // 限制缩放范围
+      newScale = clampf(newScale, _minScale, MAX_SCALE);
+      
+      if (abs(newScale - _currentScale) > 0.01f) {
+        Vec2 center = getTouchCenter(activeTouchList);
+        applyZoomAroundPoint(center, newScale);
+      }
+    }
+  } else if (_activeTouches.size() == 1 && !_isPinching) {
+    // 单指拖动地图
+    auto it = _activeTouches.begin();
+    Vec2 currentPos = it->second->getLocation();
+    float distance = _touchStartPos.distance(currentPos);
+    
+    if (distance > TAP_THRESHOLD) {
+      _isDragging = true;
+      handleMapDragging(it->second);
+    }
   }
 }
 
-void MoveMapController::onTouchEnded(Touch* touch, Event* event) {
-  CCLOG("MoveMapController::onTouchEnded - currentState=%d, isDragging=%s", 
-        (int)_currentState, _isDragging ? "true" : "false");
+void MoveMapController::onTouchesEnded(const std::vector<Touch*>& touches, Event* event) {
+  CCLOG("MoveMapController::onTouchesEnded - endedCount=%zu, activeBefore=%zu, isDragging=%s, isPinching=%s", 
+        touches.size(), _activeTouches.size(), _isDragging ? "true" : "false", _isPinching ? "true" : "false");
   
   if (_currentState != InputState::MAP_DRAG) {
-    CCLOG("MoveMapController::onTouchEnded - Rejected: not in MAP_DRAG state");
+    CCLOG("MoveMapController::onTouchesEnded - Rejected: not in MAP_DRAG state");
     return;
   }
 
-  Vec2 endPos = touch->getLocation();
+  // 从活跃列表移除结束的触点
+  for (auto touch : touches) {
+    _activeTouches.erase(touch->getID());
+  }
+  
+  CCLOG("Active touches after removal: %zu", _activeTouches.size());
 
-  // 判断是 Tap 还是 Drag
-  if (!_isDragging && isTapGesture(_touchStartPos, endPos)) {
-    CCLOG("MoveMapController::onTouchEnded - Detected TAP gesture");
-    handleTap(endPos);
-  } else {
-    CCLOG("MoveMapController::onTouchEnded - Not a tap: isDragging=%s, distance=%.2f", 
-          _isDragging ? "true" : "false", _touchStartPos.distance(endPos));
+  // 如果是捏合结束（触点少于2个），重置状态
+  if (_isPinching && _activeTouches.size() < 2) {
+    _isPinching = false;
+    CCLOG("Pinch ended");
+    
+    // 如果还有一个触点，转为拖动模式
+    if (_activeTouches.size() == 1) {
+      auto it = _activeTouches.begin();
+      storeTouchStartState(it->second);
+    }
+    return;
   }
 
-  _isDragging = false;
+  // 只有单指触摸且没有拖动才检测点击
+  if (_activeTouches.size() == 0 && !_isDragging && !_isPinching) {
+    Vec2 endPos = touches[0]->getLocation();
+    if (isTapGesture(_touchStartPos, endPos)) {
+      CCLOG("MoveMapController::onTouchesEnded - Detected TAP gesture");
+      handleTap(endPos);
+    }
+  }
+
+  if (_activeTouches.size() == 0) {
+    _isDragging = false;
+  }
+}
+
+// 计算两个触点之间的距离
+float MoveMapController::getTouchDistance(const std::vector<Touch*>& touches) {
+  if (touches.size() < 2) return 0;
+  Vec2 p1 = touches[0]->getLocation();
+  Vec2 p2 = touches[1]->getLocation();
+  return p1.distance(p2);
+}
+
+// 计算两个触点的中心点
+Vec2 MoveMapController::getTouchCenter(const std::vector<Touch*>& touches) {
+  if (touches.size() < 2) {
+    return touches.size() == 1 ? touches[0]->getLocation() : Vec2::ZERO;
+  }
+  Vec2 p1 = touches[0]->getLocation();
+  Vec2 p2 = touches[1]->getLocation();
+  return (p1 + p2) / 2;
 }
 
 void MoveMapController::storeTouchStartState(Touch* touch) {

@@ -3,6 +3,7 @@
 
 #include "cocos2d.h"
 #include <functional>
+#include <map>
 
 // 输入状态枚举
 enum class InputState {
@@ -75,8 +76,15 @@ private:
   bool _isDragging;               // 是否正在拖动
 
   // 事件监听器
-  cocos2d::EventListenerTouchOneByOne* _touchListener;
+  cocos2d::EventListenerTouchAllAtOnce* _multiTouchListener;  // 多点触控监听器
   cocos2d::EventListenerMouse* _mouseListener;
+
+  // 多点触控状态
+  bool _isPinching;                // 是否正在双指缩放
+  float _initialPinchDistance;     // 初始双指距离
+  float _initialPinchScale;        // 初始缩放比例
+  cocos2d::Vec2 _pinchCenter;      // 缩放中心点
+  std::map<int, cocos2d::Touch*> _activeTouches;  // 追踪所有活跃触点
 
   // 回调函数
   std::function<void(InputState, InputState)> _onStateChanged;  // 状态改变回调（旧状态，新状态）
@@ -94,9 +102,13 @@ private:
 
   // ========== 触摸事件处理 ========= =
   void setupTouchHandling();
-  bool onTouchBegan(cocos2d::Touch* touch, cocos2d::Event* event);
-  void onTouchMoved(cocos2d::Touch* touch, cocos2d::Event* event);
-  void onTouchEnded(cocos2d::Touch* touch, cocos2d::Event* event);
+  void onTouchesBegan(const std::vector<cocos2d::Touch*>& touches, cocos2d::Event* event);
+  void onTouchesMoved(const std::vector<cocos2d::Touch*>& touches, cocos2d::Event* event);
+  void onTouchesEnded(const std::vector<cocos2d::Touch*>& touches, cocos2d::Event* event);
+
+  // 捏合缩放辅助方法
+  float getTouchDistance(const std::vector<cocos2d::Touch*>& touches);
+  cocos2d::Vec2 getTouchCenter(const std::vector<cocos2d::Touch*>& touches);
 
   void storeTouchStartState(cocos2d::Touch* touch);
   void handleMapDragging(cocos2d::Touch* touch);

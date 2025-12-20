@@ -13,6 +13,22 @@ USING_NS_CC;
 // 静态成员初始化
 int RandomBattleMapGenerator::nextBuildingId = 10000;
 
+// C++11 需要静态 constexpr 成员的类外定义（ODR-used 时）
+constexpr int RandomBattleMapGenerator::TOWNHALL;
+constexpr int RandomBattleMapGenerator::CANNON;
+constexpr int RandomBattleMapGenerator::ARCHER_TOWER;
+constexpr int RandomBattleMapGenerator::WALL;
+constexpr int RandomBattleMapGenerator::GOLD_MINE;
+constexpr int RandomBattleMapGenerator::ELIXIR_COLLECTOR;
+constexpr int RandomBattleMapGenerator::GOLD_STORAGE;
+constexpr int RandomBattleMapGenerator::ELIXIR_STORAGE;
+constexpr int RandomBattleMapGenerator::BOMB;
+constexpr int RandomBattleMapGenerator::GIANT_BOMB;
+constexpr int RandomBattleMapGenerator::MAP_MIN;
+constexpr int RandomBattleMapGenerator::MAP_MAX;
+constexpr int RandomBattleMapGenerator::CENTER_X;
+constexpr int RandomBattleMapGenerator::CENTER_Y;
+
 RandomBattleMapGenerator::DifficultyConfig 
 RandomBattleMapGenerator::getDifficultyConfig(int difficulty) {
     DifficultyConfig config;

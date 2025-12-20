@@ -92,7 +92,6 @@ list(APPEND GAME_SOURCE
      Classes/Util/RandomBattleMapGenerator.cpp
      )
 list(APPEND GAME_HEADER
-     ../proj.win32/Constants.h
      Classes/AppDelegate/AppDelegate.h
      Classes/Scene/StartupScene.h
      Classes/Scene/VillageScene.h
@@ -207,6 +206,17 @@ endif()
 target_link_libraries(${APP_NAME} cocos2d)
 target_include_directories(${APP_NAME}
         PRIVATE Classes
+        PRIVATE Classes/AppDelegate
+        PRIVATE Classes/Scene
+        PRIVATE Classes/Layer
+        PRIVATE Classes/Controller
+        PRIVATE Classes/Manager
+        PRIVATE Classes/Manager/Resource
+        PRIVATE Classes/Model
+        PRIVATE Classes/Sprite
+        PRIVATE Classes/UI
+        PRIVATE Classes/Util
+        PRIVATE Classes/Component
         PRIVATE ${COCOS2DX_ROOT_PATH}/cocos/audio/include/
 )
 
