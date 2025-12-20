@@ -24,6 +24,8 @@ public:
     void setAnimationOffset(const Vec2& offset);
     void setBarrelOffset(const Vec2& offset);
 
+    // 测试函数 - 按顺序显示所有炮管帧
+    void testAllBarrelFrames();
 private:
     DefenseBuildingAnimation();
     virtual ~DefenseBuildingAnimation();

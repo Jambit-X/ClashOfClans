@@ -172,23 +172,22 @@ void DefenseBuildingAnimation::aimAt(const Vec2& targetWorldPos) {
     while (angleDegrees >= 360.0f) angleDegrees -= 360.0f;
 
     CCLOG("Cocos2d-x Angle: %.1f°", angleDegrees);
-
     // ========== 步骤5：Cocos2d角度 -> 炮管帧角度 ==========
-    // 炮管帧定义：
-    // - cannon01.png (帧1) = 0° = 6点钟(向下)
-    // - cannon10.png (帧10) = 90° = 3点钟(向右)
-    // - cannon19.png (帧19) = 180° = 12点钟(向上)
-    // - cannon28.png (帧28) = 270° = 9点钟(向左)
+    // 炮管帧定义（逆时针）：
+    // - cannon01.png (帧1) = 0° = 3点钟(向右) ✅
+    // - cannon10.png (帧10) = 90° = 12点钟(向上) ✅
+    // - cannon19.png (帧19) = 180° = 9点钟(向左) ✅
+    // - cannon28.png (帧28) = 270° = 6点钟(向下) ✅
     //
-    // 转换公式推导：
-    // - Cocos2d 0°(右) 应该对应 炮管 90°(右) → barrelAngle = cocos2dAngle + 90°
-    // - 但炮管从0°开始，所以需要调整：barrelAngle = (cocos2dAngle + 270°) % 360°
+    // Cocos2d-x 角度（逆时针）：
+    // - 0° = 右, 90° = 上, 180° = 左, 270° = 下
+    //
+    // 完美匹配！直接使用 Cocos2d-x 角度即可
 
-    float barrelAngle = 270.0f - angleDegrees;
+    float barrelAngle = angleDegrees;
 
     // 归一化到 [0, 360)
-    while (barrelAngle < 0) barrelAngle += 360.0f;
-    while (barrelAngle >= 360.0f) barrelAngle -= 360.0f;
+    if (barrelAngle >= 360.0f) barrelAngle -= 360.0f;
 
     CCLOG("Barrel Angle: %.1f°", barrelAngle);
 
@@ -205,7 +204,7 @@ void DefenseBuildingAnimation::setBarrelFrame(float angleDegrees) {
     }
 
     // 36 帧 = 每帧 10°
-    // 帧 1 = 0°, 帧 2 = 10°, ..., 帧 36 = 350°
+    // 帧 1 = 0°(右), 帧 2 = 10°, ..., 帧 36 = 350°
     int frameIndex = static_cast<int>(angleDegrees / 10.0f) + 1;
 
     // 处理边界情况
@@ -216,15 +215,18 @@ void DefenseBuildingAnimation::setBarrelFrame(float angleDegrees) {
         "Animation/defence_architecture/cannon/cannon%02d.png", frameIndex
     );
 
-    CCLOG("Setting barrel frame: %s (angle=%.1f°, index=%d)",
-          frameName.c_str(), angleDegrees, frameIndex);
+    // ✅ 增强的日志输出
+    CCLOG("🎯 [BARREL ROTATION] 正在播放炮管动画:");
+    CCLOG("   ├─ 帧序号: %d/36", frameIndex);
+    CCLOG("   ├─ 角度: %.1f°", angleDegrees);
+    CCLOG("   └─ 帧文件: %s", frameName.c_str());
 
     auto frame = SpriteFrameCache::getInstance()->getSpriteFrameByName(frameName);
     if (frame) {
         _barrelSprite->setSpriteFrame(frame);
-        CCLOG("✅ Successfully set barrel frame");
+        CCLOG("   ✅ 炮管帧切换成功!");
     } else {
-        CCLOG("❌ ERROR - Frame '%s' not found!", frameName.c_str());
+        CCLOG("   ❌ ERROR - 炮管帧 '%s' 未找到!", frameName.c_str());
     }
 }
 
@@ -301,4 +303,66 @@ void DefenseBuildingAnimation::playAttackAnimation(const Vec2& targetWorldPos, c
 
 void DefenseBuildingAnimation::playAttackAnimation() {
     playFireAnimation(nullptr);
+}
+
+// ✅✅✅ 测试函数：按顺序显示所有炮管帧
+void DefenseBuildingAnimation::testAllBarrelFrames() {
+    if (!_barrelSprite) {
+        CCLOG("DefenseBuildingAnimation::testAllBarrelFrames - _barrelSprite is NULL!");
+        return;
+    }
+
+    CCLOG("========================================");
+    CCLOG("开始测试炮管36帧动画");
+    CCLOG("每帧显示1秒，请观察炮管朝向");
+    CCLOG("========================================");
+
+    // 创建动作序列
+    Vector<FiniteTimeAction*> actions;
+
+    for (int frameIndex = 1; frameIndex <= 36; frameIndex++) {
+        // 计算角度（帧1=0°, 帧2=10°, ..., 帧36=350°）
+        float angle = (frameIndex - 1) * 10.0f;
+
+        // 切换帧
+        auto switchFrame = CallFunc::create([this, frameIndex, angle]() {
+            std::string frameName = StringUtils::format(
+                "Animation/defence_architecture/cannon/cannon%02d.png", frameIndex
+            );
+
+            auto frame = SpriteFrameCache::getInstance()->getSpriteFrameByName(frameName);
+            if (frame) {
+                _barrelSprite->setSpriteFrame(frame);
+
+                // 输出当前帧信息
+                CCLOG("========================================");
+                CCLOG("当前帧: cannon%02d.png", frameIndex);
+                CCLOG("帧编号: %d/36", frameIndex);
+                CCLOG("定义角度: %.1f°", angle);
+                CCLOG("请观察炮管朝向！");
+                CCLOG("========================================");
+            } else {
+                CCLOG("❌ 帧 %d 加载失败: %s", frameIndex, frameName.c_str());
+            }
+        });
+
+        // 停留1秒
+        auto delay = DelayTime::create(1.0f);
+
+        actions.pushBack(switchFrame);
+        actions.pushBack(delay);
+    }
+
+    // 测试完成后的回调
+    auto finish = CallFunc::create([]() {
+        CCLOG("========================================");
+        CCLOG("✅ 测试完成！共36帧已全部显示");
+        CCLOG("========================================");
+    });
+
+    actions.pushBack(finish);
+
+    // 执行动作序列
+    auto sequence = Sequence::create(actions);
+    this->runAction(sequence);
 }

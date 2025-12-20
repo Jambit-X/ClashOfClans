@@ -156,6 +156,15 @@ void BuildingManager::createDefenseAnimation(BuildingSprite* sprite, const Build
     _defenseAnims[building.id] = anim;
     CCLOG("BuildingManager: ✅ Defense animation saved to map, total anims: %zu", _defenseAnims.size());
 
+    //// ✅✅✅ 启动测试：2秒后开始播放所有帧
+    //anim->runAction(Sequence::create(
+    //    DelayTime::create(2.0f),
+    //    CallFunc::create([anim]() {
+    //    anim->testAllBarrelFrames();
+    //}),
+    //    nullptr
+    //));
+
     // 7. 验证
     if (sprite->getChildByName("DefenseAnim")) {
         CCLOG("BuildingManager: ✅✅✅ DefenseAnim successfully verified in sprite children!");
