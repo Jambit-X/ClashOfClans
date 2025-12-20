@@ -91,66 +91,6 @@ bool BattleScene::init() {
     // 【新增】设置建筑摧毁事件监听
     setupBuildingDestroyedListener();
 
-    // ========== 安全的测试代码：使用 schedule 的自动管理 ==========
-    this->scheduleOnce([this](float) {
-        auto buildingManager = _mapLayer->getBuildingManager();
-        if (!buildingManager) {
-            CCLOG("❌ BattleScene: BuildingManager is null!");
-            return;
-        }
-
-        auto dataManager = VillageDataManager::getInstance();
-        const auto& buildings = dataManager->getAllBuildings();
-
-        CCLOG("🔫 STARTING CANNON ROTATION TEST");
-
-        for (const auto& building : buildings) {
-            if (building.type == 301) {  // 加农炮
-                // 【关键修复】每次在 lambda 内部重新获取 anim 指针
-                std::string scheduleKey = "test_cannon_" + std::to_string(building.id);
-                int buildingId = building.id;  // 按值捕获 ID,而不是整个对象
-
-                this->schedule([this, buildingId](float dt) {
-                    // 每次回调时重新获取指针,确保安全
-                    auto buildingManager = _mapLayer->getBuildingManager();
-                    if (!buildingManager) return;
-
-                    auto anim = buildingManager->getDefenseAnimation(buildingId);
-                    if (!anim) {
-                        // 如果动画对象已被销毁,取消该 schedule
-                        this->unschedule("test_cannon_" + std::to_string(buildingId));
-                        return;
-                    }
-
-                    // 获取建筑数据
-                    auto dataManager = VillageDataManager::getInstance();
-                    auto buildingPtr = dataManager->getBuildingById(buildingId);
-                    if (!buildingPtr) {
-                        this->unschedule("test_cannon_" + std::to_string(buildingId));
-                        return;
-                    }
-
-                    static std::map<int, float> angles;
-                    float& angle = angles[buildingId];
-
-                    angle += 2.0f;
-                    if (angle >= 360.0f) angle = 0.0f;
-
-                    Vec2 buildingPos = GridMapUtils::gridToPixel(buildingPtr->gridX, buildingPtr->gridY);
-                    Vec2 fakeTarget = Vec2(
-                        buildingPos.x + 200 * cos(CC_DEGREES_TO_RADIANS(angle)),
-                        buildingPos.y + 200 * sin(CC_DEGREES_TO_RADIANS(angle))
-                    );
-
-                    anim->aimAt(fakeTarget);
-                }, 0.05f, scheduleKey);
-
-                CCLOG("✅ Started rotation test for cannon ID=%d", building.id);
-            }
-        }
-    }, 2.0f, "test_all_cannons");
-    // ============================================================
-    
     return true;
 }
 

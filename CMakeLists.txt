@@ -62,6 +62,7 @@ list(APPEND GAME_SOURCE
      Classes/Layer/DebugLayer.cpp
      Classes/Component/ConstructionAnimation.cpp
      Classes/Component/DefenseBuildingAnimation.cpp
+     Classes/Component/HealthBarComponent.cpp
      Classes/Component/Projectile.cpp
      Classes/Layer/TrainingLayer.cpp
      Classes/Controller/MoveMapController.cpp
@@ -106,6 +107,7 @@ list(APPEND GAME_HEADER
      Classes/Layer/DebugLayer.h
      Classes/Component/ConstructionAnimation.h
      Classes/Component/DefenseBuildingAnimation.h
+     Classes/Component/HealthBarComponent.h
      Classes/Component/Projectile.h
      Classes/Layer/TrainingLayer.h
      Classes/Controller/MoveMapController.h

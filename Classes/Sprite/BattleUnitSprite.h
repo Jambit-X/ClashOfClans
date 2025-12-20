@@ -5,6 +5,7 @@
 #include "cocos2d.h"
 #include "Manager/AnimationManager.h"
 #include "../Util/GridMapUtils.h"
+#include "Component/HealthBarComponent.h"
 
 USING_NS_CC;
 
@@ -123,7 +124,10 @@ public:
   
   bool isTargetedByBuilding() const { return _isTargetedByBuilding; }
   void setTargetedByBuilding(bool targeted);
-
+  /**
+ * @brief 更新血条显示
+ */
+  void updateHealthBar();
 protected:
   std::string _unitType;
   UnitTypeID _unitTypeID = UnitTypeID::UNKNOWN;
@@ -145,8 +149,8 @@ protected:
   static const int ANIMATION_TAG = 1000;
   static const int MOVE_TAG = 1001;
 
-  // 炸弹兵的炸弹子精灵
-  cocos2d::Sprite* _bombSprite = nullptr;
+  // ✅ 使用通用血条组件
+  HealthBarComponent* _healthBar = nullptr;
 
   // 根据移动方向选择动画类型和是否需要翻转
   void selectWalkAnimation(const Vec2& direction, AnimationType& outAnimType, bool& outFlipX);

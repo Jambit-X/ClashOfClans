@@ -227,7 +227,7 @@ void AnimationManager::initializeDefaultConfigs() {
 
     // 死亡动画：帧 175-176
     registerAnimationConfig("Barbarian", AnimationType::DEATH, {
-        "barbarian", 175, 2, 0.5f, false
+        "barbarian", 176, 1, 0.5f, false
                             });
 
     // ===== 弓箭手动画配置 =====
@@ -279,7 +279,7 @@ void AnimationManager::initializeDefaultConfigs() {
 
     // 死亡动画：帧 53-54
     registerAnimationConfig("Archer", AnimationType::DEATH, {
-        "archer", 53, 2, 0.5f, false
+        "archer", 54, 1, 0.5f, false
                             });
 
     // ===== 巨人动画配置 =====
@@ -331,7 +331,7 @@ void AnimationManager::initializeDefaultConfigs() {
 
     // 死亡动画：帧 99-100
     registerAnimationConfig("Giant", AnimationType::DEATH, {
-        "giant", 99, 2, 0.5f, false
+        "giant", 100, 1, 0.5f, false
                             });
 
     // ===== 哥布林动画配置 =====
@@ -383,14 +383,14 @@ void AnimationManager::initializeDefaultConfigs() {
 
     // 死亡动画：帧 41-42
     registerAnimationConfig("Goblin", AnimationType::DEATH, {
-        "goblin", 41, 2, 0.5f, false
+        "goblin", 42, 1, 0.5f, false
                             });
 
     // ========== 炸弹兵动画配置 ==========
 
     // 死亡墓碑：帧 1
     registerAnimationConfig("Wall_Breaker", AnimationType::DEATH, {
-        "wall_breaker", {2, 1}, 1.0f, false
+        "wall_breaker", 1, 1, 1.0f, false
                             });
 
     // ✅ 向右待机（跳舞）：帧 7-10

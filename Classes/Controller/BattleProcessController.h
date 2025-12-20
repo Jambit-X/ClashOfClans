@@ -33,6 +33,14 @@ public:
     
     // ========== 建筑防御自动更新 ==========
     void updateBuildingDefense(BattleTroopLayer* troopLayer);
+
+    // 炸弹兵自爆攻击（单体伤害版本）
+    void performWallBreakerSuicideAttack(
+        BattleUnitSprite* unit,
+        BuildingInstance* target,
+        BattleTroopLayer* troopLayer,
+        const std::function<void()>& onComplete
+    );
     
 private:
     BattleProcessController() = default;

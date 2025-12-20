@@ -100,37 +100,6 @@ bool BattleUnitSprite::init(const std::string& unitType) {
     this->setScale(scale);
     CCLOG("BattleUnitSprite: Set scale to %.2f for %s", scale, unitType.c_str());
 
-    // ========== ✅ 炸弹兵特殊处理:添加炸弹子精灵 ==========
-    if (_unitTypeID == UnitTypeID::WALL_BREAKER) {
-        // 从精灵图集加载炸弹帧
-        auto bombFrame = SpriteFrameCache::getInstance()->getSpriteFrameByName("wall_breaker61.0.png");
-
-        if (bombFrame) {
-            _bombSprite = Sprite::createWithSpriteFrame(bombFrame);
-
-            if (_bombSprite) {
-                // 设置炸弹的位置(相对于炸弹兵中心)
-                // 根据实际情况调整偏移量,让炸弹显示在炸弹兵手中
-                _bombSprite->setPosition(Vec2(20, 30));  // X偏移0,Y向上偏移30像素
-
-                // 炸弹的缩放比例(可以根据视觉效果调整)
-                _bombSprite->setScale(0.8f);
-                
-                // 设置锚点(默认0.5,0.5即中心点)
-                _bombSprite->setAnchorPoint(Vec2(0.5f, 0.5f));
-
-                // 将炸弹作为子节点添加到炸弹兵身上
-                // zOrder=1 确保炸弹显示在炸弹兵上层
-                this->addChild(_bombSprite, 1);
-
-                CCLOG("BattleUnitSprite: Bomb sprite attached to Wall_Breaker");
-            } else {
-                CCLOG("BattleUnitSprite: Failed to create bomb sprite");
-            }
-        } else {
-            CCLOG("BattleUnitSprite: Bomb frame 'wall_breaker61.0.png' not found in sprite frame cache");
-        }
-    }
 
     this->scheduleUpdate();
 
@@ -175,15 +144,23 @@ void BattleUnitSprite::update(float dt) {
 
 // ========== 建筑锁定状态可视化 ==========
 void BattleUnitSprite::setTargetedByBuilding(bool targeted) {
-    if (_isTargetedByBuilding == targeted) return;  // 状态未改变
-    
+    // ✅ 如果兵种已死亡，拒绝接受锁定
+    if (this->isDead()) {
+        if (_isTargetedByBuilding) {
+            _isTargetedByBuilding = false;
+            this->setColor(Color3B::WHITE);
+            CCLOG("BattleUnitSprite: Dead unit refusing targeting, color reset to WHITE");
+        }
+        return;
+    }
+
+    if (_isTargetedByBuilding == targeted) return;
+
     _isTargetedByBuilding = targeted;
-    
+
     if (targeted) {
-        // 被锁定：变红色
         this->setColor(Color3B(255, 100, 100));  // 红色高亮
     } else {
-        // 取消锁定：恢复白色
         this->setColor(Color3B::WHITE);
     }
 }
@@ -267,18 +244,6 @@ void BattleUnitSprite::playAnimation(
 
     _currentAnimation = animType;
     _isAnimating = true;
-
-    // ========== ✅ 炸弹兵死亡时移除炸弹 ==========
-    if (_unitTypeID == UnitTypeID::WALL_BREAKER && animType == AnimationType::DEATH) {
-        if (_bombSprite) {
-            // 炸弹飞出的动画(可选)
-            _bombSprite->runAction(Sequence::create(
-                RemoveSelf::create(),  // 移除炸弹
-                nullptr
-            ));
-            _bombSprite = nullptr;
-        }
-    }
 
     if (loop) {
         auto action = animMgr->createLoopAnimate(_unitType, animType);
@@ -378,10 +343,6 @@ void BattleUnitSprite::playWalkAnimation() {
 
 void BattleUnitSprite::playAttackAnimation(const std::function<void()>& callback) {
   playAnimation(AnimationType::ATTACK, false, callback);
-}
-
-void BattleUnitSprite::playDeathAnimation(const std::function<void()>& callback) {
-  playAnimation(AnimationType::DEATH, false, callback);
 }
 
 // ===== 方向计算 =====
@@ -764,16 +725,75 @@ void BattleUnitSprite::followPath(
 // ===== 生命值系统 =====
 
 void BattleUnitSprite::takeDamage(int damage) {
-    if (_currentHP <= 0) {
-        return; // 已经死亡
-    }
-    
+    if (_currentHP <= 0) return;
+
     _currentHP -= damage;
-    
-    if (_currentHP < 0) {
-        _currentHP = 0;
-    }
-    
-    CCLOG("BattleUnitSprite: %s took %d damage, HP: %d/%d", 
+    if (_currentHP < 0) _currentHP = 0;
+
+    // ✅ 更新血条
+    updateHealthBar();
+
+    CCLOG("BattleUnitSprite: %s took %d damage, HP: %d/%d",
           _unitType.c_str(), damage, _currentHP, _maxHP);
+}
+
+void BattleUnitSprite::updateHealthBar() {
+    // ✅ 惰性创建血条组件
+    if (!_healthBar) {
+        // 根据兵种大小配置血条
+        HealthBarComponent::Config barConfig;
+
+        switch (_unitTypeID) {
+            case UnitTypeID::GOBLIN:
+            case UnitTypeID::WALL_BREAKER:
+                barConfig.width = 30.0f;  // 小型兵种
+                break;
+            case UnitTypeID::BARBARIAN:
+            case UnitTypeID::ARCHER:
+                barConfig.width = 40.0f;  // 中型兵种
+                break;
+            case UnitTypeID::GIANT:
+            case UnitTypeID::BALLOON:
+                barConfig.width = 60.0f;  // 大型兵种
+                break;
+            default:
+                barConfig.width = 40.0f;
+                break;
+        }
+
+        barConfig.height = 6.0f;
+        barConfig.offset = Vec2(0, 10);  // 兵种头顶上方10像素
+        barConfig.highThreshold = 60.0f;
+        barConfig.mediumThreshold = 30.0f;
+        barConfig.showWhenFull = false;
+        barConfig.fadeInDuration = 0.2f;
+
+        // 创建血条组件
+        _healthBar = HealthBarComponent::create(barConfig);
+        this->addChild(_healthBar, 100);
+
+        // 更新血条位置
+        _healthBar->updatePosition(this->getContentSize());
+    }
+
+    // 更新血条
+    _healthBar->updateHealth(_currentHP, _maxHP);
+}
+
+void BattleUnitSprite::playDeathAnimation(const std::function<void()>& callback) {
+    // ✅ 第一时间恢复正常颜色
+    this->setColor(Color3B::WHITE);
+    this->setOpacity(255);
+
+    // ✅ 立即取消建筑锁定状态（触发颜色恢复）
+    this->setTargetedByBuilding(false);
+
+    // 隐藏血条
+    if (_healthBar) {
+        _healthBar->hide();
+    }
+
+    CCLOG("BattleUnitSprite: Death animation started, color reset to WHITE, targeting cleared");
+
+    playAnimation(AnimationType::DEATH, false, callback);
 }

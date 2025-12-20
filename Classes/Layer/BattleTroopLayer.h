@@ -55,8 +55,15 @@ public:
     /**
      * @brief 在指定位置生成墓碑
      */
-    void spawnTombstone(const Vec2& position);
-    
+    //void spawnTombstone(const Vec2& position);
+
+    /**
+     * @brief 在指定位置生成墓碑(支持兵种类型)
+     * @param position 墓碑生成位置
+     * @param unitType 兵种类型,用于选择正确的墓碑图片
+     */
+    void spawnTombstone(const Vec2& position, UnitTypeID unitType);
+
     /**
      * @brief 清除所有墓碑（战斗结束时调用）
      */

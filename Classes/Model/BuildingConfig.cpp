@@ -232,6 +232,7 @@ void BuildingConfig::initConfigs() {
   cannon.hitPoints = 620;
   cannon.damagePerSecond = 11;
   cannon.attackRange = 9;
+  cannon.attackSpeed = 1.5f;
   cannon.resourceCapacity = 0;
   cannon.productionRate = 0;
   _configs[301] = cannon;
@@ -252,6 +253,7 @@ void BuildingConfig::initConfigs() {
   archerTower.hitPoints = 380;
   archerTower.damagePerSecond = 11;
   archerTower.attackRange = 10;
+  archerTower.attackSpeed = 1.0f;
   archerTower.resourceCapacity = 0;
   archerTower.productionRate = 0;
   _configs[302] = archerTower;

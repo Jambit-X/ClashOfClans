@@ -30,6 +30,9 @@ struct BuildingInstance {
   // ========== 战斗系统：防御建筑锁定目标 =========
   mutable void* lockedTarget = nullptr;  // 锁定的兵种指针（BattleUnitSprite*）
   // =============================================
+
+  // ✅ 新增：攻击冷却系统
+  float attackCooldown = 0.0f;  // 当前冷却时间（秒）
 };
 
 struct VillageData {
