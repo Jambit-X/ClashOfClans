@@ -139,6 +139,16 @@ void BattleUnitSprite::update(float dt) {
         _currentGridPos = gridPos;
         _lastGridX = currentGridX;
         _lastGridY = currentGridY;
+        
+        // ✅ 动态更新 Z-Order，确保移动时透视正确
+        int zOrder = GridMapUtils::calculateZOrder(currentGridX, currentGridY);
+        
+        // 飞行单位（气球兵）额外加 1000 偏移
+        if (_unitTypeID == UnitTypeID::BALLOON) {
+            zOrder += 1000;
+        }
+        
+        this->setLocalZOrder(zOrder);
     }
 }
 
@@ -225,6 +235,17 @@ void BattleUnitSprite::playAnimation(
             if (callback) {
                 this->runAction(Sequence::create(
                     DelayTime::create(0.5f),
+                    CallFunc::create(callback),
+                    nullptr
+                ));
+            }
+        } else if (animType == AnimationType::ATTACK || 
+                   animType == AnimationType::ATTACK_UP || 
+                   animType == AnimationType::ATTACK_DOWN) {
+            // ✅ 所有方向的攻击动画都需要延迟，模拟投弹时间
+            if (callback) {
+                this->runAction(Sequence::create(
+                    DelayTime::create(0.8f),  // 0.8 秒攻击间隔
                     CallFunc::create(callback),
                     nullptr
                 ));
@@ -667,6 +688,7 @@ void BattleUnitSprite::followPath(
     Vector<FiniteTimeAction*> actions;
 
     Vec2 currentPos = this->getPosition();
+    bool hasValidMovement = false;  // ✅ 追踪是否有有效移动
 
     for (const auto& waypoint : path) {
         // 计算方向和距离
@@ -677,6 +699,7 @@ void BattleUnitSprite::followPath(
             continue; // 跳过太近的点
         }
 
+        hasValidMovement = true;  // ✅ 标记有有效移动
         direction.normalize();
 
         // 选择动画
@@ -698,6 +721,12 @@ void BattleUnitSprite::followPath(
         actions.pushBack(moveAction);
 
         currentPos = waypoint;
+    }
+
+    // ✅ 如果没有有效移动，添加最小延迟防止立即回调导致秒杀
+    if (!hasValidMovement) {
+        CCLOG("BattleUnitSprite: No valid movement, adding minimum delay");
+        actions.pushBack(DelayTime::create(0.1f));
     }
 
     // 到达后播放待机动画
