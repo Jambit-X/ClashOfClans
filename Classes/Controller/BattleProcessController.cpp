@@ -169,34 +169,6 @@ void BattleProcessController::executeAttack(
         return;
     }
 
-    // ========== 炸弹人特殊处理：10倍伤害 + 攻击后自毁 ==========
-    if (unit->getUnitTypeID() == UnitTypeID::WALL_BREAKER) {
-        // 对城墙造成10倍伤害
-        int wallBreakerDamage = dps * 10;
-        liveTarget->currentHP -= wallBreakerDamage;
-        CCLOG("Wall Breaker deals %d damage (10x) to wall!", wallBreakerDamage);
-        
-        // 处理目标摧毁
-        if (liveTarget->currentHP <= 0) {
-            liveTarget->isDestroyed = true;
-            liveTarget->currentHP = 0;
-            FindPathUtil::getInstance()->updatePathfindingMap();
-            Director::getInstance()->getEventDispatcher()->dispatchCustomEvent(
-                "EVENT_BUILDING_DESTROYED", static_cast<void*>(liveTarget)
-            );
-        }
-        
-        // 炸弹人攻击后立即阵亡
-        Vec2 deathPos = unit->getPosition();
-        troopLayer->spawnTombstone(deathPos);
-        troopLayer->removeUnit(unit);
-        CCLOG("Wall Breaker self-destructed after attack!");
-        
-        // 不再调用后续回调，因为炸弹人已死亡
-        return;
-    }
-    // ============================================================
-
     liveTarget->currentHP -= dps;
 
     // 目标被摧毁
@@ -558,7 +530,7 @@ const BuildingInstance* BattleProcessController::findNearestBuilding(const Vec2&
 }
 
 // ==========================================
-// 炸弹人专用：查找最近城墙
+// 炸弹兵专用：查找最近城墙
 // ==========================================
 
 const BuildingInstance* BattleProcessController::findNearestWall(const Vec2& unitWorldPos) {
@@ -892,7 +864,26 @@ void BattleProcessController::startCombatLoop(BattleUnitSprite* unit, BattleTroo
     int gridDistance = std::max(gridDistX, gridDistY);
     int attackRangeGrid = getAttackRangeByUnitType(unit->getUnitTypeID());
     
-    if (gridDistance > attackRangeGrid) {
+    // ========== 气球兵特殊判定：飞行单位只要在建筑上方或附近就可以攻击 ==========
+    if (unit->getUnitTypeID() == UnitTypeID::BALLOON) {
+        // 气球兵使用像素距离判定，更加宽松
+        // 只要气球兵在建筑中心附近 (建筑尺寸 + 1格) 范围内就可以攻击
+        Vec2 buildingCenter = GridMapUtils::gridToPixelCenter(
+            bX + bW / 2, 
+            bY + bH / 2
+        );
+        float pixelDistance = unitPos.distance(buildingCenter);
+        float maxAttackDistance = (std::max(bW, bH) + 1) * 32.0f;  // 建筑尺寸 + 1格，每格32像素
+        
+        if (pixelDistance > maxAttackDistance) {
+            // 距离太远，重新飞向目标
+            startUnitAI(unit, troopLayer);
+            return;
+        }
+        // 否则继续执行攻击逻辑
+    }
+    // ============================================================================
+    else if (gridDistance > attackRangeGrid) {
         startUnitAI(unit, troopLayer);
         return;
     }
@@ -1020,6 +1011,12 @@ void BattleProcessController::performWallBreakerSuicideAttack(
 
     // 1. 获取炸弹兵伤害值
     int damage = getDamageByUnitType(unit->getUnitTypeID());
+    
+    // ========== 对城墙造成10倍伤害 ==========
+    if (target->type == 303) {  // 城墙
+        damage *= 10;
+        CCLOG("BattleProcessController: Wall Breaker deals 10x damage to wall!");
+    }
 
     // 2. 对目标建筑造成伤害
     target->currentHP -= damage;
