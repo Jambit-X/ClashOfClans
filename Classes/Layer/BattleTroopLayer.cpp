@@ -50,11 +50,20 @@ BattleUnitSprite* BattleTroopLayer::spawnUnit(const std::string& unitType, int g
     // 添加到层级
     // 【修改】添加到父节点 (MapLayer) 以便与建筑进行统一 Z 序排序
     auto mapLayer = this->getParent();
+    
+    // 计算初始 Z-Order
+    int zOrder = GridMapUtils::calculateZOrder(gridX, gridY);
+    
+    // 飞行单位（气球兵）额外加 1000 偏移，确保始终在地面单位之上
+    if (unit->getUnitTypeID() == UnitTypeID::BALLOON) {
+        zOrder += 1000;
+    }
+    
     if (mapLayer) {
-        mapLayer->addChild(unit);
+        mapLayer->addChild(unit, zOrder);
     } else {
         // Fallback (防崩): 如果还没加到 MapLayer，就加到自己身上
-        this->addChild(unit); 
+        this->addChild(unit, zOrder); 
     }
     _units.push_back(unit);
     

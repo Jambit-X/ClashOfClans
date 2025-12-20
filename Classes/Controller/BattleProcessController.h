@@ -58,6 +58,7 @@ private:
     const BuildingInstance* findTargetWithResourcePriority(const cocos2d::Vec2& unitWorldPos, UnitTypeID unitType);
     const BuildingInstance* findTargetWithDefensePriority(const cocos2d::Vec2& unitWorldPos, UnitTypeID unitType);
     const BuildingInstance* findNearestBuilding(const cocos2d::Vec2& unitWorldPos, UnitTypeID unitType);
+    const BuildingInstance* findNearestWall(const cocos2d::Vec2& unitWorldPos);  // 炸弹人专用
     const BuildingInstance* getFirstWallInLine(const cocos2d::Vec2& startPixel, const cocos2d::Vec2& endPixel);
 
     // ========== 核心攻击逻辑 =========
