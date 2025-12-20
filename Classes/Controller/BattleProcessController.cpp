@@ -7,6 +7,8 @@
 #include "2d/CCParticleExamples.h"
 #include <cmath>
 #include <set>
+#include "../Sprite/BuildingSprite.h"
+#include "../Component/DefenseBuildingAnimation.h"
 
 USING_NS_CC;
 
@@ -96,17 +98,16 @@ void BattleProcessController::resetBattleState() {
             building.isDestroyed = false;
             restoredCount++;
         }
-        
+
         // 清除防御建筑的锁定目标
         building.lockedTarget = nullptr;
+
+        // ✅ 重置攻击冷却
+        building.attackCooldown = 0.0f;
     }
-    
-    // 【新增】清除累积伤害记录
-    _accumulatedDamage.clear();
 
     dataManager->saveToFile("village.json");
 }
-
 // ==========================================
 // 核心攻击逻辑（提取公共代码）
 // ==========================================
@@ -576,121 +577,145 @@ void BattleProcessController::updateBuildingDefense(BattleTroopLayer* troopLayer
     auto& buildings = const_cast<std::vector<BuildingInstance>&>(dataManager->getAllBuildings());
 
     std::set<BattleUnitSprite*> targetedUnitsThisFrame;
-
     float deltaTime = Director::getInstance()->getDeltaTime();
 
     for (auto& building : buildings) {
+        // 跳过非防御建筑
         if (building.isDestroyed || building.currentHP <= 0) continue;
         if (building.state == BuildingInstance::State::PLACING) continue;
-
         if (building.type != 301 && building.type != 302) continue;
 
         auto config = BuildingConfig::getInstance()->getConfig(building.type);
         if (!config) continue;
 
         float attackRange = config->attackRange;
+        float attackSpeed = config->attackSpeed;
 
         BattleUnitSprite* currentTarget = static_cast<BattleUnitSprite*>(building.lockedTarget);
+
+        // ========== 目标有效性检查 ==========
+        bool targetValid = false;
 
         if (currentTarget) {
             auto allUnits = troopLayer->getAllUnits();
 
-            bool targetStillAlive = false;
+            // 检查1: 目标是否还存活
             for (auto unit : allUnits) {
-                if (unit == currentTarget) {
-                    targetStillAlive = true;
+                if (unit == currentTarget && !unit->isDead()) {
+                    targetValid = true;
                     break;
                 }
             }
 
-            if (!targetStillAlive) {
-                _accumulatedDamage.erase(currentTarget);
-                building.lockedTarget = nullptr;
-                currentTarget = nullptr;
-            } else {
+            // 检查2: 是否还在范围内
+            if (targetValid) {
                 int centerX = building.gridX + config->gridWidth / 2;
                 int centerY = building.gridY + config->gridHeight / 2;
 
                 Vec2 unitGridPos = currentTarget->getGridPosition();
-                int unitGridX = static_cast<int>(unitGridPos.x);
-                int unitGridY = static_cast<int>(unitGridPos.y);
-
                 int gridDistance = std::max(
-                    std::abs(unitGridX - centerX),
-                    std::abs(unitGridY - centerY)
+                    std::abs((int)unitGridPos.x - centerX),
+                    std::abs((int)unitGridPos.y - centerY)
                 );
 
-                int attackRangeInt = static_cast<int>(attackRange);
-
-                if (gridDistance > attackRangeInt) {
-                    building.lockedTarget = nullptr;
-                    currentTarget = nullptr;
+                if (gridDistance > static_cast<int>(attackRange)) {
+                    targetValid = false;
                 }
             }
-        }
 
-        if (!currentTarget) {
-            BattleUnitSprite* newTarget = findNearestUnitInRange(building, attackRange, troopLayer);
-            if (newTarget) {
-                building.lockedTarget = static_cast<void*>(newTarget);
-                currentTarget = newTarget;
+            // 目标无效，清除锁定
+            if (!targetValid) {
+                building.lockedTarget = nullptr;
+                currentTarget = nullptr;
             }
         }
 
+        // ========== 寻找新目标 ==========
+        if (!currentTarget) {
+            BattleUnitSprite* newTarget = findNearestUnitInRange(building, attackRange, troopLayer);
+            if (newTarget && !newTarget->isDead()) {
+                building.lockedTarget = static_cast<void*>(newTarget);
+                currentTarget = newTarget;
+                building.attackCooldown = 0.0f;
+            }
+        }
+
+        // ========== 攻击逻辑 ==========
         if (currentTarget) {
             targetedUnitsThisFrame.insert(currentTarget);
 
-            float damageThisFrame = config->damagePerSecond * deltaTime;
-            _accumulatedDamage[currentTarget] += damageThisFrame;
+            building.attackCooldown -= deltaTime;
 
-            if (_accumulatedDamage[currentTarget] >= 1.0f) {
-                int damageToApply = static_cast<int>(_accumulatedDamage[currentTarget]);
+            if (building.attackCooldown <= 0.0f) {
+                int damagePerShot = static_cast<int>(config->damagePerSecond * attackSpeed);
+                currentTarget->takeDamage(damagePerShot);
 
-                currentTarget->takeDamage(damageToApply);
+                // ✅✅✅ 关键修复：转换到 MapLayer 坐标系
+                auto mapLayer = troopLayer->getParent();
+                if (mapLayer) {
+                    std::string spriteName = "Building_" + std::to_string(building.id);
+                    auto buildingSprite = dynamic_cast<BuildingSprite*>(mapLayer->getChildByName(spriteName));
 
-                _accumulatedDamage[currentTarget] -= damageToApply;
+                    if (buildingSprite) {
+                        auto defenseAnim = dynamic_cast<DefenseBuildingAnimation*>(
+                            buildingSprite->getChildByName("DefenseAnim")
+                            );
 
-                // ========== ✅ 修改:播放死亡动画后再移除 ==========
+                        if (defenseAnim) {
+                            // ✅ 核心修复：转换到 MapLayer 坐标系（而非世界坐标）
+                            // 1. 获取兵种在 TroopLayer 中的位置
+                            Vec2 unitPosInTroopLayer = currentTarget->getPosition();
+
+                            // 2. 转换到 MapLayer 坐标系
+                            Vec2 targetPosInMapLayer = troopLayer->convertToNodeSpace(
+                                troopLayer->getParent()->convertToWorldSpace(unitPosInTroopLayer)
+                            );
+
+                            // 更简洁的写法（推荐）
+                            // Vec2 targetPosInMapLayer = mapLayer->convertToNodeSpace(
+                            //     troopLayer->convertToWorldSpace(currentTarget->getPosition())
+                            // );
+
+                            CCLOG("BattleProcessController: Aiming at target - Unit pos in TroopLayer: (%.1f, %.1f), Target pos in MapLayer: (%.1f, %.1f)",
+                                  unitPosInTroopLayer.x, unitPosInTroopLayer.y,
+                                  targetPosInMapLayer.x, targetPosInMapLayer.y);
+
+                            defenseAnim->playAttackAnimation(targetPosInMapLayer);
+                        }
+                    }
+                }
+
+                building.attackCooldown = attackSpeed;
+
+                // ✅ 修复：目标死亡，立即清除锁定并停止所有动作
                 if (currentTarget->isDead()) {
-                    CCLOG("BattleProcessController: Unit killed by building %d", building.id);
+                    // 1. 立即清除建筑的锁定引用
+                    building.lockedTarget = nullptr;
+                    targetedUnitsThisFrame.erase(currentTarget);
 
-                    // 取消锁定状态(恢复白色)
+                    // 2. 恢复兵种颜色
                     currentTarget->setTargetedByBuilding(false);
 
-                    // ✅ 记录位置和类型（在移除前）
-                    Vec2 tombstonePos = currentTarget->getPosition();
-                    UnitTypeID unitType = currentTarget->getUnitTypeID();
+                    // 3. 停止兵种所有正在进行的动作（包括攻击动画）
+                    currentTarget->stopAllActions();
 
-                    // 播放死亡动画,动画结束后移除兵种
-                    currentTarget->playDeathAnimation([troopLayer, currentTarget, tombstonePos, unitType]() {
-                        CCLOG("BattleProcessController: Death animation completed, removing unit");
-
-                        // 移除兵种
+                    // 4. 播放死亡动画
+                    currentTarget->playDeathAnimation([troopLayer, currentTarget]() {
                         troopLayer->removeUnit(currentTarget);
-
-                        // ✅ 生成墓碑（会自动淡出）
-                        troopLayer->spawnTombstone(tombstonePos, unitType);
                     });
 
-                    // 清除锁定和累积伤害
-                    building.lockedTarget = nullptr;
-                    _accumulatedDamage.erase(currentTarget);
-
-                    // 从本帧锁定列表中移除
-                    targetedUnitsThisFrame.erase(currentTarget);
+                    CCLOG("BattleProcessController: Unit killed, stopped all actions and playing death animation");
                 }
-                // ===========================================
             }
         }
     }
 
+    // ========== 更新兵种锁定状态 ==========
     auto allUnits = troopLayer->getAllUnits();
-
     for (auto unit : allUnits) {
-        if (!unit) continue;
+        if (!unit || unit->isDead()) continue;
 
         bool shouldBeTargeted = (targetedUnitsThisFrame.find(unit) != targetedUnitsThisFrame.end());
-
         if (unit->isTargetedByBuilding() != shouldBeTargeted) {
             unit->setTargetedByBuilding(shouldBeTargeted);
         }

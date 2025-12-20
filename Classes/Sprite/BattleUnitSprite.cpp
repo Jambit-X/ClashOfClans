@@ -144,15 +144,23 @@ void BattleUnitSprite::update(float dt) {
 
 // ========== 建筑锁定状态可视化 ==========
 void BattleUnitSprite::setTargetedByBuilding(bool targeted) {
-    if (_isTargetedByBuilding == targeted) return;  // 状态未改变
-    
+    // ✅ 如果兵种已死亡，拒绝接受锁定
+    if (this->isDead()) {
+        if (_isTargetedByBuilding) {
+            _isTargetedByBuilding = false;
+            this->setColor(Color3B::WHITE);
+            CCLOG("BattleUnitSprite: Dead unit refusing targeting, color reset to WHITE");
+        }
+        return;
+    }
+
+    if (_isTargetedByBuilding == targeted) return;
+
     _isTargetedByBuilding = targeted;
-    
+
     if (targeted) {
-        // 被锁定：变红色
         this->setColor(Color3B(255, 100, 100));  // 红色高亮
     } else {
-        // 取消锁定：恢复白色
         this->setColor(Color3B::WHITE);
     }
 }
@@ -773,13 +781,19 @@ void BattleUnitSprite::updateHealthBar() {
 }
 
 void BattleUnitSprite::playDeathAnimation(const std::function<void()>& callback) {
-    // 死亡前恢复正常颜色
+    // ✅ 第一时间恢复正常颜色
     this->setColor(Color3B::WHITE);
+    this->setOpacity(255);
 
-    // ✅ 隐藏血条
+    // ✅ 立即取消建筑锁定状态（触发颜色恢复）
+    this->setTargetedByBuilding(false);
+
+    // 隐藏血条
     if (_healthBar) {
         _healthBar->hide();
     }
+
+    CCLOG("BattleUnitSprite: Death animation started, color reset to WHITE, targeting cleared");
 
     playAnimation(AnimationType::DEATH, false, callback);
 }

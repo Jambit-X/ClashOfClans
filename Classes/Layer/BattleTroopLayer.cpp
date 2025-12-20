@@ -153,22 +153,22 @@ void BattleTroopLayer::spawnTombstone(const Vec2& position, UnitTypeID unitType)
         std::string frameName;
         switch (unitType) {
             case UnitTypeID::BARBARIAN:
-                frameName = "barbarian175.0.png"; // 野蛮人墓碑(第175帧)
+                frameName = "barbarian175.0.png";
                 break;
             case UnitTypeID::ARCHER:
-                frameName = "archer53.0.png"; // 弓箭手墓碑(第53帧)
+                frameName = "archer53.0.png";
                 break;
             case UnitTypeID::GOBLIN:
-                frameName = "goblin41.0.png"; // 哥布林墓碑(第41帧)
+                frameName = "goblin41.0.png";
                 break;
             case UnitTypeID::GIANT:
-                frameName = "giant99.0.png"; // 巨人墓碑(第99帧)
+                frameName = "giant99.0.png";
                 break;
             case UnitTypeID::WALL_BREAKER:
-                frameName = "wall_breaker1.0.png"; // 炸弹兵墓碑(第1帧)
+                frameName = "wall_breaker1.0.png";
                 break;
             default:
-                frameName = "barbarian175.0.png"; // 默认使用野蛮人墓碑
+                frameName = "barbarian175.0.png";
                 break;
         }
 
@@ -185,9 +185,9 @@ void BattleTroopLayer::spawnTombstone(const Vec2& position, UnitTypeID unitType)
 
     // 设置位置
     tombstone->setPosition(position);
-    tombstone->setAnchorPoint(Vec2(0.5f, 0.0f)); // 底部中心锚点
+    tombstone->setAnchorPoint(Vec2(0.5f, 0.0f));
 
-    // 设置缩放(与原兵种一致)
+    // 设置缩放
     float scale = 0.8f;
     switch (unitType) {
         case UnitTypeID::BARBARIAN: scale = 0.8f; break;
@@ -199,9 +199,11 @@ void BattleTroopLayer::spawnTombstone(const Vec2& position, UnitTypeID unitType)
     }
     tombstone->setScale(scale);
 
-    // ✅ 确保墓碑显示为正常颜色（白色），而不是红色
+    // ✅ 强制设置为白色（防止继承兵种的红色）
     tombstone->setColor(Color3B::WHITE);
     tombstone->setOpacity(255);
+
+    CCLOG("BattleTroopLayer::spawnTombstone - Tombstone color set to WHITE");
 
     // 添加到地图层
     auto mapLayer = this->getParent();
@@ -209,7 +211,7 @@ void BattleTroopLayer::spawnTombstone(const Vec2& position, UnitTypeID unitType)
 
     if (mapLayer) {
         CCLOG("BattleTroopLayer::spawnTombstone - Adding to MapLayer with Z-order 100...");
-        mapLayer->addChild(tombstone, 100); // Z-Order设为100,显示在地图上层
+        mapLayer->addChild(tombstone, 100);
         CCLOG("BattleTroopLayer::spawnTombstone - Tombstone added successfully");
     } else {
         CCLOG("BattleTroopLayer::spawnTombstone - WARNING: No MapLayer, adding to TroopLayer...");

@@ -67,29 +67,34 @@ void BuildingManager::loadFromBattleMapData() {
 
 
 BuildingSprite* BuildingManager::addBuilding(const BuildingInstance& building) {
-  auto sprite = BuildingSprite::create(building);
-  if (!sprite) return nullptr;
+    auto sprite = BuildingSprite::create(building);
+    if (!sprite) return nullptr;
 
-  Vec2 worldPos = GridMapUtils::gridToPixel(building.gridX, building.gridY);
-  Vec2 finalPos = worldPos + sprite->getVisualOffset();
-  sprite->setPosition(finalPos);
+    Vec2 worldPos = GridMapUtils::gridToPixel(building.gridX, building.gridY);
+    Vec2 finalPos = worldPos + sprite->getVisualOffset();
+    sprite->setPosition(finalPos);
 
-  // 使用统一函数计算 Z-Order
-  int zOrder = calculateZOrder(building.gridX, building.gridY);
-  _parentLayer->addChild(sprite, zOrder);
+    // ✅ 关键修复：设置精灵名称（用于战斗系统查找）
+    std::string spriteName = "Building_" + std::to_string(building.id);
+    sprite->setName(spriteName);
 
-  _buildings[building.id] = sprite;
+    // 使用统一函数计算 Z-Order
+    int zOrder = calculateZOrder(building.gridX, building.gridY);
+    _parentLayer->addChild(sprite, zOrder);
 
-  // 防御建筑特殊处理
-  if (_isBattleScene && (building.type == 301 || building.type == 302)) {
-      createDefenseAnimation(sprite, building);
-  }
+    _buildings[building.id] = sprite;
 
-  CCLOG("BuildingManager: Added building ID=%d at grid(%d, %d), Z-Order=%d",
-        building.id, building.gridX, building.gridY, zOrder);
+    // 防御建筑特殊处理
+    if (_isBattleScene && (building.type == 301 || building.type == 302)) {
+        createDefenseAnimation(sprite, building);
+    }
 
-  return sprite;
+    CCLOG("BuildingManager: Added building ID=%d (name='%s') at grid(%d, %d), Z-Order=%d",
+          building.id, spriteName.c_str(), building.gridX, building.gridY, zOrder);
+
+    return sprite;
 }
+
 void BuildingManager::removeBuilding(int buildingId) {
     // 清理动画引用
     auto animIt = _defenseAnims.find(buildingId);
@@ -108,48 +113,55 @@ void BuildingManager::removeBuilding(int buildingId) {
 
 // 【新增】创建防御建筑动画
 void BuildingManager::createDefenseAnimation(BuildingSprite* sprite, const BuildingInstance& building) {
-    if (!sprite) return;
-
-    // ========== 只为加农炮创建动画 ==========
-    if (building.type != 301) {
-        CCLOG("BuildingManager: Building type %d doesn't need animation, keeping static sprite", building.type);
-        return;  // 箭塔(302)等其他防御建筑直接返回,保持静态显示
-    }
-    // ======================================
-
-
-    // 1. 【关键】保存原始尺寸
-    auto originalSize = sprite->getContentSize();
-    CCLOG("BuildingManager: Original size: (%.0f, %.0f)", originalSize.width, originalSize.height);
-
-    // 2. 隐藏原始静态贴图
-    sprite->setOpacity(0);
-    sprite->setTextureRect(Rect(0, 0, 0, 0));  // 这会让 contentSize 变成 (0,0)
-
-    // 3. 【关键】恢复 contentSize，确保 UI 元素位置正确
-    sprite->setContentSize(originalSize);
-    CCLOG("BuildingManager: Restored contentSize to (%.0f, %.0f)", originalSize.width, originalSize.height);
-
-    // 4. 创建动画组件
-    auto anim = DefenseBuildingAnimation::create(sprite, building.type);
-    if (!anim) {
-        CCLOG("BuildingManager: Failed to create defense animation for building ID=%d", building.id);
-        sprite->setOpacity(255);
-        sprite->loadSprite(building.type, building.level);
+    if (!sprite) {
+        CCLOG("BuildingManager: ❌ sprite is NULL!");
         return;
     }
 
-    anim->setName("DefenseAnim");
-    sprite->addChild(anim, -1);
-
-    // 5. 根据建筑类型设置默认偏移量
-    if (building.type == 301) {  // 加农炮
-        anim->setAnimationOffset(Vec2(0, 0));  // 你调整的偏移量
-        CCLOG("BuildingManager: Applied offset (0, 0) for cannon");
+    if (building.type != 301) {
+        CCLOG("BuildingManager: Building type %d doesn't need animation", building.type);
+        return;
     }
-    
+
+    CCLOG("BuildingManager: Creating defense animation for building ID=%d, type=%d", building.id, building.type);
+
+    // 1. 保存原始尺寸
+    auto originalSize = sprite->getContentSize();
+    CCLOG("BuildingManager: Original size: (%.0f, %.0f)", originalSize.width, originalSize.height);
+
+    // 2. 创建动画组件
+    auto anim = DefenseBuildingAnimation::create(sprite, building.type);
+    if (!anim) {
+        CCLOG("BuildingManager: ❌ Failed to create DefenseBuildingAnimation!");
+        return;
+    }
+
+    CCLOG("BuildingManager: ✅ DefenseBuildingAnimation created, retain count: %u", anim->getReferenceCount());
+
+    anim->setName("DefenseAnim");
+
+    // 3. 添加到 Sprite（会自动 retain）
+    sprite->addChild(anim, 10);
+    CCLOG("BuildingManager: ✅ anim added to sprite, retain count: %u", anim->getReferenceCount());
+
+    // 4. 设置偏移量
+    anim->setAnimationOffset(Vec2(0, 0));
+
+    // 5. 隐藏原始贴图
+    sprite->setOpacity(0);
+    sprite->setTextureRect(Rect(0, 0, 0, 0));
+    sprite->setContentSize(originalSize);
+
+    // 6. 保存引用
     _defenseAnims[building.id] = anim;
-    CCLOG("BuildingManager: Defense animation created for building ID=%d", building.id);
+    CCLOG("BuildingManager: ✅ Defense animation saved to map, total anims: %zu", _defenseAnims.size());
+
+    // 7. 验证
+    if (sprite->getChildByName("DefenseAnim")) {
+        CCLOG("BuildingManager: ✅✅✅ DefenseAnim successfully verified in sprite children!");
+    } else {
+        CCLOG("BuildingManager: ❌❌❌ DefenseAnim NOT found in sprite children!");
+    }
 }
 
 // 获取防御建筑动画

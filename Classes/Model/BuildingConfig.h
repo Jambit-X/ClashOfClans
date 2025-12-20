@@ -30,6 +30,9 @@ struct BuildingConfigData {
   int attackRange;                // 攻击范围（防御建筑用）
   int resourceCapacity;           // 资源容量（资源建筑用）
   int productionRate;             // 生产速率（资源建筑用，单位/小时）
+
+  // 攻击速度（秒/次）
+  float attackSpeed = 1.0f;  // 每次攻击的间隔时间
 };
 
 /**
