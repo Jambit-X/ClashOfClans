@@ -14,6 +14,11 @@ namespace cocos2d {
 class BattleMapLayer;
 class BattleHUDLayer;
 class BattleResultLayer;
+class BattleProgressUI;  // ✅ 新增：战斗进度UI
+
+// ========== 新增：前置声明摧毁进度事件数据结构 ==========
+struct DestructionProgressEventData;
+struct StarAwardedEventData;
 
 class BattleScene : public cocos2d::Scene {
 public:
@@ -99,6 +104,17 @@ private:
 
     void loadEnemyVillage();
     void performCloudTransition(std::function<void()> onMapReloadCallback, bool isInitialEntry = false);
+
+    // ========== ✅ 战斗进度UI（新版）==========
+    BattleProgressUI* _battleProgressUI = nullptr;
+
+    // ========== 事件监听器 ==========
+    cocos2d::EventListenerCustom* _progressListener = nullptr;
+    cocos2d::EventListenerCustom* _starListener = nullptr;
+
+    // ========== 回调函数 ==========
+    void onProgressUpdated(cocos2d::EventCustom* event);
+    void onStarAwarded(cocos2d::EventCustom* event);
 };
 
 #endif // __BATTLE_SCENE_H__
