@@ -14,7 +14,7 @@
 #include "Util/GridMapUtils.h"
 #include "Util/RandomBattleMapGenerator.h"
 #include "Component/DefenseBuildingAnimation.h"
-
+#include <iostream>
 
 USING_NS_CC;
 
@@ -448,44 +448,52 @@ void BattleScene::onTouchEnded(cocos2d::Touch* touch, cocos2d::Event* event) {
         CCLOG("BattleScene: Invalid grid position, ignoring");
         return;
     }
-    
-    // 4. 检查点击位置是否有建筑或城墙（包括已摧毁的）
-    // 注意：不能用 getBuildingAtGrid，因为它会跳过已摧毁建筑
+
+    // 4. 检查点击位置是否在建筑及其周围一圈的禁区内
     auto dataManager = VillageDataManager::getInstance();
     const auto& buildings = dataManager->getAllBuildings();
-    bool isOnBuilding = false;
-    
+    bool isInRestrictedZone = false;
+
     for (const auto& building : buildings) {
         // 跳过放置中的建筑
         if (building.state == BuildingInstance::State::PLACING) {
             continue;
         }
-        
+
         // ✅ 跳过陷阱（type 400-499）- 兵种可以部署在陷阱上
         if (building.type >= 400 && building.type < 500) {
             continue;
         }
-        
+
         // 获取建筑配置以确定尺寸
         auto config = BuildingConfig::getInstance()->getConfig(building.type);
         if (!config) continue;
-        
-        // 检查点击格子是否在建筑范围内
+
+        // 建筑的原始范围
         int bx = building.gridX;
         int by = building.gridY;
         int bw = config->gridWidth;
         int bh = config->gridHeight;
-        
-        if (gx >= bx && gx < bx + bw && gy >= by && gy < by + bh) {
-            isOnBuilding = true;
-            CCLOG("BattleScene: Cannot deploy on building (ID=%d, type=%d, destroyed=%s) at grid(%d, %d)", 
-                  building.id, building.type, building.isDestroyed ? "true" : "false", gx, gy);
+
+        // ✅ 关键修改：扩展检测范围到建筑周围一圈（8个相邻格子）
+        // 禁区范围：[bx-1, bx+bw] x [by-1, by+bh]
+        int minX = std::max(0, bx - 1);           // 防止越界
+        int maxX = std::min(49, bx + bw);         // 防止越界（假设地图是50x50）
+        int minY = std::max(0, by - 1);           // 防止越界
+        int maxY = std::min(49, by + bh);         // 防止越界
+
+        if (gx >= minX && gx <= maxX && gy >= minY && gy <= maxY) {
+            isInRestrictedZone = true;
+            CCLOG("BattleScene: Cannot deploy near building (ID=%d, type=%d) at grid(%d, %d). Building area: [%d-%d, %d-%d], Restricted zone: [%d-%d, %d-%d]",
+                  building.id, building.type, gx, gy,
+                  bx, bx + bw - 1, by, by + bh - 1,
+                  minX, maxX, minY, maxY);
             break;
         }
     }
-    
-    if (isOnBuilding) {
-        showPlacementTip("无法在建筑上部署兵种", touchPos);
+
+    if (isInRestrictedZone) {
+        showPlacementTip("无法在建筑附近部署兵种", touchPos);
         return;
     }
 
@@ -496,7 +504,7 @@ void BattleScene::onTouchEnded(cocos2d::Touch* touch, cocos2d::Event* event) {
         return;
     }
 
-    // 4. 生成士兵并启动 AI
+    // 5. 生成士兵并启动 AI
     auto troopLayer = dynamic_cast<BattleTroopLayer*>(_mapLayer->getChildByTag(999));
     if (troopLayer) {
         // 兵种ID映射
@@ -527,9 +535,9 @@ void BattleScene::onTouchEnded(cocos2d::Touch* touch, cocos2d::Event* event) {
             // 【新增】更新兵种数量统计
             _remainingTroops[troopId]--;
             _usedTroops[troopId]++;
-            CCLOG("BattleScene: Troop %d deployed. Remaining: %d, Used: %d", 
+            CCLOG("BattleScene: Troop %d deployed. Remaining: %d, Used: %d",
                   troopId, _remainingTroops[troopId], _usedTroops[troopId]);
-            
+
             // 【新增】更新 HUD 显示
             if (_hudLayer) {
                 _hudLayer->updateTroopCount(troopId, _remainingTroops[troopId]);
