@@ -9,10 +9,12 @@
 #include "Manager/VillageDataManager.h"
 #include "Manager/BuildingManager.h"
 #include "Model/BuildingConfig.h"
+#include "UI/BattleProgressUI.h"
 #include "Util/FindPathUtil.h"
 #include "Util/GridMapUtils.h"
 #include "Util/RandomBattleMapGenerator.h"
 #include "Component/DefenseBuildingAnimation.h"
+
 
 USING_NS_CC;
 
@@ -91,6 +93,29 @@ bool BattleScene::init() {
     // 【新增】设置建筑摧毁事件监听
     setupBuildingDestroyedListener();
 
+    // ✅ 初始化战斗进度追踪
+    BattleProcessController::getInstance()->initDestructionTracking();
+
+    // ✅ 新增：创建战斗进度UI（替代旧的顶部星星UI）
+    _battleProgressUI = BattleProgressUI::create();
+    if (_battleProgressUI) {
+        this->addChild(_battleProgressUI, 200);  // 高ZOrder确保在最上层
+        CCLOG("BattleScene: Battle progress UI initialized");
+    }
+
+    // ✅ 注册事件监听
+    auto dispatcher = Director::getInstance()->getEventDispatcher();
+
+    _progressListener = dispatcher->addCustomEventListener(
+        "EVENT_DESTRUCTION_PROGRESS_UPDATED",
+        CC_CALLBACK_1(BattleScene::onProgressUpdated, this)
+    );
+
+    _starListener = dispatcher->addCustomEventListener(
+        "EVENT_STAR_AWARDED",
+        CC_CALLBACK_1(BattleScene::onStarAwarded, this)
+    );
+
     return true;
 }
 
@@ -126,11 +151,27 @@ void BattleScene::switchState(BattleState newState) {
         case BattleState::PREPARE:
             _stateTimer = 30.0f;
             break;
+            
         case BattleState::FIGHTING:
             _stateTimer = 180.0f;
+            
+            // ✅ 进入战斗状态时显示进度UI
+            if (_battleProgressUI) {
+                _battleProgressUI->show();
+                CCLOG("BattleScene: FIGHTING state started, showing progress UI");
+            }
             break;
+            
         case BattleState::RESULT:
             _stateTimer = 0;
+            
+            // ✅ 播放进度UI的结算动画
+            if (_battleProgressUI) {
+                _battleProgressUI->playResultAnimation([this]() {
+                    CCLOG("BattleScene: Progress UI animation completed");
+                });
+            }
+            
             if (!_resultLayer) {
                 // 【修改】传递消耗数据和掠夺资源给结算页面
                 _resultLayer = BattleResultLayer::createWithData(
@@ -224,7 +265,7 @@ void BattleScene::onReturnHomeClicked() {
     
     // 【新增】将掠夺的资源添加到玩家账户
     if (_lootedGold > 0) {
-      dataManager->addGold(_lootedGold);
+        dataManager->addGold(_lootedGold);
         CCLOG("BattleScene: Added %d gold to player", _lootedGold);
     }
     if (_lootedElixir > 0) {
@@ -242,6 +283,12 @@ void BattleScene::onReturnHomeClicked() {
     if (_buildingDestroyedListener) {
         _eventDispatcher->removeEventListener(_buildingDestroyedListener);
         _buildingDestroyedListener = nullptr;
+    }
+    
+    // ✅ 新增：重置战斗进度UI
+    if (_battleProgressUI) {
+        _battleProgressUI->reset();
+        CCLOG("BattleScene: Battle progress UI reset");
     }
   
     auto homeScene = VillageScene::createScene();
@@ -327,16 +374,6 @@ void BattleScene::cleanupTouchListener() {
         _touchListener = nullptr;
         CCLOG("BattleScene: Touch listener cleaned up");
     }
-}
-
-void BattleScene::onExit() {
-    CCLOG("BattleScene::onExit - Cleaning up resources");
-
-    // 清理触摸监听器
-    cleanupTouchListener();
-
-    // 调用父类的 onExit
-    Scene::onExit();
 }
 
 bool BattleScene::onTouchBegan(cocos2d::Touch* touch, cocos2d::Event* event) {
@@ -694,4 +731,56 @@ void BattleScene::checkAllBuildingsDestroyed() {
             onEndBattleClicked();
         }, 1.5f, "auto_end_battle");
     }
+}
+
+// ========== 进度更新回调 ==========
+void BattleScene::onProgressUpdated(EventCustom* event) {
+    auto data = static_cast<DestructionProgressEventData*>(event->getUserData());
+    if (!data) return;
+
+    // ✅ 更新战斗进度UI
+    if (_battleProgressUI) {
+        _battleProgressUI->updateProgress(data->progress);
+    }
+
+    CCLOG("BattleScene: Progress updated to %.1f%%, Stars: %d",
+          data->progress, data->stars);
+}
+
+// ========== 星星获得回调 ==========
+void BattleScene::onStarAwarded(EventCustom* event) {
+    auto data = static_cast<StarAwardedEventData*>(event->getUserData());
+    if (!data) return;
+
+    int starIndex = data->starIndex;
+
+    CCLOG("BattleScene: Star #%d awarded! Reason: %s",
+          starIndex + 1, data->reason.c_str());
+
+    // ✅ 更新战斗进度UI的星星
+    if (_battleProgressUI) {
+        _battleProgressUI->updateStars(starIndex + 1);
+    }
+}
+
+// ========== 清理资源（合并版本）==========
+void BattleScene::onExit() {
+    CCLOG("BattleScene::onExit - Cleaning up resources");
+
+    // 1. 清理触摸监听器
+    cleanupTouchListener();
+
+    // 2. 移除进度和星星事件监听
+    if (_progressListener) {
+        Director::getInstance()->getEventDispatcher()->removeEventListener(_progressListener);
+        _progressListener = nullptr;
+    }
+
+    if (_starListener) {
+        Director::getInstance()->getEventDispatcher()->removeEventListener(_starListener);
+        _starListener = nullptr;
+    }
+
+    // 3. 调用父类的 onExit
+    Scene::onExit();
 }

@@ -85,6 +85,7 @@ list(APPEND GAME_SOURCE
      Classes/Sprite/BattleUnitSprite.cpp
      Classes/UI/PlacementConfirmUI.cpp
      Classes/UI/ResourceCollectionUI.cpp
+     Classes/UI/BattleProgressUI.cpp
      Classes/Util/GridMapUtils.cpp
      Classes/Util/FindPathUtil.cpp
      Classes/Util/FindPathUtil.cpp
@@ -131,6 +132,7 @@ list(APPEND GAME_HEADER
      Classes/Sprite/BattleUnitSprite.h
      Classes/UI/PlacementConfirmUI.h
      Classes/UI/ResourceCollectionUI.h
+     Classes/UI/BattleProgressUI.cpp
      Classes/Util/GridMapUtils.h
      Classes/Util/FindPathUtil.h
      Classes/Util/FindPathUtil.h
