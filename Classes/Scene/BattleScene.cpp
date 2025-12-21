@@ -22,6 +22,8 @@ Scene* BattleScene::createScene() {
     return BattleScene::create();
 }
 
+// Scene/BattleScene.cpp
+
 bool BattleScene::init() {
     if (!Scene::init()) return false;
 
@@ -38,79 +40,69 @@ bool BattleScene::init() {
     if (_mapLayer) {
         this->addChild(_mapLayer, 0);
 
-        // 【新增】把 TroopLayer 加为 MapLayer 的子节点，Tag 设为 999
         auto troopLayer = BattleTroopLayer::create();
         troopLayer->setTag(999);
         _mapLayer->addChild(troopLayer, 10);
     }
 
-    // 2. UI 层 (Z=10)
+    // 2. UI 层
     _hudLayer = BattleHUDLayer::create();
     if (_hudLayer) this->addChild(_hudLayer, 10);
 
-    // 3. 初始化云层遮罩 (Z=100, 放在最高层以遮挡一切)
+    // 3. 云层遮罩
     _cloudSprite = Sprite::create("UI/battle/battle-prepare/cloud.jpg");
     if (_cloudSprite) {
         auto visibleSize = Director::getInstance()->getVisibleSize();
         _cloudSprite->setPosition(visibleSize.width / 2, visibleSize.height / 2);
-
         float scaleX = visibleSize.width / _cloudSprite->getContentSize().width;
         float scaleY = visibleSize.height / _cloudSprite->getContentSize().height;
         float finalScale = std::max(scaleX, scaleY) * 1.1f;
         _cloudSprite->setScale(finalScale);
-
         _cloudSprite->setOpacity(255);
         _cloudSprite->setVisible(true);
-
         this->addChild(_cloudSprite, 100);
     }
 
-    // 4. 【关键修复】先切换到战斗模式，再加载敌人数据
+    // 4. 切换到战斗模式
     VillageDataManager::getInstance()->setInBattleMode(true);
-    CCLOG("BattleScene: Entered battle mode, data source switched to battle map");
+    CCLOG("BattleScene: Entered battle mode");
 
-    // 加载敌人数据（这会触发 reloadMap 并输出正确的建筑布局）
-    loadEnemyVillage();
+    // ✅ 关键修复：不在 init() 中加载地图，延迟到 onEnter()
+    // 这样可以确保 _replayData 已经被正确设置
 
-    // ========== 更新寻路地图 ==========(
+    // 更新寻路地图
     FindPathUtil::getInstance()->updatePathfindingMap();
-    CCLOG("BattleScene: Pathfinding map updated for battle");
-    // ===========================================
 
     switchState(BattleState::PREPARE);
 
-    // 5. 启动时执行一次"进入动画"
+    // 5. 云层动画
     float randomStartDelay = cocos2d::RandomHelper::random_real(0.5f, 1.0f);
     this->scheduleOnce([this](float) {
         performCloudTransition(nullptr, true);
+
+        if (_isReplayMode) {
+            this->scheduleOnce([this](float) {
+                startReplay();
+            }, 0.5f, "start_replay");
+        }
     }, randomStartDelay, "start_anim_delay");
 
     this->scheduleUpdate();
 
-    // 【新增】最后开启触摸监听
-    setupTouchListener();
-    
-    // 【新增】设置建筑摧毁事件监听
-    setupBuildingDestroyedListener();
-
-    // ✅ 初始化战斗进度追踪
+    // 初始化战斗进度
     BattleProcessController::getInstance()->initDestructionTracking();
 
-    // ✅ 新增：创建战斗进度UI（替代旧的顶部星星UI）
     _battleProgressUI = BattleProgressUI::create();
     if (_battleProgressUI) {
-        this->addChild(_battleProgressUI, 200);  // 高ZOrder确保在最上层
-        CCLOG("BattleScene: Battle progress UI initialized");
+        this->addChild(_battleProgressUI, 200);
     }
 
-    // ✅ 注册事件监听
+    // 注册事件监听
     auto dispatcher = Director::getInstance()->getEventDispatcher();
-
     _progressListener = dispatcher->addCustomEventListener(
         "EVENT_DESTRUCTION_PROGRESS_UPDATED",
         CC_CALLBACK_1(BattleScene::onProgressUpdated, this)
     );
-
     _starListener = dispatcher->addCustomEventListener(
         "EVENT_STAR_AWARDED",
         CC_CALLBACK_1(BattleScene::onStarAwarded, this)
@@ -118,6 +110,30 @@ bool BattleScene::init() {
 
     return true;
 }
+
+// ✅ 新增：在 onEnter 中完成初始化
+void BattleScene::onEnter() {
+    Scene::onEnter();
+
+    // 只执行一次
+    if (_isInitialized) return;
+    _isInitialized = true;
+
+    CCLOG("BattleScene::onEnter - Completing initialization");
+
+    // 现在 _replayData 已经被正确设置了
+    if (_isReplayMode) {
+        CCLOG("BattleScene: Initializing in REPLAY mode");
+        loadReplayMap();
+    } else {
+        CCLOG("BattleScene: Initializing in NORMAL mode");
+        loadEnemyVillage();
+        setupTouchListener();
+        setupBuildingDestroyedListener();
+        startRecording();
+    }
+}
+
 
 void BattleScene::update(float dt) {
     if (_currentState == BattleState::PREPARE || _currentState == BattleState::FIGHTING) {
@@ -144,6 +160,10 @@ void BattleScene::update(float dt) {
             }
         }
         // =========================================
+    }
+    // ✅ 新增：回放播放逻辑
+    if (_isReplayMode && _currentState == BattleState::FIGHTING) {
+        updateReplay(dt);
     }
 }
 
@@ -238,63 +258,107 @@ void BattleScene::onNextOpponentClicked() {
     }, false);
 }
 
+// ========== 修复 2：回放结束时不生成新回放 ==========
+
 void BattleScene::onEndBattleClicked() {
     CCLOG("BattleScene: Ending battle, resetting building states");
-    
-    // 【新增】从村庄数据中扣除消耗的兵种
-    auto dataManager = VillageDataManager::getInstance();
-    for (const auto& pair : _usedTroops) {
-        int troopId = pair.first;
-        int usedCount = pair.second;
-        if (usedCount > 0) {
-            dataManager->removeTroop(troopId, usedCount);
-            CCLOG("BattleScene: Deducted %d of troop %d from village data", usedCount, troopId);
+
+    // ✅ 修复：只在正常模式下停止录制
+    if (_isRecording && !_isReplayMode) {
+        stopRecording();
+        CCLOG("BattleScene: Recording stopped (normal mode)");
+    }
+
+    // ✅ 回放模式下：先设置真实的战斗结果数据
+    if (_isReplayMode) {
+        CCLOG("BattleScene: Replay mode - setting actual battle results before showing result layer");
+
+        // ✅ 关键：从 _replayData 复制真实数据
+        _lootedGold = _replayData.lootedGold;
+        _lootedElixir = _replayData.lootedElixir;
+        _usedTroops = _replayData.usedTroops;
+        _troopLevels = _replayData.troopLevels;
+
+        // ✅ 更新战斗进度UI
+        if (_battleProgressUI) {
+            _battleProgressUI->updateProgress((float)_replayData.destructionPercentage);
+            _battleProgressUI->updateStars(_replayData.finalStars);
+        }
+
+        CCLOG("BattleScene: Applied replay results - Stars: %d, Destruction: %d%%, Gold: %d, Elixir: %d",
+              _replayData.finalStars, _replayData.destructionPercentage,
+              _replayData.lootedGold, _replayData.lootedElixir);
+    }
+    // ✅ 正常模式下：扣除兵种
+    else {
+        // 从村庄数据中扣除消耗的兵种
+        auto dataManager = VillageDataManager::getInstance();
+        for (const auto& pair : _usedTroops) {
+            int troopId = pair.first;
+            int usedCount = pair.second;
+            if (usedCount > 0) {
+                dataManager->removeTroop(troopId, usedCount);
+                CCLOG("BattleScene: Deducted %d of troop %d from village data", usedCount, troopId);
+            }
         }
     }
-    
+
     // 退出战斗前恢复所有建筑状态
     BattleProcessController::getInstance()->resetBattleState();
-    
+
+    // ✅ 现在 _usedTroops 等数据已经是真实数据了，可以安全地创建结算页面
     switchState(BattleState::RESULT);
 }
 
+// ========== 修复 4：回放模式下"回营"按钮应该返回回放列表 ==========
+
 void BattleScene::onReturnHomeClicked() {
     CCLOG("BattleScene: Returning home, resetting building states");
-    
-    // ========== 关键修复：清除资源回调，防止回调访问即将销毁的HUDLayer ==========
+
+    // ✅ 修复：只在正常模式下停止录制
+    if (_isRecording && !_isReplayMode) {  // ✅ 添加 !_isReplayMode 判断
+        stopRecording();
+    }
+
+    // ========== 关键修复：清除资源回调 ==========
     auto dataManager = VillageDataManager::getInstance();
-    dataManager->setResourceCallback(nullptr);  // 清除旧的回调
+    dataManager->setResourceCallback(nullptr);
     CCLOG("BattleScene: Resource callback cleared before adding loot");
-    // ===========================================================================
-    
-    // 【新增】将掠夺的资源添加到玩家账户
-    if (_lootedGold > 0) {
-        dataManager->addGold(_lootedGold);
-        CCLOG("BattleScene: Added %d gold to player", _lootedGold);
+    // =============================================
+
+    // ✅ 只在正常模式下添加掠夺资源
+    if (!_isReplayMode) {
+        // 【新增】将掠夺的资源添加到玩家账户
+        if (_lootedGold > 0) {
+            dataManager->addGold(_lootedGold);
+            CCLOG("BattleScene: Added %d gold to player", _lootedGold);
+        }
+        if (_lootedElixir > 0) {
+            dataManager->addElixir(_lootedElixir);
+            CCLOG("BattleScene: Added %d elixir to player", _lootedElixir);
+        }
+    } else {
+        CCLOG("BattleScene: Replay mode - skipping loot collection");
     }
-    if (_lootedElixir > 0) {
-        dataManager->addElixir(_lootedElixir);
-        CCLOG("BattleScene: Added %d elixir to player", _lootedElixir);
-    }
-    
+
     // 【关键修复】退出战斗模式，切换回村庄数据源
     dataManager->setInBattleMode(false);
-    
+
     // 退出战斗前恢复所有建筑状态
     BattleProcessController::getInstance()->resetBattleState();
-    
+
     // 【新增】清理建筑摧毁事件监听器
     if (_buildingDestroyedListener) {
         _eventDispatcher->removeEventListener(_buildingDestroyedListener);
         _buildingDestroyedListener = nullptr;
     }
-    
+
     // ✅ 新增：重置战斗进度UI
     if (_battleProgressUI) {
         _battleProgressUI->reset();
         CCLOG("BattleScene: Battle progress UI reset");
     }
-  
+
     auto homeScene = VillageScene::createScene();
     Director::getInstance()->replaceScene(TransitionFade::create(0.5f, homeScene));
 }
@@ -529,6 +593,8 @@ void BattleScene::onTouchEnded(cocos2d::Touch* touch, cocos2d::Event* event) {
         CCLOG("BattleScene: Spawning %s (ID %d) at grid(%d, %d)", name.c_str(), troopId, gx, gy);
         auto unit = troopLayer->spawnUnit(name, gx, gy);
         if (unit) {
+            // 记录兵种部署事件
+            recordTroopDeployment(troopId, gx, gy);
             auto controller = BattleProcessController::getInstance();
             controller->startUnitAI(unit, troopLayer);
 
@@ -800,4 +866,213 @@ void BattleScene::onExit() {
 
     // 3. 调用父类的 onExit
     Scene::onExit();
+}
+
+// ========== 录制系统实现 ==========
+
+void BattleScene::startRecording() {
+    _isRecording = true;
+    _battleStartTime = Director::getInstance()->getTotalFrames() / 60.0f;
+
+    // 清空数据
+    _replayData = BattleReplayData();
+    _replayData.troopEvents.clear();
+
+    // 保存初始地图状态
+    auto dataManager = VillageDataManager::getInstance();
+    _replayData.initialBuildings = dataManager->getAllBuildings();
+    _replayData.battleMapSeed = 0;  // TODO: 如果有地图种子系统，在这里保存
+
+    // 保存对手名称
+    _replayData.defenderName = "AI Village";  // 可以从 VillageDataManager 获取
+    _replayData.timestamp = time(nullptr);
+
+    CCLOG("BattleScene: Recording started at time %.2f", _battleStartTime);
+}
+
+void BattleScene::recordTroopDeployment(int troopId, int gridX, int gridY) {
+    if (!_isRecording) return;
+
+    float currentTime = Director::getInstance()->getTotalFrames() / 60.0f;
+    float timestamp = currentTime - _battleStartTime;
+
+    TroopDeployEvent event;
+    event.timestamp = timestamp;
+    event.troopId = troopId;
+    event.gridX = gridX;
+    event.gridY = gridY;
+
+    _replayData.troopEvents.push_back(event);
+
+    CCLOG("BattleScene: Recorded troop %d at grid(%d, %d) @ %.2fs",
+          troopId, gridX, gridY, timestamp);
+}
+
+void BattleScene::stopRecording() {
+    if (!_isRecording) return;
+
+    _isRecording = false;
+
+    // 保存战斗结果
+    auto controller = BattleProcessController::getInstance();
+    _replayData.finalStars = controller->getCurrentStars();
+    _replayData.destructionPercentage = (int)controller->getDestructionProgress();
+    _replayData.lootedGold = _lootedGold;
+    _replayData.lootedElixir = _lootedElixir;
+    _replayData.usedTroops = _usedTroops;
+    _replayData.troopLevels = _troopLevels;
+    _replayData.battleDuration = Director::getInstance()->getTotalFrames() / 60.0f - _battleStartTime;
+
+    // 保存到本地
+    ReplayManager::getInstance()->saveReplay(_replayData);
+
+    CCLOG("BattleScene: Recording stopped, saved replay with %zu events",
+          _replayData.troopEvents.size());
+}
+
+BattleScene* BattleScene::createReplayScene(const BattleReplayData& replayData) {
+    auto scene = BattleScene::create();
+    scene->_isReplayMode = true;
+    scene->_replayData = replayData;
+    return scene;
+}
+
+void BattleScene::startReplay() {
+    if (!_isReplayMode) return;
+
+    CCLOG("BattleScene: Starting replay playback with %zu events",
+          _replayData.troopEvents.size());
+
+    // ✅ 隐藏 HUD 中的兵种选择栏（回放模式下不允许手动部署）
+    if (_hudLayer) {
+        _hudLayer->hideReplayControls();  // 需要在 BattleHUDLayer 中添加此方法
+        CCLOG("BattleScene: HUD controls hidden for replay mode");
+    }
+
+    _replayStartTime = Director::getInstance()->getTotalFrames() / 60.0f;
+    _currentEventIndex = 0;
+
+    // 自动进入战斗状态
+    switchState(BattleState::FIGHTING);
+}
+
+// ========== 修复：回放结束逻辑 ==========
+
+void BattleScene::updateReplay(float dt) {
+    float currentTime = Director::getInstance()->getTotalFrames() / 60.0f;
+    float elapsedTime = currentTime - _replayStartTime;
+
+    // 检查是否有兵种需要部署
+    checkAndDeployNextTroop(elapsedTime);
+
+    // ✅ 关键修复：当所有事件播放完毕后，立即准备结算（不等待整个战斗时长）
+    static bool isEndingScheduled = false;  // 防止重复调度
+
+    if (_currentEventIndex >= _replayData.troopEvents.size() && !isEndingScheduled) {
+        isEndingScheduled = true;
+        CCLOG("BattleScene: All replay events deployed, preparing to show results...");
+
+        // ✅ 缩短延迟到 1 秒（给玩家时间看到最后的兵种部署）
+        this->scheduleOnce([this](float) {
+            CCLOG("BattleScene: Showing actual battle results from replay data");
+
+            // ✅ 关键：先停止战斗，重置建筑状态，避免继续战斗
+            // 停止所有兵种AI
+            auto troopLayer = dynamic_cast<BattleTroopLayer*>(_mapLayer->getChildByTag(999));
+            if (troopLayer) {
+                troopLayer->removeAllChildren();  // 清空所有兵种
+            }
+
+            // 重置战斗状态
+            BattleProcessController::getInstance()->resetBattleState();
+
+            // ✅ 使用录制时保存的真实数据
+            if (_battleProgressUI) {
+                _battleProgressUI->updateProgress((float)_replayData.destructionPercentage);
+                _battleProgressUI->updateStars(_replayData.finalStars);
+            }
+
+            // ✅ 设置真实的战斗结果数据
+            _lootedGold = _replayData.lootedGold;
+            _lootedElixir = _replayData.lootedElixir;
+            _usedTroops = _replayData.usedTroops;
+            _troopLevels = _replayData.troopLevels;
+
+            CCLOG("BattleScene: Replay results - Stars: %d, Destruction: %d%%, Gold: %d, Elixir: %d",
+                  _replayData.finalStars, _replayData.destructionPercentage,
+                  _replayData.lootedGold, _replayData.lootedElixir);
+
+            // ✅ 立即进入结算状态
+            switchState(BattleState::RESULT);
+
+        }, 1.0f, "show_replay_result");  // ✅ 从 2.0f 改为 1.0f
+    }
+}
+
+void BattleScene::checkAndDeployNextTroop(float elapsedTime) {
+    while (_currentEventIndex < _replayData.troopEvents.size()) {
+        const auto& event = _replayData.troopEvents[_currentEventIndex];
+
+        // 如果时间未到，跳出循环
+        if (elapsedTime < event.timestamp) {
+            break;
+        }
+
+        // 自动部署兵种
+        auto troopLayer = dynamic_cast<BattleTroopLayer*>(_mapLayer->getChildByTag(999));
+        if (troopLayer) {
+            // 兵种ID映射（复用正常模式的映射）
+            std::string name = "Barbarian";
+            if (event.troopId == 1001) name = "Barbarian";
+            else if (event.troopId == 1002) name = "Archer";
+            else if (event.troopId == 1003) name = "Goblin";
+            else if (event.troopId == 1004) name = "Giant";
+            else if (event.troopId == 1005) name = "Wall_Breaker";
+            else if (event.troopId == 1006) name = "Balloon";
+
+            auto unit = troopLayer->spawnUnit(name, event.gridX, event.gridY);
+            if (unit) {
+                BattleProcessController::getInstance()->startUnitAI(unit, troopLayer);
+                CCLOG("BattleScene: [REPLAY] Auto-deployed %s at grid(%d, %d)",
+                      name.c_str(), event.gridX, event.gridY);
+            }
+        }
+
+        _currentEventIndex++;
+    }
+}
+
+// ========== ✅ 新增：加载回放地图 ==========
+void BattleScene::loadReplayMap() {
+    if (!_mapLayer) return;
+
+    CCLOG("BattleScene: Loading replay map with %zu buildings",
+          _replayData.initialBuildings.size());
+
+    // 将回放的建筑数据加载到 VillageDataManager
+    auto dataManager = VillageDataManager::getInstance();
+
+    // 清空当前战斗地图数据
+    dataManager->clearBattleMap();
+
+    // 加载回放的建筑
+    for (const auto& building : _replayData.initialBuildings) {
+        dataManager->addBattleBuildingFromReplay(building);
+    }
+
+    // 刷新地图层显示
+    _mapLayer->reloadMapFromData();
+
+    // 初始化资源掠夺数据（从回放数据读取）
+    _lootedGold = 0;
+    _lootedElixir = 0;
+    _totalLootableGold = _replayData.lootedGold;  // 使用回放中的最终掠夺量作为总量
+    _totalLootableElixir = _replayData.lootedElixir;
+
+    // 通知 HUD 更新资源显示
+    if (_hudLayer) {
+        _hudLayer->initLootDisplay(_totalLootableGold, _totalLootableElixir);
+    }
+
+    CCLOG("BattleScene: Replay map loaded successfully");
 }

@@ -1212,3 +1212,23 @@ void VillageDataManager::updateBattleGridOccupancy() {
   CCLOG("VillageDataManager: Battle grid occupancy updated");
 }
 
+
+void VillageDataManager::clearBattleMap() {
+    if (_inBattleMode) {
+        _battleMapData.buildings.clear();
+        CCLOG("VillageDataManager: Battle map cleared (%zu buildings removed)",
+              _battleMapData.buildings.size());
+    } else {
+        CCLOG("VillageDataManager: WARNING - clearBattleMap called but not in battle mode");
+    }
+}
+
+void VillageDataManager::addBattleBuildingFromReplay(const BuildingInstance& building) {
+    if (_inBattleMode) {
+        _battleMapData.buildings.push_back(building);
+        CCLOG("VillageDataManager: Added replay building ID=%d, type=%d to battle map (total: %zu)",
+              building.id, building.type, _battleMapData.buildings.size());
+    } else {
+        CCLOG("VillageDataManager: WARNING - addBattleBuildingFromReplay called but not in battle mode");
+    }
+}

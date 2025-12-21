@@ -193,6 +193,9 @@ public:
   bool isInBattleMode() const;
   void updateBattleGridOccupancy();  // 更新战斗地图的网格占用
 
+  // 回放相关方法
+  void clearBattleMap();  // 清空战斗地图数据
+  void addBattleBuildingFromReplay(const BuildingInstance& building);
 private:
   VillageDataManager();
   ~VillageDataManager();

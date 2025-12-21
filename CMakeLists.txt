@@ -60,6 +60,7 @@ list(APPEND GAME_SOURCE
      Classes/Layer/BattleHUDLayer.cpp
      Classes/Layer/BattleResultLayer.cpp
      Classes/Layer/DebugLayer.cpp
+     Classes/Layer/ReplayListLayer.cpp
      Classes/Component/ConstructionAnimation.cpp
      Classes/Component/DefenseBuildingAnimation.cpp
      Classes/Component/HealthBarComponent.cpp
@@ -74,11 +75,13 @@ list(APPEND GAME_SOURCE
      Classes/Manager/BuildingManager.cpp
      Classes/Manager/BuildingSpeedupManager.cpp
      Classes/Manager/BuildingUpgradeManager.cpp
+     Classes/Manager/ReplayManager.cpp
      Classes/Manager/VillageDataManager.cpp
      Classes/Model/BuildingRequirements.cpp
      Classes/Model/BuildingConfig.cpp
      Classes/Model/TroopConfig.cpp
      Classes/Model/TroopUpgradeConfig.cpp
+     Classes/Model/Replaydata.cpp
      Classes/Layer/LaboratoryLayer.cpp
      Classes/Util/GridMapUtils.cpp
      Classes/Sprite/BuildingSprite.cpp
@@ -106,6 +109,7 @@ list(APPEND GAME_HEADER
      Classes/Layer/BattleHUDLayer.h
      Classes/Layer/BattleResultLayer.h
      Classes/Layer/DebugLayer.h
+     Classes/Layer/ReplayListLayer.h
      Classes/Component/ConstructionAnimation.h
      Classes/Component/DefenseBuildingAnimation.h
      Classes/Component/HealthBarComponent.h
@@ -121,11 +125,13 @@ list(APPEND GAME_HEADER
      Classes/Manager/BuildingUpgradeManager.h
      Classes/Manager/BuildingManager.h
      Classes/Manager/VillageDataManager.h
+     Classes/Manager/ReplayManager.h
      Classes/Model/VillageData.h
      Classes/Model/BuildingRequirements.h
      Classes/Model/BuildingConfig.h
      Classes/Model/TroopConfig.h
      Classes/Model/TroopUpgradeConfig.h
+     Classes/Model/Replaydata.h
      Classes/Layer/LaboratoryLayer.h
      Classes/Util/GridMapUtils.h
      Classes/Sprite/BuildingSprite.h

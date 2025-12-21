@@ -1,6 +1,8 @@
 ﻿#ifndef __BATTLE_SCENE_H__
 #define __BATTLE_SCENE_H__
 
+#include "Model/ReplayData.h"
+#include "Manager/ReplayManager.h"
 #include "cocos2d.h"
 #include <functional>
 #include <map>
@@ -55,6 +57,8 @@ public:
     int getTotalLootableGold() const { return _totalLootableGold; }
     int getTotalLootableElixir() const { return _totalLootableElixir; }
 
+    // 创建回放场景
+    static BattleScene* createReplayScene(const BattleReplayData& replayData);
 private:
     BattleState _currentState = BattleState::PREPARE;
     float _stateTimer = 0.0f;
@@ -115,6 +119,29 @@ private:
     // ========== 回调函数 ==========
     void onProgressUpdated(cocos2d::EventCustom* event);
     void onStarAwarded(cocos2d::EventCustom* event);
+
+    // ========== ✅ 回放录制系统 ==========
+    bool _isReplayMode = false;              // 是否为回放模式
+    bool _isInitialized = false;             // 标记是否完成初始化
+    bool _isRecording = false;               // 是否正在录制
+    float _battleStartTime = 0.0f;           // 战斗开始时间
+    BattleReplayData _replayData;            // 回放数据
+
+    // 录制相关方法
+    void startRecording();
+    void stopRecording();
+    void recordTroopDeployment(int troopId, int gridX, int gridY);
+
+    // ========== ✅ 回放播放系统 ==========
+    size_t _currentEventIndex = 0;           // 当前播放到的事件索引
+    float _replayStartTime = 0.0f;           // 回放开始时间
+
+    void startReplay();
+    void updateReplay(float dt);
+    void checkAndDeployNextTroop(float elapsedTime);
+
+    void loadReplayMap();  // 加载回放地图
+    virtual void onEnter() override;
 };
 
 #endif // __BATTLE_SCENE_H__

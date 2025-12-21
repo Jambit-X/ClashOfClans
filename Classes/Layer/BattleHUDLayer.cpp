@@ -321,3 +321,40 @@ void BattleHUDLayer::updateLootDisplay(int lootedGold, int lootedElixir,
         _elixirLabel->setString(StringUtils::format("%d/%d", lootedElixir, totalElixir));
     }
 }
+
+void BattleHUDLayer::hideReplayControls() {
+    // ✅ 修复：隐藏兵种栏容器（正确的变量名）
+    if (_troopBarNode) {
+        _troopBarNode->setVisible(false);
+        CCLOG("BattleHUDLayer: Troop bar hidden");
+    }
+
+    // ✅ 修复：隐藏"下一个"按钮（正确的变量名）
+    if (_btnNext) {
+        _btnNext->setVisible(false);
+        CCLOG("BattleHUDLayer: Next button hidden");
+    }
+
+    // ✅ 修复：隐藏"回营"按钮（正确的变量名）
+    if (_btnReturn) {
+        _btnReturn->setVisible(false);
+        CCLOG("BattleHUDLayer: Return button hidden");
+    }
+
+    // ✅ 修复：隐藏"结束战斗"按钮（正确的变量名）
+    if (_btnEnd) {
+        _btnEnd->setVisible(false);
+        CCLOG("BattleHUDLayer: End battle button hidden");
+    }
+
+    // ✅ 可选：显示"回放中"标识
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+    auto replayLabel = Label::createWithTTF("回放中...", "fonts/simhei.ttf", 32);
+    replayLabel->setPosition(Vec2(visibleSize.width / 2, visibleSize.height - 50));
+    replayLabel->setColor(Color3B::YELLOW);
+    replayLabel->enableOutline(Color4B::BLACK, 2);
+    replayLabel->setTag(9999);  // 用于后续查找和移除
+    this->addChild(replayLabel, 100);
+
+    CCLOG("BattleHUDLayer: Replay controls hidden successfully");
+}
