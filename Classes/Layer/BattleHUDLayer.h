@@ -31,7 +31,7 @@ public:
     // 【新增】资源显示接口
     void initLootDisplay(int totalGold, int totalElixir);
     void updateLootDisplay(int lootedGold, int lootedElixir, int totalGold, int totalElixir);
-
+    void hideReplayControls();  // 隐藏回放模式下的UI控件
 private:
     // UI 元素
     cocos2d::Label* _timerLabel;

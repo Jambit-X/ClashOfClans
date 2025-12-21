@@ -184,3 +184,23 @@ void BattleMapLayer::update(float dt) {
         _buildingManager->update(dt);
     }
 }
+
+void BattleMapLayer::reloadMapFromData() {
+    CCLOG("BattleMapLayer: Reloading map from existing data (replay mode)...");
+
+    // 清理旧的 BuildingManager
+    if (_buildingManager) {
+        delete _buildingManager;
+        _buildingManager = nullptr;
+    }
+
+    // 创建新的 BuildingManager（它会从 VillageDataManager 读取当前数据）
+    _buildingManager = new BuildingManager(this, true);
+
+    // 输出建筑布局
+    logBuildingLayout("REPLAY MAP LOADED");
+
+    auto dataManager = VillageDataManager::getInstance();
+    CCLOG("BattleMapLayer: Replay map reloaded with %zu buildings",
+          dataManager->getBattleMapData().buildings.size());
+}

@@ -1,7 +1,9 @@
 ﻿#include "VillageScene.h"
 #include "Layer/HUDLayer.h"
 #include "Layer/BattleTroopLayer.h"
+#include "Layer/ReplayListLayer.h"
 #include "Manager/VillageDataManager.h"
+#include "cocos2d.h"
 
 USING_NS_CC;
 
@@ -42,6 +44,20 @@ bool VillageScene::init() {
   CCLOG("  - VillageLayer (tag=1, zOrder=0)");
   CCLOG("      └─ BattleTroopLayer (tag=2, zOrder=10) ← CHILD of VillageLayer");
   CCLOG("  - HUDLayer (tag=100, zOrder=10)");
+
+  // 获取可见区域大小
+  auto visibleSize = Director::getInstance()->getVisibleSize();
+
+  // ✅ 新增：回放按钮
+  auto replayBtn = ui::Button::create("UI/replay/replay_enter.png");
+  replayBtn->setPosition(Vec2(60, visibleSize.height - 200));
+  replayBtn->setScale(0.8f);
+  replayBtn->addClickEventListener([this](Ref*) {
+      // 打开回放列表
+      auto replayList = ReplayListLayer::create();
+      this->addChild(replayList, 1000);
+  });
+  this->addChild(replayBtn, 10);
   
   return true;
 }

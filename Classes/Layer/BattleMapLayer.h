@@ -20,6 +20,7 @@ public:
     // 获取 BuildingManager
     BuildingManager* getBuildingManager() const { return _buildingManager; }
 
+    void reloadMapFromData();  // ✅ 新增：从现有数据重建（回放模式）
 private:
     cocos2d::Sprite* _mapSprite;
     BuildingManager* _buildingManager;
