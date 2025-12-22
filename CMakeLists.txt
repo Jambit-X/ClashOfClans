@@ -59,6 +59,7 @@ list(APPEND GAME_SOURCE
      Classes/Layer/BattleMapLayer.cpp
      Classes/Layer/BattleHUDLayer.cpp
      Classes/Layer/BattleResultLayer.cpp
+     Classes/Layer/ThemeSwitchLayer.cpp
      Classes/Layer/DebugLayer.cpp
      Classes/Layer/ReplayListLayer.cpp
      Classes/Component/ConstructionAnimation.cpp
@@ -110,6 +111,7 @@ list(APPEND GAME_HEADER
      Classes/Layer/BattleResultLayer.h
      Classes/Layer/DebugLayer.h
      Classes/Layer/ReplayListLayer.h
+     Classes/Layer/ThemeSwitchLayer.h
      Classes/Component/ConstructionAnimation.h
      Classes/Component/DefenseBuildingAnimation.h
      Classes/Component/HealthBarComponent.h

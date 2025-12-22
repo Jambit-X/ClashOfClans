@@ -30,6 +30,9 @@ VillageDataManager::VillageDataManager()
   _data.elixir = 100000;
   _data.gem = 1000;
 
+  _currentThemeId = 1;  // 默认经典场景
+  _purchasedThemes.insert(1);  // 经典场景默认拥有
+
   CCLOG("VillageDataManager: Initialized");
 }
 
@@ -620,72 +623,84 @@ void VillageDataManager::checkAndFinishConstructions() {
 
 
 
+// 在 saveToFile() 函数中添加场景数据的保存：
 void VillageDataManager::saveToFile(const std::string& filename) {
-  rapidjson::Document doc;
-  doc.SetObject();
-  auto& allocator = doc.GetAllocator();
+    rapidjson::Document doc;
+    doc.SetObject();
+    auto& allocator = doc.GetAllocator();
 
-  doc.AddMember("gold", _data.gold, allocator);
-  doc.AddMember("elixir", _data.elixir, allocator);
-  doc.AddMember("gem", _data.gem, allocator);
-  // --- 保存军队数据 ---
-  rapidjson::Value troopsArray(rapidjson::kArrayType);
-  for (const auto& pair : _data.troops) {
-      rapidjson::Value troopObj(rapidjson::kObjectType);
-      troopObj.AddMember("id", pair.first, allocator);
-      troopObj.AddMember("count", pair.second, allocator);
-      troopsArray.PushBack(troopObj, allocator);
-  }
-  doc.AddMember("troops", troopsArray, allocator);
+    doc.AddMember("gold", _data.gold, allocator);
+    doc.AddMember("elixir", _data.elixir, allocator);
+    doc.AddMember("gem", _data.gem, allocator);
 
-  // 保存建筑数据
-  rapidjson::Value buildingsArray(rapidjson::kArrayType);
-  for (const auto& building : _data.buildings) {
-    rapidjson::Value buildingObj(rapidjson::kObjectType);
-    buildingObj.AddMember("id", building.id, allocator);
-    buildingObj.AddMember("type", building.type, allocator);
-    buildingObj.AddMember("level", building.level, allocator);
-    buildingObj.AddMember("gridX", building.gridX, allocator);
-    buildingObj.AddMember("gridY", building.gridY, allocator);
-    buildingObj.AddMember("state", (int)building.state, allocator);
-    buildingObj.AddMember("finishTime", building.finishTime, allocator);
-    buildingObj.AddMember("isInitialConstruction", building.isInitialConstruction, allocator);
-    // 保存运行时血量，注意：不要保存 isDestroyed（战斗临时状态不应持久化）
-    buildingObj.AddMember("currentHP", building.currentHP, allocator);
-    buildingsArray.PushBack(buildingObj, allocator);
-  }
-  doc.AddMember("buildings", buildingsArray, allocator);
+    // ========== 新增：保存当前场景 ==========
+    doc.AddMember("currentTheme", _currentThemeId, allocator);
 
-  // --- 保存兵种研究等级 ---
-  rapidjson::Value troopLevelsArray(rapidjson::kArrayType);
-  for (const auto& pair : _data.troopLevels) {
-    rapidjson::Value levelObj(rapidjson::kObjectType);
-    levelObj.AddMember("id", pair.first, allocator);
-    levelObj.AddMember("level", pair.second, allocator);
-    troopLevelsArray.PushBack(levelObj, allocator);
-  }
-  doc.AddMember("troopLevels", troopLevelsArray, allocator);
+    // 保存已购买场景列表
+    rapidjson::Value purchasedArr(rapidjson::kArrayType);
+    for (int id : _purchasedThemes) {
+        purchasedArr.PushBack(id, allocator);
+    }
+    doc.AddMember("purchasedThemes", purchasedArr, allocator);
+    // ==========================================
 
-  // --- 保存研究状态 ---
-  doc.AddMember("researchingTroopId", _data.researchingTroopId, allocator);
-  doc.AddMember("researchFinishTime", _data.researchFinishTime, allocator);
+    // --- 保存军队数据 ---
+    rapidjson::Value troopsArray(rapidjson::kArrayType);
+    for (const auto& pair : _data.troops) {
+        rapidjson::Value troopObj(rapidjson::kObjectType);
+        troopObj.AddMember("id", pair.first, allocator);
+        troopObj.AddMember("count", pair.second, allocator);
+        troopsArray.PushBack(troopObj, allocator);
+    }
+    doc.AddMember("troops", troopsArray, allocator);
 
-  // 写入文件
-  rapidjson::StringBuffer buffer;
-  rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-  doc.Accept(writer);
+    // 保存建筑数据
+    rapidjson::Value buildingsArray(rapidjson::kArrayType);
+    for (const auto& building : _data.buildings) {
+        rapidjson::Value buildingObj(rapidjson::kObjectType);
+        buildingObj.AddMember("id", building.id, allocator);
+        buildingObj.AddMember("type", building.type, allocator);
+        buildingObj.AddMember("level", building.level, allocator);
+        buildingObj.AddMember("gridX", building.gridX, allocator);
+        buildingObj.AddMember("gridY", building.gridY, allocator);
+        buildingObj.AddMember("state", (int)building.state, allocator);
+        buildingObj.AddMember("finishTime", building.finishTime, allocator);
+        buildingObj.AddMember("isInitialConstruction", building.isInitialConstruction, allocator);
+        buildingObj.AddMember("currentHP", building.currentHP, allocator);
+        buildingsArray.PushBack(buildingObj, allocator);
+    }
+    doc.AddMember("buildings", buildingsArray, allocator);
 
-  auto fileUtils = FileUtils::getInstance();
-  std::string writablePath = fileUtils->getWritablePath();
-  std::string fullPath = writablePath + filename;
+    // --- 保存兵种研究等级 ---
+    rapidjson::Value troopLevelsArray(rapidjson::kArrayType);
+    for (const auto& pair : _data.troopLevels) {
+        rapidjson::Value levelObj(rapidjson::kObjectType);
+        levelObj.AddMember("id", pair.first, allocator);
+        levelObj.AddMember("level", pair.second, allocator);
+        troopLevelsArray.PushBack(levelObj, allocator);
+    }
+    doc.AddMember("troopLevels", troopLevelsArray, allocator);
 
-  bool success = fileUtils->writeStringToFile(buffer.GetString(), fullPath);
+    // --- 保存研究状态 ---
+    doc.AddMember("researchingTroopId", _data.researchingTroopId, allocator);
+    doc.AddMember("researchFinishTime", _data.researchFinishTime, allocator);
 
-  if (success) {
-    CCLOG("VillageDataManager: Saved to %s", fullPath.c_str());
-  } else {
-    CCLOG("VillageDataManager: ERROR - Failed to save");
-  }
+    // 写入文件
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    doc.Accept(writer);
+
+    auto fileUtils = FileUtils::getInstance();
+    std::string writablePath = fileUtils->getWritablePath();
+    std::string fullPath = writablePath + filename;
+
+    bool success = fileUtils->writeStringToFile(buffer.GetString(), fullPath);
+
+    if (success) {
+        CCLOG("VillageDataManager: Saved to %s", fullPath.c_str());
+    } else {
+        CCLOG("VillageDataManager: ERROR - Failed to save");
+    }
 }
 
 void VillageDataManager::loadFromFile(const std::string& filename) {
@@ -767,6 +782,20 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
   }
   if (doc.HasMember("gem") && doc["gem"].IsInt()) {
     _data.gem = doc["gem"].GetInt();  
+  }
+
+  // ========== 新增：加载当前场景 ==========
+  if (doc.HasMember("currentTheme") && doc["currentTheme"].IsInt()) {
+      _currentThemeId = doc["currentTheme"].GetInt();
+  }
+
+  // 加载已购买场景
+  _purchasedThemes.clear();
+  if (doc.HasMember("purchasedThemes") && doc["purchasedThemes"].IsArray()) {
+      const auto& arr = doc["purchasedThemes"];
+      for (rapidjson::SizeType i = 0; i < arr.Size(); i++) {
+          _purchasedThemes.insert(arr[i].GetInt());
+      }
   }
 
   // --- 读取军队数据 ---
@@ -1231,4 +1260,25 @@ void VillageDataManager::addBattleBuildingFromReplay(const BuildingInstance& bui
     } else {
         CCLOG("VillageDataManager: WARNING - addBattleBuildingFromReplay called but not in battle mode");
     }
+}
+
+// 实现场景管理方法：
+int VillageDataManager::getCurrentThemeId() const {
+    return _currentThemeId;
+}
+
+void VillageDataManager::setCurrentTheme(int themeId) {
+    _currentThemeId = themeId;
+    saveToFile("village.json");  
+    CCLOG("VillageDataManager: Theme switched to %d", themeId);
+}
+
+bool VillageDataManager::isThemePurchased(int themeId) const {
+    return _purchasedThemes.find(themeId) != _purchasedThemes.end();
+}
+
+void VillageDataManager::purchaseTheme(int themeId) {
+    _purchasedThemes.insert(themeId);
+    saveToFile("village.json");  
+    CCLOG("VillageDataManager: Theme %d purchased", themeId);
 }

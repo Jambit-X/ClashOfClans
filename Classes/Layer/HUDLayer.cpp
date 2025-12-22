@@ -10,10 +10,9 @@
 #include "UI/ResourceCollectionUI.h"
 #include "Layer/VillageLayer.h"
 #include "Scene/BattleScene.h" 
-
-#include "Scene/BattleScene.h" 
 #include "DebugLayer.h"
 #include "Layer/LaboratoryLayer.h"
+#include "Layer/ThemeSwitchLayer.h" 
 
 USING_NS_CC;
 using namespace ui;
@@ -589,6 +588,17 @@ void HUDLayer::initActionMenu() {
     this->getScene()->addChild(labLayer, 150);
   });
   _actionMenuNode->addChild(_btnResearch);
+
+  // ========== 切换场景按钮（大本营专用）==========
+  _btnThemeSwitch = Button::create("UI/Village/change_bg_btn.png");
+  _btnThemeSwitch->ignoreContentAdaptWithSize(false);
+  _btnThemeSwitch->setContentSize(Size(btnSize, btnSize));
+  _btnThemeSwitch->setVisible(false);  // 默认隐藏
+  _btnThemeSwitch->addClickEventListener([this](Ref*) {
+      CCLOG("点击了切换场景按钮");
+      onThemeSwitchClicked();
+  });
+  _actionMenuNode->addChild(_btnThemeSwitch);
 }
 
 void HUDLayer::showBuildingActions(int buildingId) {
@@ -753,14 +763,26 @@ void HUDLayer::updateActionButtons(int buildingId) {
   // ========== 选择布局模板 ==========
   const ButtonLayout* layout;
   if (buildingInstance->type == 201) {
-    // 建筑工人小屋：只有信息按钮，居中显示
-    layout = &LAYOUT_ONE_BUTTON;
-  } else if (canTrain || canResearch) {
-    // 兵营/训练营/实验室：信息 + 升级 + 训练/研究
-    layout = &LAYOUT_THREE_BUTTONS;
+      // 建筑工人小屋：只有信息按钮，居中显示
+      layout = &LAYOUT_ONE_BUTTON;
+  }
+  // ========== 新增：大本营显示3个按钮 ==========
+  else if (buildingInstance->type == 1) {
+      // 大本营：信息 + 升级 + 切换场景
+      layout = &LAYOUT_THREE_BUTTONS;
+      _btnThemeSwitch->setVisible(true);
+      _btnTrain->setVisible(false);
+      _btnResearch->setVisible(false);
+  }
+  // ==============================================
+  else if (canTrain || canResearch) {
+      // 兵营/训练营/实验室：信息 + 升级 + 训练/研究
+      layout = &LAYOUT_THREE_BUTTONS;
+      _btnThemeSwitch->setVisible(false);
   } else {
-    // 其他建筑：信息 + 升级
-    layout = &LAYOUT_TWO_BUTTONS;
+      // 其他建筑：信息 + 升级
+      layout = &LAYOUT_TWO_BUTTONS;
+      _btnThemeSwitch->setVisible(false);
   }
 
   _btnInfo->setPosition(layout->infoPos);
@@ -768,6 +790,7 @@ void HUDLayer::updateActionButtons(int buildingId) {
   _btnSpeedup->setPosition(layout->upgradePos);
   _btnTrain->setPosition(layout->trainPos);
   _btnResearch->setPosition(layout->trainPos);  // 研究按钮位置同训练按钮
+  _btnThemeSwitch->setPosition(layout->trainPos);
 }
 
 //  新增：加速按钮回调
@@ -1054,4 +1077,15 @@ void HUDLayer::updateWorkerDisplay() {
   } else {
     _workerLabel->setColor(COLOR_CYAN);    // 全部空闲 - 青色
   }
+}
+// ========== 场景切换按钮回调 ==========
+void HUDLayer::onThemeSwitchClicked() {
+    CCLOG("HUDLayer: Opening theme switch panel");
+
+    // 创建场景选择面板
+    auto themeSwitchLayer = ThemeSwitchLayer::create();
+    this->getScene()->addChild(themeSwitchLayer, 150);
+
+    // 隐藏建筑菜单
+    hideBuildingActions();
 }

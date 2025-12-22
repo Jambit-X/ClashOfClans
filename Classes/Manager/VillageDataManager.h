@@ -196,6 +196,12 @@ public:
   // 回放相关方法
   void clearBattleMap();  // 清空战斗地图数据
   void addBattleBuildingFromReplay(const BuildingInstance& building);
+
+  // ========== 场景管理 ==========
+  int getCurrentThemeId() const;                    // 获取当前场景ID
+  void setCurrentTheme(int themeId);                 // 设置当前场景
+  bool isThemePurchased(int themeId) const;         // 检查场景是否已购买
+  void purchaseTheme(int themeId);                   // 购买场景
 private:
   VillageDataManager();
   ~VillageDataManager();
@@ -214,4 +220,7 @@ private:
   // 战斗地图数据
   BattleMapData _battleMapData;
   bool _inBattleMode = false;  // 战斗模式标志
+
+  int _currentThemeId;                           // 当前使用的场景ID
+  std::set<int> _purchasedThemes;                // 已购买的场景ID集合
 };
