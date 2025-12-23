@@ -440,7 +440,7 @@ void VillageLayer::switchMapBackground(int themeId) {
             break;
         case 2:  // 冬天
             mapPath = "Scene/Map_Classic_Winter.png";
-            needParticle = true;  // 需要雪花效果
+            needParticle = true;
             break;
         case 3:  // 皇室
             mapPath = "Scene/Map_Royale.png";
@@ -457,7 +457,15 @@ void VillageLayer::switchMapBackground(int themeId) {
             break;
     }
 
-    // 2. 替换地图精灵
+    // 2. 清理当前粒子效果（必须在替换地图精灵之前）
+    if (_currentParticleEffect) {
+        _currentParticleEffect->stopSystem();
+        _currentParticleEffect->removeFromParent();
+        _currentParticleEffect = nullptr;
+        CCLOG("VillageLayer: Cleaned up previous particle effect");
+    }
+
+    // 3. 替换地图精灵
     if (_mapSprite) {
         cocos2d::Vec2 oldPos = _mapSprite->getPosition();
         _mapSprite->removeFromParent();
@@ -466,52 +474,52 @@ void VillageLayer::switchMapBackground(int themeId) {
         if (_mapSprite) {
             _mapSprite->setAnchorPoint(cocos2d::Vec2::ANCHOR_BOTTOM_LEFT);
             _mapSprite->setPosition(oldPos);
-            this->addChild(_mapSprite, -1);  // 最底层
+            this->addChild(_mapSprite, -1);
             CCLOG("VillageLayer: Map background changed to %s", mapPath.c_str());
         } else {
             CCLOG("VillageLayer: ERROR - Failed to load map %s", mapPath.c_str());
         }
     }
 
-    // 3. 处理粒子效果
-    // 停止当前粒子效果
-    if (_currentParticleEffect) {
-        _currentParticleEffect->stopSystem();
-        _currentParticleEffect->removeFromParent();
-        _currentParticleEffect = nullptr;
-    }
-
-    // 如果需要新粒子效果，创建雪花
+    // 4. 如果需要新粒子效果，创建雪花
     if (needParticle) {
-        auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
-        auto origin = cocos2d::Director::getInstance()->getVisibleOrigin();
+        CCLOG("VillageLayer: Creating snow particle effect...");
 
-        // 创建雪花粒子效果
+        cocos2d::Size mapSize = _mapSprite->getContentSize();
+
         _currentParticleEffect = cocos2d::ParticleSnow::create();
         if (_currentParticleEffect) {
-            // 设置粒子参数
             _currentParticleEffect->setPosition(cocos2d::Vec2(
-                origin.x + visibleSize.width / 2,
-                origin.y + visibleSize.height
+                mapSize.width / 2,
+                mapSize.height + 50
             ));
 
-            // 调整雪花效果
-            _currentParticleEffect->setGravity(cocos2d::Vec2(0, -10));  // 重力
-            _currentParticleEffect->setSpeed(25);                        // 下落速度
-            _currentParticleEffect->setSpeedVar(10);                     // 速度变化
-            _currentParticleEffect->setLife(20.0f);                      // 粒子生命周期
-            _currentParticleEffect->setLifeVar(5.0f);                    // 生命周期变化
-            _currentParticleEffect->setEmissionRate(3);                  // 发射速率
-            _currentParticleEffect->setStartSize(4.0f);                  // 起始大小
-            _currentParticleEffect->setStartSizeVar(2.0f);               // 大小变化
-            _currentParticleEffect->setEndSize(6.0f);                    // 结束大小
+            _currentParticleEffect->setPosVar(cocos2d::Vec2(mapSize.width / 2, 0));
 
-            // 设置颜色为白色（雪花）
+            _currentParticleEffect->setGravity(cocos2d::Vec2(0, -50));
+            _currentParticleEffect->setSpeed(80);
+            _currentParticleEffect->setSpeedVar(20);
+            _currentParticleEffect->setLife(12.0f);
+            _currentParticleEffect->setLifeVar(3.0f);
+            _currentParticleEffect->setEmissionRate(20);
+            _currentParticleEffect->setTotalParticles(500);
+
+            _currentParticleEffect->setStartSize(15.0f);
+            _currentParticleEffect->setStartSizeVar(6.0f);
+            _currentParticleEffect->setEndSize(18.0f);
+
             _currentParticleEffect->setStartColor(cocos2d::Color4F(1.0f, 1.0f, 1.0f, 1.0f));
-            _currentParticleEffect->setEndColor(cocos2d::Color4F(1.0f, 1.0f, 1.0f, 0.5f));
+            _currentParticleEffect->setEndColor(cocos2d::Color4F(1.0f, 1.0f, 1.0f, 0.0f));
 
-            this->addChild(_currentParticleEffect, 100);  // 高层级显示
-            CCLOG("VillageLayer: Snow particle effect started");
+            _mapSprite->addChild(_currentParticleEffect, 100);
+
+            CCLOG("VillageLayer: Snow particle effect created successfully");
+            CCLOG("  - Position: (%.0f, %.0f)", mapSize.width / 2, mapSize.height + 50);
+            CCLOG("  - PosVar: (%.0f, 0)", mapSize.width / 2);
+            CCLOG("  - Emission Rate: 20, Total Particles: 500");
+            CCLOG("  - Size: Start=15, End=18");
+        } else {
+            CCLOG("VillageLayer: ERROR - Failed to create snow particle effect!");
         }
     }
 
