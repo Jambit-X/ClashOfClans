@@ -19,6 +19,10 @@ private:
     // --- 阶段二：Loading 元素 ---
     cocos2d::Sprite* _loadingBg;       // 游戏加载图
     cocos2d::ui::LoadingBar* _progressBar; // 进度条
+    
+    // ========== 音频 ID ==========
+    int _supercellJingleID;   // Supercell 音效 ID
+    int _startupJingleID;     // 启动场景音效 ID
 
     // --- 逻辑函数 ---
     void showSplashPhase();       // 显示 Logo 和文字

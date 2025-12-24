@@ -67,6 +67,10 @@ private:
     BattleHUDLayer* _hudLayer = nullptr;
     BattleResultLayer* _resultLayer = nullptr;
 
+    // ========== 音频系统 ==========
+    int _combatPlanningMusicID = -1;  // 准备战斗音乐 ID
+    int _combatMusicID = -1;          // 战斗音乐 ID
+
     // ========== 兵种追踪数据 ==========
     std::map<int, int> _remainingTroops;  // 剩余可用数量
     std::map<int, int> _usedTroops;       // 已消耗统计

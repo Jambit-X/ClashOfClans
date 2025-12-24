@@ -3,9 +3,11 @@
 #include "Layer/BattleTroopLayer.h"
 #include "Layer/ReplayListLayer.h"
 #include "Manager/VillageDataManager.h"
+#include "Manager/AudioManager.h"
 #include "cocos2d.h"
 
 USING_NS_CC;
+using namespace cocos2d::ui;
 
 Scene* VillageScene::createScene() {
   return VillageScene::create();
@@ -17,6 +19,10 @@ bool VillageScene::init() {
   }
 
   auto dataManager = VillageDataManager::getInstance();
+  
+  // ✅ 预加载背景音乐（避免播放时还在加载）
+  auto audioManager = AudioManager::getInstance();
+  audioManager->preloadAudio("Audios/village_background_music.m4a");
 
   // 1. 村庄层（地图、建筑）
   auto villageLayer = VillageLayer::create();
@@ -49,7 +55,7 @@ bool VillageScene::init() {
   auto visibleSize = Director::getInstance()->getVisibleSize();
 
   // ✅ 新增：回放按钮
-  auto replayBtn = ui::Button::create("UI/replay/replay_enter.png");
+  auto replayBtn = Button::create("UI/replay/replay_enter.png");
   replayBtn->setPosition(Vec2(60, visibleSize.height - 200));
   replayBtn->setScale(0.8f);
   replayBtn->addClickEventListener([this](Ref*) {
@@ -60,4 +66,27 @@ bool VillageScene::init() {
   this->addChild(replayBtn, 10);
   
   return true;
+}
+
+void VillageScene::onEnter() {
+  Scene::onEnter();
+  
+  _backgroundMusicID = -1;
+  
+  auto audioManager = AudioManager::getInstance();
+  _backgroundMusicID = audioManager->playBackgroundMusic(
+      "Audios/village_background_music.mp3",
+      1.0f,
+      true
+  );
+}
+
+void VillageScene::onExit() {
+  auto audioManager = AudioManager::getInstance();
+  if (_backgroundMusicID != -1) {
+    audioManager->stopAudio(_backgroundMusicID);
+    _backgroundMusicID = -1;
+  }
+  
+  Scene::onExit();
 }

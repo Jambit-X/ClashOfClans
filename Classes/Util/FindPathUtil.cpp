@@ -154,6 +154,9 @@ void FindPathUtil::updatePathfindingMap() {
         // 关键：跳过已摧毁的建筑
         if (b.isDestroyed || b.currentHP <= 0) continue;
 
+        // ✅ 新增：跳过陷阱（type 400-499）- 陷阱不应该阻挡寻路
+        if (b.type >= 400 && b.type < 500) continue;
+
         auto config = BuildingConfig::getInstance()->getConfig(b.type);
         if (!config) continue;
 

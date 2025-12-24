@@ -20,6 +20,9 @@ public:
                       int lootedGold,
                       int lootedElixir);
     
+    // ✅ 新增：退出时清理音乐
+    virtual void onExit() override;
+    
     CREATE_FUNC(BattleResultLayer);
 
 private:
@@ -28,7 +31,13 @@ private:
     int _lootedGold = 0;
     int _lootedElixir = 0;
     
+    // ✅ 新增：音乐ID
+    int _resultMusicID = -1;
+    
     void createTroopCards();
+    
+    // ✅ 新增：播放结算音乐
+    void playResultMusic();
 };
 
 #endif // __BATTLE_RESULT_LAYER_H__

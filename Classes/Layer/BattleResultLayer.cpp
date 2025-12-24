@@ -2,6 +2,8 @@
 #include "BattleResultLayer.h"
 #include "../Scene/BattleScene.h"
 #include "../Model/TroopConfig.h"
+#include "../Manager/AudioManager.h"
+#include "../Controller/BattleProcessController.h"
 #include "ui/CocosGUI.h"
 
 USING_NS_CC;
@@ -44,6 +46,9 @@ bool BattleResultLayer::initWithData(
     _lootedElixir = lootedElixir;
 
     auto visibleSize = Director::getInstance()->getVisibleSize();
+
+    // ✅ 新增：播放结算音乐（根据星数）
+    playResultMusic();
 
     // 标题 - 黄色大字体
     auto titleLabel = Label::createWithTTF("战斗结束", FONT_PATH, 52);
@@ -115,6 +120,58 @@ bool BattleResultLayer::initWithData(
     _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
 
     return true;
+}
+
+// ✅ 新增：播放结算音乐
+void BattleResultLayer::playResultMusic() {
+    auto audioManager = AudioManager::getInstance();
+    
+    // 获取当前战斗的星数
+    int stars = BattleProcessController::getInstance()->getCurrentStars();
+    
+    CCLOG("========================================");
+    CCLOG("BattleResultLayer::playResultMusic - START");
+    CCLOG("  Current stars: %d", stars);
+    
+    // 根据星数选择音乐
+    std::string musicFile;
+    if (stars == 0) {
+        musicFile = "Audios/battle_lost.mp3";  // 0星：失败音乐
+        CCLOG("  Result: DEFEAT");
+        CCLOG("  Music: %s", musicFile.c_str());
+    } else {
+        musicFile = "Audios/battle_win.mp3";   // 1-3星：胜利音乐
+        CCLOG("BattleResultLayer: Victory with %d stars! Playing win music", stars);
+    }
+    
+    // 播放音乐（不循环）
+    CCLOG("  Calling AudioManager::playBackgroundMusic...");
+    _resultMusicID = audioManager->playBackgroundMusic(musicFile, 0.8f, false);
+    
+    CCLOG("  Music ID returned: %d", _resultMusicID);
+    
+    if (_resultMusicID == -1) {
+        CCLOG("  ERROR: Failed to play result music!");
+    } else {
+        CCLOG("  SUCCESS: Result music started");
+    }
+    
+    CCLOG("BattleResultLayer::playResultMusic - END");
+    CCLOG("========================================");
+}
+
+// ✅ 新增：退出时停止音乐
+void BattleResultLayer::onExit() {
+    CCLOG("BattleResultLayer: Exiting, stopping result music");
+    
+    if (_resultMusicID != -1) {
+        auto audioManager = AudioManager::getInstance();
+        audioManager->stopAudio(_resultMusicID);
+        _resultMusicID = -1;
+        CCLOG("BattleResultLayer: Result music stopped");
+    }
+    
+    LayerColor::onExit();
 }
 
 void BattleResultLayer::createTroopCards() {

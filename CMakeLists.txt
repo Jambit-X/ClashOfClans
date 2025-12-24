@@ -73,6 +73,7 @@ list(APPEND GAME_SOURCE
      Classes/Controller/BattleProcessController.cpp
      Classes/Manager/Resource/ResourceProductionSystem.cpp
      Classes/Manager/AnimationManager.cpp
+     Classes/Manager/AudioManager.cpp
      Classes/Manager/BuildingManager.cpp
      Classes/Manager/BuildingSpeedupManager.cpp
      Classes/Manager/BuildingUpgradeManager.cpp
@@ -123,12 +124,13 @@ list(APPEND GAME_HEADER
      Classes/Controller/BattleProcessController.h
      Classes/Manager/Resource/ResourceProductionSystem.h
      Classes/Manager/AnimationManager.h
+     Classes/Manager/AudioManager.h
      Classes/Manager/BuildingSpeedupManager.h
      Classes/Manager/BuildingUpgradeManager.h
-     Classes/Manager/BuildingManager.h
+     Classes/Manager/BuildingManager.h  
      Classes/Manager/VillageDataManager.h
      Classes/Manager/ReplayManager.h
-     Classes/Model/VillageData.h
+     Classes/Model/VillageData.h     
      Classes/Model/BuildingRequirements.h
      Classes/Model/BuildingConfig.h
      Classes/Model/TroopConfig.h
