@@ -9,6 +9,9 @@
 #include <set>
 #include "../Sprite/BuildingSprite.h"
 #include "../Component/DefenseBuildingAnimation.h"
+#include "DestructionTracker.h"
+#include "TrapSystem.h"
+#include "TargetFinder.h"
 
 USING_NS_CC;
 
@@ -106,9 +109,8 @@ void BattleProcessController::resetBattleState() {
         building.attackCooldown = 0.0f;
     }
 
-    // ✅ 清理陷阱触发状态
-    _triggeredTraps.clear();
-    _trapTimers.clear();
+    // ✅ 清理陷阱触发状态（委托给TrapSystem）
+    TrapSystem::getInstance()->reset();
 
     dataManager->saveToFile("village.json");
 }
@@ -188,8 +190,8 @@ void BattleProcessController::executeAttack(
             static_cast<void*>(liveTarget)
         );
 
-        // 更新摧毁进度
-        updateDestructionProgress();
+        // 更新摧毁进度（已迁移到DestructionTracker）
+        DestructionTracker::getInstance()->updateProgress();
 
         onTargetDestroyed();
     }
@@ -212,13 +214,8 @@ bool BattleProcessController::shouldAbandonWallForBetterPath(BattleUnitSprite* u
     CCLOG("  Current wall ID: %d", currentWallID);
     
     const BuildingInstance* bestTarget = nullptr;
-    if (unit->getUnitTypeID() == UnitTypeID::GOBLIN) {
-        bestTarget = findTargetWithResourcePriority(unitPos, unit->getUnitTypeID());
-    } else if (unit->getUnitTypeID() == UnitTypeID::GIANT || unit->getUnitTypeID() == UnitTypeID::BALLOON) {
-        bestTarget = findTargetWithDefensePriority(unitPos, unit->getUnitTypeID());
-    } else {
-        bestTarget = findTargetWithResourcePriority(unitPos, unit->getUnitTypeID());
-    }
+    // 使用 TargetFinder 查找最佳目标
+    bestTarget = TargetFinder::getInstance()->findTarget(unitPos, unit->getUnitTypeID());
     
     if (!bestTarget) {
         CCLOG("  No best target found, keep attacking wall");
@@ -280,8 +277,10 @@ void BattleProcessController::startUnitAI(BattleUnitSprite* unit, BattleTroopLay
     const BuildingInstance* target = nullptr;
     
     // ========== 炸弹人特殊处理：只攻击城墙 ==========
+    auto targetFinder = TargetFinder::getInstance();
+    
     if (unit->getUnitTypeID() == UnitTypeID::WALL_BREAKER) {
-        target = findNearestWall(unitPos);
+        target = targetFinder->findNearestWall(unitPos);
         if (!target) {
             CCLOG("Wall Breaker: No walls found, standing idle");
             unit->playIdleAnimation();
@@ -289,12 +288,9 @@ void BattleProcessController::startUnitAI(BattleUnitSprite* unit, BattleTroopLay
         }
     }
     // ============================================
-    else if (unit->getUnitTypeID() == UnitTypeID::GOBLIN) {
-        target = findTargetWithResourcePriority(unitPos, unit->getUnitTypeID());
-    } else if (unit->getUnitTypeID() == UnitTypeID::GIANT || unit->getUnitTypeID() == UnitTypeID::BALLOON) {
-        target = findTargetWithDefensePriority(unitPos, unit->getUnitTypeID());
-    } else {
-        target = findTargetWithResourcePriority(unitPos, unit->getUnitTypeID());
+    else {
+        // 使用 TargetFinder 的通用入口
+        target = targetFinder->findTarget(unitPos, unit->getUnitTypeID());
     }
 
     if (!target) {
@@ -546,427 +542,13 @@ const BuildingInstance* BattleProcessController::getFirstWallInLine(const Vec2& 
     return nullptr;
 }
 
-static bool isResourceBuilding(int buildingType) {
-    return buildingType == 1 || buildingType == 202 || buildingType == 203 || 
-           buildingType == 204 || buildingType == 205;
-}
 
-static bool isDefenseBuilding(int buildingType) {
-    return buildingType == 301 || buildingType == 302;
-}
-
-const BuildingInstance* BattleProcessController::findTargetWithResourcePriority(const Vec2& unitWorldPos, UnitTypeID unitType) {
-    auto dataManager = VillageDataManager::getInstance();
-    const auto& buildings = dataManager->getAllBuildings();
-
-    if (buildings.empty()) return nullptr;
-
-    const BuildingInstance* bestBuilding = nullptr;
-    const BuildingInstance* fallbackBuilding = nullptr;
-    float minDistanceSq = FLT_MAX;
-    float fallbackMinDistanceSq = FLT_MAX;
-
-    for (const auto& building : buildings) {
-        if (building.isDestroyed || building.currentHP <= 0) continue;
-        if (building.state == BuildingInstance::State::PLACING) continue;
-        
-        // 跳过城墙（303）和陷阱（4xx）
-        if (building.type == 303) continue;
-        if (building.type >= 400 && building.type < 500) continue;
-
-        auto config = BuildingConfig::getInstance()->getConfig(building.type);
-        if (!config) continue;
-
-        // ✅ 修复：使用 getBuildingCenterPixel 获取建筑的真实中心位置
-        Vec2 bPos = GridMapUtils::getBuildingCenterPixel(
-            building.gridX, building.gridY, 
-            config->gridWidth, config->gridHeight
-        );
-        float distSq = unitWorldPos.distanceSquared(bPos);
-
-        if (unitType == UnitTypeID::GOBLIN) {
-            if (isResourceBuilding(building.type)) {
-                if (distSq < minDistanceSq) {
-                    minDistanceSq = distSq;
-                    bestBuilding = &building;
-                }
-            } else {
-                if (distSq < fallbackMinDistanceSq) {
-                    fallbackMinDistanceSq = distSq;
-                    fallbackBuilding = &building;
-                }
-            }
-        } else {
-            if (distSq < minDistanceSq) {
-                minDistanceSq = distSq;
-                bestBuilding = &building;
-            }
-        }
-    }
-
-    if (unitType == UnitTypeID::GOBLIN && !bestBuilding && fallbackBuilding) {
-        return fallbackBuilding;
-    }
-
-    return bestBuilding;
-}
-
-const BuildingInstance* BattleProcessController::findTargetWithDefensePriority(const Vec2& unitWorldPos, UnitTypeID unitType) {
-    auto dataManager = VillageDataManager::getInstance();
-    const auto& buildings = dataManager->getAllBuildings();
-
-    if (buildings.empty()) return nullptr;
-
-    const BuildingInstance* bestBuilding = nullptr;
-    const BuildingInstance* fallbackBuilding = nullptr;
-    float minDistanceSq = FLT_MAX;
-    float fallbackMinDistanceSq = FLT_MAX;
-
-    for (const auto& building : buildings) {
-        if (building.isDestroyed || building.currentHP <= 0) continue;
-        if (building.state == BuildingInstance::State::PLACING) continue;
-        
-        // 跳过城墙（303）和陷阱（4xx）
-        if (building.type == 303) continue;
-        if (building.type >= 400 && building.type < 500) continue;
-        
-        // 气球兵额外跳过城墙（已在上面处理，这里保留代码完整性）
-        if (unitType == UnitTypeID::BALLOON && building.type == 303) continue;
-
-        auto config = BuildingConfig::getInstance()->getConfig(building.type);
-        if (!config) continue;
-
-        // ✅ 修复：使用 getBuildingCenterPixel 获取建筑的真实中心位置
-        Vec2 bPos = GridMapUtils::getBuildingCenterPixel(
-            building.gridX, building.gridY, 
-            config->gridWidth, config->gridHeight
-        );
-        float distSq = unitWorldPos.distanceSquared(bPos);
-
-        if (unitType == UnitTypeID::GIANT || unitType == UnitTypeID::BALLOON) {
-            if (isDefenseBuilding(building.type)) {
-                if (distSq < minDistanceSq) {
-                    minDistanceSq = distSq;
-                    bestBuilding = &building;
-                }
-            } else {
-                if (building.type != 303) {
-                    if (distSq < fallbackMinDistanceSq) {
-                        fallbackMinDistanceSq = distSq;
-                        fallbackBuilding = &building;
-                    }
-                }
-            }
-        } else {
-            if (distSq < minDistanceSq) {
-                minDistanceSq = distSq;
-                bestBuilding = &building;
-            }
-        }
-    }
-
-    if ((unitType == UnitTypeID::GIANT || unitType == UnitTypeID::BALLOON) && !bestBuilding && fallbackBuilding) {
-        return fallbackBuilding;
-    }
-
-    return bestBuilding;
-}
-
-const BuildingInstance* BattleProcessController::findNearestBuilding(const Vec2& unitWorldPos, UnitTypeID unitType) {
-    // ========== 炸弹人特殊处理：只返回城墙 ==========
-    if (unitType == UnitTypeID::WALL_BREAKER) {
-        return findNearestWall(unitWorldPos);
-    }
-    // ================================================
-    
-    if (unitType == UnitTypeID::GOBLIN) {
-        return findTargetWithResourcePriority(unitWorldPos, unitType);
-    } else if (unitType == UnitTypeID::GIANT || unitType == UnitTypeID::BALLOON) {
-        return findTargetWithDefensePriority(unitWorldPos, unitType);
-    } else {
-        return findTargetWithResourcePriority(unitWorldPos, unitType);
-    }
-}
 
 // ==========================================
-// 炸弹兵专用：查找最近城墙
+// 建筑防御系统已迁移到 DefenseSystem 类
+// 使用 DefenseSystem::getInstance()->updateBuildingDefense()
 // ==========================================
 
-const BuildingInstance* BattleProcessController::findNearestWall(const Vec2& unitWorldPos) {
-    auto dataManager = VillageDataManager::getInstance();
-    const auto& buildings = dataManager->getAllBuildings();
-    
-    const BuildingInstance* nearestWall = nullptr;
-    float minDistanceSq = FLT_MAX;
-    
-    for (const auto& building : buildings) {
-        // 只查找城墙（type=303）
-        if (building.type != 303) continue;
-        if (building.isDestroyed || building.currentHP <= 0) continue;
-        if (building.state == BuildingInstance::State::PLACING) continue;
-        
-        Vec2 bPos = GridMapUtils::gridToPixelCenter(building.gridX, building.gridY);
-        float distSq = unitWorldPos.distanceSquared(bPos);
-        
-        if (distSq < minDistanceSq) {
-            minDistanceSq = distSq;
-            nearestWall = &building;
-        }
-    }
-    
-    return nearestWall;
-}
-
-// ==========================================
-// 建筑防御系统 - 查找攻击范围内的兵种
-// ==========================================
-
-BattleUnitSprite* BattleProcessController::findNearestUnitInRange(
-    const BuildingInstance& building, 
-    float attackRangeGrids,
-    BattleTroopLayer* troopLayer) {
-    
-    if (!troopLayer) return nullptr;
-    
-    auto config = BuildingConfig::getInstance()->getConfig(building.type);
-    if (!config) return nullptr;
-    
-    int centerX = building.gridX + config->gridWidth / 2;
-    int centerY = building.gridY + config->gridHeight / 2;
-    
-    auto allUnits = troopLayer->getAllUnits();
-    if (allUnits.empty()) return nullptr;
-    
-    BattleUnitSprite* nearestUnit = nullptr;
-    int minGridDistance = INT_MAX;
-    int attackRangeInt = static_cast<int>(attackRangeGrids);
-    
-    for (auto unit : allUnits) {
-        if (!unit) continue;
-        
-        // 气球兵是飞行单位，只有箭塔（302）能攻击它
-        // 加农炮（301）只能攻击地面单位
-        if (unit->getUnitTypeID() == UnitTypeID::BALLOON && building.type != 302) {
-            continue;  // 跳过气球兵
-        }
-        
-        Vec2 unitGridPos = unit->getGridPosition();
-        int unitGridX = static_cast<int>(unitGridPos.x);
-        int unitGridY = static_cast<int>(unitGridPos.y);
-        
-        int gridDistance = std::max(
-            std::abs(unitGridX - centerX),
-            std::abs(unitGridY - centerY)
-        );
-        
-        if (gridDistance <= attackRangeInt) {
-            if (gridDistance < minGridDistance) {
-                minGridDistance = gridDistance;
-                nearestUnit = unit;
-            }
-        }
-    }
-    
-    if (nearestUnit) {
-        nearestUnit->setTargetedByBuilding(true);
-    }
-    
-    return nearestUnit;
-}
-
-std::vector<BattleUnitSprite*> BattleProcessController::getAllUnitsInRange(
-    const BuildingInstance& building, 
-    float attackRangeGrids,
-    BattleTroopLayer* troopLayer) {
-    
-    std::vector<BattleUnitSprite*> unitsInRange;
-    
-    if (!troopLayer) return unitsInRange;
-    
-    auto config = BuildingConfig::getInstance()->getConfig(building.type);
-    if (!config) return unitsInRange;
-    
-    int centerX = building.gridX + config->gridWidth / 2;
-    int centerY = building.gridY + config->gridHeight / 2;
-    
-    auto allUnits = troopLayer->getAllUnits();
-    int attackRangeInt = static_cast<int>(attackRangeGrids);
-    
-    for (auto unit : allUnits) {
-        if (!unit) continue;
-        
-        Vec2 unitGridPos = unit->getGridPosition();
-        int unitGridX = static_cast<int>(unitGridPos.x);
-        int unitGridY = static_cast<int>(unitGridPos.y);
-        
-        int gridDistance = std::max(
-            std::abs(unitGridX - centerX),
-            std::abs(unitGridY - centerY)
-        );
-        
-        if (gridDistance <= attackRangeInt) {
-            unitsInRange.push_back(unit);
-        }
-    }
-    
-    return unitsInRange;
-}
-
-// ==========================================
-// 建筑防御自动更新系统
-// ==========================================
-
-void BattleProcessController::updateBuildingDefense(BattleTroopLayer* troopLayer) {
-    if (!troopLayer) return;
-
-    auto dataManager = VillageDataManager::getInstance();
-    auto& buildings = const_cast<std::vector<BuildingInstance>&>(dataManager->getAllBuildings());
-
-    std::set<BattleUnitSprite*> targetedUnitsThisFrame;
-    float deltaTime = Director::getInstance()->getDeltaTime();
-
-    for (auto& building : buildings) {
-        // 跳过非防御建筑
-        if (building.isDestroyed || building.currentHP <= 0) continue;
-        if (building.state == BuildingInstance::State::PLACING) continue;
-        if (building.type != 301 && building.type != 302) continue;
-
-        auto config = BuildingConfig::getInstance()->getConfig(building.type);
-        if (!config) continue;
-
-        float attackRange = config->attackRange;
-        float attackSpeed = config->attackSpeed;
-
-        BattleUnitSprite* currentTarget = static_cast<BattleUnitSprite*>(building.lockedTarget);
-
-        // ========== 目标有效性检查 ==========
-        bool targetValid = false;
-
-        if (currentTarget) {
-            auto allUnits = troopLayer->getAllUnits();
-
-            // 检查1: 目标是否还存活
-            for (auto unit : allUnits) {
-                if (unit == currentTarget && !unit->isDead()) {
-                    targetValid = true;
-                    break;
-                }
-            }
-
-            // 检查2: 是否还在范围内
-            if (targetValid) {
-                int centerX = building.gridX + config->gridWidth / 2;
-                int centerY = building.gridY + config->gridHeight / 2;
-
-                Vec2 unitGridPos = currentTarget->getGridPosition();
-                int gridDistance = std::max(
-                    std::abs((int)unitGridPos.x - centerX),
-                    std::abs((int)unitGridPos.y - centerY)
-                );
-
-                if (gridDistance > static_cast<int>(attackRange)) {
-                    targetValid = false;
-                }
-            }
-
-            // 目标无效，清除锁定
-            if (!targetValid) {
-                building.lockedTarget = nullptr;
-                currentTarget = nullptr;
-            }
-        }
-
-        // ========== 寻找新目标 ==========
-        if (!currentTarget) {
-            BattleUnitSprite* newTarget = findNearestUnitInRange(building, attackRange, troopLayer);
-            if (newTarget && !newTarget->isDead()) {
-                building.lockedTarget = static_cast<void*>(newTarget);
-                currentTarget = newTarget;
-                building.attackCooldown = 0.0f;
-            }
-        }
-
-        // ========== 攻击逻辑 ==========
-        if (currentTarget) {
-            targetedUnitsThisFrame.insert(currentTarget);
-
-            building.attackCooldown -= deltaTime;
-
-            if (building.attackCooldown <= 0.0f) {
-                int damagePerShot = static_cast<int>(config->damagePerSecond * attackSpeed);
-                currentTarget->takeDamage(damagePerShot);
-
-                // ✅✅✅ 关键修复：转换到 MapLayer 坐标系
-                auto mapLayer = troopLayer->getParent();
-                if (mapLayer) {
-                    std::string spriteName = "Building_" + std::to_string(building.id);
-                    auto buildingSprite = dynamic_cast<BuildingSprite*>(mapLayer->getChildByName(spriteName));
-
-                    if (buildingSprite) {
-                        auto defenseAnim = dynamic_cast<DefenseBuildingAnimation*>(
-                            buildingSprite->getChildByName("DefenseAnim")
-                            );
-
-                        if (defenseAnim) {
-                            // ✅ 核心修复：转换到 MapLayer 坐标系（而非世界坐标）
-                            // 1. 获取兵种在 TroopLayer 中的位置
-                            Vec2 unitPosInTroopLayer = currentTarget->getPosition();
-
-                            // 2. 转换到 MapLayer 坐标系
-                            Vec2 targetPosInMapLayer = troopLayer->convertToNodeSpace(
-                                troopLayer->getParent()->convertToWorldSpace(unitPosInTroopLayer)
-                            );
-
-                            // 更简洁的写法（推荐）
-                            // Vec2 targetPosInMapLayer = mapLayer->convertToNodeSpace(
-                            //     troopLayer->convertToWorldSpace(currentTarget->getPosition())
-                            // );
-
-                            CCLOG("BattleProcessController: Aiming at target - Unit pos in TroopLayer: (%.1f, %.1f), Target pos in MapLayer: (%.1f, %.1f)",
-                                  unitPosInTroopLayer.x, unitPosInTroopLayer.y,
-                                  targetPosInMapLayer.x, targetPosInMapLayer.y);
-
-                            defenseAnim->playAttackAnimation(targetPosInMapLayer);
-                        }
-                    }
-                }
-
-                building.attackCooldown = attackSpeed;
-
-                // ✅ 修复：目标死亡，立即清除锁定并停止所有动作
-                if (currentTarget->isDead()) {
-                    // 1. 立即清除建筑的锁定引用
-                    building.lockedTarget = nullptr;
-                    targetedUnitsThisFrame.erase(currentTarget);
-
-                    // 2. 恢复兵种颜色
-                    currentTarget->setTargetedByBuilding(false);
-
-                    // 3. 停止兵种所有正在进行的动作（包括攻击动画）
-                    currentTarget->stopAllActions();
-
-                    // 4. 播放死亡动画
-                    currentTarget->playDeathAnimation([troopLayer, currentTarget]() {
-                        troopLayer->removeUnit(currentTarget);
-                    });
-
-                    CCLOG("BattleProcessController: Unit killed, stopped all actions and playing death animation");
-                }
-            }
-        }
-    }
-
-    // ========== 更新兵种锁定状态 ==========
-    auto allUnits = troopLayer->getAllUnits();
-    for (auto unit : allUnits) {
-        if (!unit || unit->isDead()) continue;
-
-        bool shouldBeTargeted = (targetedUnitsThisFrame.find(unit) != targetedUnitsThisFrame.end());
-        if (unit->isTargetedByBuilding() != shouldBeTargeted) {
-            unit->setTargetedByBuilding(shouldBeTargeted);
-        }
-    }
-}
 
 // ==========================================
 // 战斗循环逻辑
@@ -977,7 +559,7 @@ void BattleProcessController::startCombatLoop(BattleUnitSprite* unit, BattleTroo
 
     Vec2 unitPos = unit->getPosition();
     auto dm = VillageDataManager::getInstance();
-    const BuildingInstance* target = findNearestBuilding(unitPos, unit->getUnitTypeID());
+    const BuildingInstance* target = TargetFinder::getInstance()->findTarget(unitPos, unit->getUnitTypeID());
 
     if (!target) {
         unit->playIdleAnimation();
@@ -1214,8 +796,8 @@ void BattleProcessController::performWallBreakerSuicideAttack(
             static_cast<void*>(target)
         );
 
-        // 新增：更新摧毁进度
-        updateDestructionProgress();
+        // 更新摧毁进度（已迁移到DestructionTracker）
+        DestructionTracker::getInstance()->updateProgress();
         CCLOG("BattleProcessController: Target destroyed!");
     }
 
@@ -1264,407 +846,7 @@ void BattleProcessController::performWallBreakerSuicideAttack(
 }
 
 // ==========================================
-// 🆕 摧毁进度追踪系统实现
+// 摧毁进度追踪系统已迁移到 DestructionTracker 类
+// 使用 DestructionTracker::getInstance()->initTracking()
+// 使用 DestructionTracker::getInstance()->updateProgress()
 // ==========================================
-
-void BattleProcessController::initDestructionTracking() {
-    // 重置所有追踪变量
-    _totalBuildingHP = 0;
-    _currentStars = 0;
-    _townHallDestroyed = false;
-    _star50Awarded = false;
-    _star100Awarded = false;
-
-    // 计算总血量
-    _totalBuildingHP = calculateTotalBuildingHP();
-
-    CCLOG("========================================");
-    CCLOG("BattleProcessController: Destruction tracking initialized");
-    CCLOG("Total Building HP: %d (excluding walls and traps)", _totalBuildingHP);
-    CCLOG("========================================");
-}
-
-int BattleProcessController::calculateTotalBuildingHP() {
-    auto dataManager = VillageDataManager::getInstance();
-    const auto& buildings = dataManager->getAllBuildings();
-
-    int totalHP = 0;
-    int buildingCount = 0;
-
-    for (const auto& building : buildings) {
-        // 跳过城墙（type == 303）
-        if (building.type == 303) continue;
-
-        // 跳过陷阱（type >= 400 && type < 500）
-        if (building.type >= 400 && building.type < 500) continue;
-
-        // 跳过未建造完成的建筑
-        if (building.state != BuildingInstance::State::BUILT) continue;
-
-        // 获取建筑配置
-        auto config = BuildingConfig::getInstance()->getConfig(building.type);
-        if (!config) continue;
-
-        // 累加血量
-        int maxHP = config->hitPoints;
-        if (maxHP > 0) {
-            totalHP += maxHP;
-            buildingCount++;
-
-            CCLOG("  [%d] Type=%d, HP=%d", building.id, building.type, maxHP);
-        }
-    }
-
-    CCLOG("BattleProcessController: Total %d buildings tracked, Total HP=%d",
-          buildingCount, totalHP);
-
-    return totalHP;
-}
-
-void BattleProcessController::updateDestructionProgress() {
-    // 如果总血量为0，说明没有初始化或没有建筑
-    if (_totalBuildingHP <= 0) {
-        CCLOG("BattleProcessController: Total HP is 0, skipping progress update");
-        return;
-    }
-
-    auto dataManager = VillageDataManager::getInstance();
-    const auto& buildings = dataManager->getAllBuildings();
-
-    // 计算当前剩余血量
-    int currentTotalHP = 0;
-    bool townHallDestroyed = false;
-
-    for (const auto& building : buildings) {
-        // 使用与 calculateTotalBuildingHP 相同的过滤逻辑
-        if (building.type == 303) continue;
-        if (building.type >= 400 && building.type < 500) continue;
-        if (building.state != BuildingInstance::State::BUILT) continue;
-
-        // 检查大本营状态（type == 1）
-        if (building.type == 1 && building.isDestroyed) {
-            townHallDestroyed = true;
-        }
-
-        // 累加当前血量
-        if (!building.isDestroyed && building.currentHP > 0) {
-            currentTotalHP += building.currentHP;
-        }
-    }
-
-    // 计算摧毁进度
-    float progress = ((_totalBuildingHP - currentTotalHP) / (float)_totalBuildingHP) * 100.0f;
-
-    // 限制在 0-100 范围内
-    if (progress < 0.0f) progress = 0.0f;
-    if (progress > 100.0f) progress = 100.0f;
-
-    CCLOG("========================================");
-    CCLOG("BattleProcessController: Progress Updated");
-    CCLOG("  Total HP: %d", _totalBuildingHP);
-    CCLOG("  Current HP: %d", currentTotalHP);
-    CCLOG("  Destroyed HP: %d", _totalBuildingHP - currentTotalHP);
-    CCLOG("  Progress: %.1f%%", progress);
-    CCLOG("  Town Hall Destroyed: %s", townHallDestroyed ? "YES" : "NO");
-    CCLOG("========================================");
-
-    // ✅ 关键修复：先检查星级条件（此时 _townHallDestroyed 还是旧值）
-    checkStarConditions(progress, townHallDestroyed);
-
-    // ✅ 然后再更新大本营状态（放在检查之后）
-    _townHallDestroyed = townHallDestroyed;
-
-    // 发送进度更新事件
-    DestructionProgressEventData eventData;
-    eventData.progress = progress;
-    eventData.stars = _currentStars;
-
-    EventCustom event("EVENT_DESTRUCTION_PROGRESS_UPDATED");
-    event.setUserData(&eventData);
-    Director::getInstance()->getEventDispatcher()->dispatchEvent(&event);
-}
-
-void BattleProcessController::checkStarConditions(float progress, bool townHallDestroyed) {
-    int oldStars = _currentStars;
-
-    // ✅ 修复：三个条件独立累加，每个条件各加1颗星
-    int newStars = 0;
-
-    // ========== 第1颗星：摧毁进度 >= 50% ==========
-    if (progress >= 50.0f) {
-        newStars++;
-        
-        if (!_star50Awarded) {
-            _star50Awarded = true;
-            
-            CCLOG("⭐⭐⭐ STAR AWARDED! ⭐⭐⭐");
-            CCLOG("  Reason: 50%% Destruction");
-            CCLOG("  Progress: %.1f%%", progress);
-
-            // 发送星星获得事件
-            StarAwardedEventData starData;
-            starData.starIndex = 0;  // 第1颗星（索引0）
-            starData.reason = "50%";
-
-            EventCustom event("EVENT_STAR_AWARDED");
-            event.setUserData(&starData);
-            Director::getInstance()->getEventDispatcher()->dispatchEvent(&event);
-        }
-    }
-
-    // ========== 第2颗星：大本营被摧毁 ==========
-    if (townHallDestroyed) {
-        newStars++;
-        
-        if (!_townHallDestroyed) {
-            CCLOG("⭐⭐⭐ STAR AWARDED! ⭐⭐⭐");
-            CCLOG("  Reason: Town Hall Destroyed");
-
-            // 发送星星获得事件
-            StarAwardedEventData starData;
-            starData.starIndex = 1;  // 第2颗星（索引1）
-            starData.reason = "townhall";
-
-            EventCustom event("EVENT_STAR_AWARDED");
-            event.setUserData(&starData);
-            Director::getInstance()->getEventDispatcher()->dispatchEvent(&event);
-        }
-    }
-
-    // ========== 第3颗星：摧毁进度 == 100% ==========
-    if (progress >= 99.9f) {  // 使用 99.9 避免浮点误差
-        newStars++;
-        
-        if (!_star100Awarded) {
-            _star100Awarded = true;
-
-            CCLOG("⭐⭐⭐ STAR AWARDED! ⭐⭐⭐");
-            CCLOG("  Reason: 100%% Destruction");
-            CCLOG("  Progress: %.1f%%", progress);
-
-            // 发送星星获得事件
-            StarAwardedEventData starData;
-            starData.starIndex = 2;  // 第3颗星（索引2）
-            starData.reason = "100%";
-
-            EventCustom event("EVENT_STAR_AWARDED");
-            event.setUserData(&starData);
-            Director::getInstance()->getEventDispatcher()->dispatchEvent(&event);
-        }
-    }
-
-    // 更新星数
-    _currentStars = newStars;
-
-    // 如果星数发生变化，输出日志
-    if (_currentStars != oldStars) {
-        CCLOG("BattleProcessController: Stars updated: %d -> %d", oldStars, _currentStars);
-        CCLOG("  - 50%% progress: %s", progress >= 50.0f ? "YES" : "NO");
-        CCLOG("  - Town Hall destroyed: %s", townHallDestroyed ? "YES" : "NO");
-        CCLOG("  - 100%% progress: %s", progress >= 99.9f ? "YES" : "NO");
-    }
-}
-
-float BattleProcessController::getDestructionProgress() {
-    if (_totalBuildingHP <= 0) return 0.0f;
-
-    auto dataManager = VillageDataManager::getInstance();
-    const auto& buildings = dataManager->getAllBuildings();
-
-    int currentTotalHP = 0;
-
-    for (const auto& building : buildings) {
-        if (building.type == 303) continue;
-        if (building.type >= 400 && building.type < 500) continue;
-        if (building.state != BuildingInstance::State::BUILT) continue;
-
-        if (!building.isDestroyed && building.currentHP > 0) {
-            currentTotalHP += building.currentHP;
-        }
-    }
-
-    float progress = ((_totalBuildingHP - currentTotalHP) / (float)_totalBuildingHP) * 100.0f;
-
-    if (progress < 0.0f) progress = 0.0f;
-    if (progress > 100.0f) progress = 100.0f;
-
-    return progress;
-}
-
-int BattleProcessController::getCurrentStars() {
-    return _currentStars;
-}
-
-// ==========================================
-// 陷阱系统实现
-// ==========================================
-
-bool BattleProcessController::isUnitInTrapRange(const BuildingInstance& trap, BattleUnitSprite* unit) {
-    if (!unit || unit->isDead()) return false;
-    
-    // 获取兵种网格位置
-    Vec2 unitGridPos = unit->getGridPosition();
-    int unitGridX = static_cast<int>(std::floor(unitGridPos.x));
-    int unitGridY = static_cast<int>(std::floor(unitGridPos.y));
-    
-    int trapX = trap.gridX;
-    int trapY = trap.gridY;
-    
-    // 401: 炸弹 - 1x1 格子，只检查陷阱所在的格子
-    if (trap.type == 401) {
-        return (unitGridX == trapX && unitGridY == trapY);
-    }
-    // 404: 巨型炸弹 - 2x2 格子，检查陷阱所在的4个格子
-    else if (trap.type == 404) {
-        // 巨型炸弹占据 (trapX, trapY) 到 (trapX+1, trapY+1) 的范围
-        return (unitGridX >= trapX && unitGridX <= trapX + 1 &&
-                unitGridY >= trapY && unitGridY <= trapY + 1);
-    }
-    
-    return false;
-}
-
-void BattleProcessController::updateTrapDetection(BattleTroopLayer* troopLayer) {
-    if (!troopLayer) return;
-    
-    auto dataManager = VillageDataManager::getInstance();
-    auto& buildings = const_cast<std::vector<BuildingInstance>&>(dataManager->getAllBuildings());
-    float deltaTime = Director::getInstance()->getDeltaTime();
-    
-    auto allUnits = troopLayer->getAllUnits();
-    if (allUnits.empty()) return;
-    
-    // 遍历所有陷阱
-    for (auto& building : buildings) {
-        // 只处理陷阱（401: 炸弹, 404: 巨型炸弹）
-        if (building.type != 401 && building.type != 404) continue;
-        
-        // 跳过已摧毁或已触发的陷阱
-        if (building.isDestroyed || building.currentHP <= 0) continue;
-        
-        int trapId = building.id;
-        
-        // 检查陷阱是否已经被触发（正在倒计时）
-        if (_triggeredTraps.find(trapId) != _triggeredTraps.end()) {
-            // 更新计时器
-            _trapTimers[trapId] -= deltaTime;
-            
-            if (_trapTimers[trapId] <= 0.0f) {
-                // 时间到，执行爆炸
-                CCLOG("BattleProcessController: Trap %d exploding!", trapId);
-                explodeTrap(&building, troopLayer);
-                
-                // 清除触发状态
-                _triggeredTraps.erase(trapId);
-                _trapTimers.erase(trapId);
-            }
-            continue;
-        }
-        
-        // 检查是否有兵种进入陷阱范围
-        for (auto unit : allUnits) {
-            if (!unit || unit->isDead()) continue;
-            
-            // 气球兵是飞行单位，不会触发地面陷阱
-            if (unit->getUnitTypeID() == UnitTypeID::BALLOON) continue;
-            
-            if (isUnitInTrapRange(building, unit)) {
-                // 触发陷阱，开始0.5秒倒计时
-                CCLOG("BattleProcessController: Trap %d (type=%d) triggered by unit at grid(%d, %d)!",
-                      trapId, building.type,
-                      static_cast<int>(unit->getGridPosition().x),
-                      static_cast<int>(unit->getGridPosition().y));
-                
-                _triggeredTraps.insert(trapId);
-                _trapTimers[trapId] = 0.5f;  // 0.5秒延迟
-                
-                // ✅ 新增：让陷阱显示出来
-                auto mapLayer = troopLayer->getParent();
-                if (mapLayer) {
-                    std::string spriteName = "Building_" + std::to_string(trapId);
-                    auto trapSprite = mapLayer->getChildByName(spriteName);
-                    if (trapSprite) {
-                        trapSprite->setVisible(true);
-                        CCLOG("BattleProcessController: Trap %d now VISIBLE!", trapId);
-                    }
-                }
-                
-                break;  // 一个陷阱只能被触发一次
-            }
-        }
-    }
-}
-
-void BattleProcessController::explodeTrap(BuildingInstance* trap, BattleTroopLayer* troopLayer) {
-    if (!trap || !troopLayer) return;
-    
-    auto config = BuildingConfig::getInstance()->getConfig(trap->type);
-    if (!config) return;
-    
-    int damage = config->damagePerSecond;  // 对于陷阱，这个字段存储爆炸伤害
-    
-    CCLOG("BattleProcessController: Trap %d (type=%d) exploding with %d damage!",
-          trap->id, trap->type, damage);
-    
-    // 获取所有在范围内的兵种
-    auto allUnits = troopLayer->getAllUnits();
-    std::vector<BattleUnitSprite*> affectedUnits;
-    
-    for (auto unit : allUnits) {
-        if (!unit || unit->isDead()) continue;
-        
-        // 气球兵是飞行单位，不会受到地面陷阱伤害
-        if (unit->getUnitTypeID() == UnitTypeID::BALLOON) continue;
-        
-        if (isUnitInTrapRange(*trap, unit)) {
-            affectedUnits.push_back(unit);
-        }
-    }
-    
-    CCLOG("BattleProcessController: %zu units affected by trap explosion", affectedUnits.size());
-    
-    // 对范围内的所有兵种造成伤害
-    for (auto unit : affectedUnits) {
-        unit->takeDamage(damage);
-        CCLOG("BattleProcessController: Unit %s took %d damage from trap, HP: %d",
-              unit->getUnitType().c_str(), damage, unit->getCurrentHP());
-        
-        // 检查是否死亡
-        if (unit->isDead()) {
-            unit->stopAllActions();
-            unit->playDeathAnimation([troopLayer, unit]() {
-                troopLayer->removeUnit(unit);
-            });
-        }
-    }
-    
-    // 播放爆炸特效
-    Vec2 trapPixelPos = GridMapUtils::gridToPixelCenter(trap->gridX, trap->gridY);
-    
-    // 对于巨型炸弹，爆炸位置在2x2的中心
-    if (trap->type == 404) {
-        trapPixelPos = GridMapUtils::gridToPixelCenter(trap->gridX, trap->gridY + 1);
-    }
-    
-    auto explosion = ParticleExplosion::create();
-    explosion->setPosition(trapPixelPos);
-    explosion->setDuration(0.3f);
-    
-    // 巨型炸弹爆炸更大
-    float scale = (trap->type == 404) ? 0.6f : 0.3f;
-    explosion->setScale(scale);
-    explosion->setAutoRemoveOnFinish(true);
-    troopLayer->getParent()->addChild(explosion, 1000);
-    
-    // 标记陷阱为已摧毁（消失）
-    trap->isDestroyed = true;
-    trap->currentHP = 0;
-    
-    // 发送陷阱摧毁事件（用于隐藏精灵）
-    Director::getInstance()->getEventDispatcher()->dispatchCustomEvent(
-        "EVENT_BUILDING_DESTROYED",
-        static_cast<void*>(trap)
-    );
-    
-    CCLOG("BattleProcessController: Trap %d destroyed after explosion", trap->id);
-}

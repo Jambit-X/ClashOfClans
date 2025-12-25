@@ -3,6 +3,7 @@
 
 #include "Model/ReplayData.h"
 #include "Manager/ReplayManager.h"
+#include "Controller/BattleRecorder.h"
 #include "cocos2d.h"
 #include <functional>
 #include <map>
@@ -124,25 +125,18 @@ private:
     void onProgressUpdated(cocos2d::EventCustom* event);
     void onStarAwarded(cocos2d::EventCustom* event);
 
-    // ========== ✅ 回放录制系统 ==========
-    bool _isReplayMode = false;              // 是否为回放模式
+    // ========== ✅ 回放录制系统（委托给 BattleRecorder）==========
+    BattleRecorder _recorder;                // 回放录制/播放管理器
     bool _isInitialized = false;             // 标记是否完成初始化
-    bool _isRecording = false;               // 是否正在录制
-    float _battleStartTime = 0.0f;           // 战斗开始时间
-    BattleReplayData _replayData;            // 回放数据
 
-    // 录制相关方法
+    // 录制相关方法（委托给 _recorder）
     void startRecording();
     void stopRecording();
     void recordTroopDeployment(int troopId, int gridX, int gridY);
 
-    // ========== ✅ 回放播放系统 ==========
-    size_t _currentEventIndex = 0;           // 当前播放到的事件索引
-    float _replayStartTime = 0.0f;           // 回放开始时间
-
+    // 回放相关方法（委托给 _recorder）
     void startReplay();
     void updateReplay(float dt);
-    void checkAndDeployNextTroop(float elapsedTime);
 
     void loadReplayMap();  // 加载回放地图
     virtual void onEnter() override;
