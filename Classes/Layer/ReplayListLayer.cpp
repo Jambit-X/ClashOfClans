@@ -81,7 +81,7 @@ void ReplayListLayer::loadReplayList() {
     auto replayList = ReplayManager::getInstance()->getReplayList();
 
     if (replayList.empty()) {
-        // 空状态提示（✅ 改用 TTF）
+        // 空状态提示
         auto emptyLabel = Label::createWithTTF(
             "暂无战斗回放\n去打一场战斗吧！",
             FONT_PATH, 36
@@ -93,23 +93,34 @@ void ReplayListLayer::loadReplayList() {
         return;
     }
 
-    // 倒序显示（最新的在上面）
-    std::reverse(replayList.begin(), replayList.end());
+    // ✅ 计算总高度
+    float contentHeight = replayList.size() * (CARD_HEIGHT + CARD_SPACING);
+    float scrollHeight = _scrollView->getContentSize().height;
 
-    // ✅ 计算总高度（卡片数量 * 单卡高度 + 间距）
-    float totalHeight = replayList.size() * (CARD_HEIGHT + CARD_SPACING);
+    // ✅✅✅ 关键修复：确保内容高度至少等于 ScrollView 高度
+    // 这样即使只有一张卡片，内容也会从顶部开始排列
+    float totalHeight = std::max(contentHeight, scrollHeight);
+
     _contentNode->setContentSize(Size(_scrollView->getContentSize().width, totalHeight));
     _scrollView->setInnerContainerSize(Size(_scrollView->getContentSize().width, totalHeight));
 
-    CCLOG("ReplayListLayer: Total content height = %.0f for %zu replays",
-          totalHeight, replayList.size());
+    CCLOG("ReplayListLayer: Content height = %.0f, ScrollView height = %.0f, Total height = %.0f for %zu replays",
+          contentHeight, scrollHeight, totalHeight, replayList.size());
 
-    // ✅ 创建每张卡片（从顶部开始排列）
-    float yPos = totalHeight - CARD_HEIGHT / 2 - 10;  // 从顶部开始，留10像素边距
-    for (const auto& replay : replayList) {
-        createReplayCard(replay, yPos);
+    // ✅ 第一张卡片顶部对齐到内容区域顶部
+    float yPos = totalHeight - CARD_HEIGHT / 2;
+
+    for (auto it = replayList.rbegin(); it != replayList.rend(); ++it) {
+        createReplayCard(*it, yPos);
         yPos -= (CARD_HEIGHT + CARD_SPACING);
     }
+
+    CCLOG("ReplayListLayer: Loaded %zu replay cards (newest at top)", replayList.size());
+
+    // ✅ 强制滚动到顶部
+    _scrollView->jumpToTop();
+
+    CCLOG("ReplayListLayer: ScrollView jumped to top");
 }
 
 void ReplayListLayer::createReplayCard(const ReplayMetadata& replay, float yPosition) {

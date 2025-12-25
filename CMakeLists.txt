@@ -49,9 +49,18 @@ endif()
 # add cross-platforms source files and header files
 list(APPEND GAME_SOURCE
      Classes/AppDelegate/AppDelegate.cpp
-     Classes/Scene/StartupScene.cpp
-     Classes/Scene/VillageScene.cpp
-     Classes/Scene/BattleScene.cpp
+     Classes/Component/ConstructionAnimation.cpp
+     Classes/Component/DefenseBuildingAnimation.cpp
+     Classes/Component/HealthBarComponent.cpp
+     Classes/Controller/MoveMapController.cpp
+     Classes/Controller/MoveBuildingController.cpp
+     Classes/Controller/BuildingPlacementController.cpp
+     Classes/Controller/BattleProcessController.cpp
+     Classes/Controller/BattleRecorder.cpp
+     Classes/Controller/TargetFinder.cpp
+     Classes/Controller/TrapSystem.cpp
+     Classes/Controller/DefenseSystem.cpp
+     Classes/Controller/DestructionTracker.cpp
      Classes/Layer/BattleTroopLayer.cpp
      Classes/Layer/VillageLayer.cpp
      Classes/Layer/ShopLayer.cpp
@@ -62,20 +71,8 @@ list(APPEND GAME_SOURCE
      Classes/Layer/ThemeSwitchLayer.cpp
      Classes/Layer/DebugLayer.cpp
      Classes/Layer/ReplayListLayer.cpp
-     Classes/Component/ConstructionAnimation.cpp
-     Classes/Component/DefenseBuildingAnimation.cpp
-     Classes/Component/HealthBarComponent.cpp
-     Classes/Component/Projectile.cpp
      Classes/Layer/TrainingLayer.cpp
-     Classes/Controller/MoveMapController.cpp
-     Classes/Controller/MoveBuildingController.cpp
-     Classes/Controller/BuildingPlacementController.cpp
-     Classes/Controller/BattleProcessController.cpp
-     Classes/Controller/BattleRecorder.cpp
-     Classes/Controller/TargetFinder.cpp
-     Classes/Controller/TrapSystem.cpp
-     Classes/Controller/DefenseSystem.cpp
-     Classes/Controller/DestructionTracker.cpp
+     Classes/Layer/LaboratoryLayer.cpp
      Classes/Manager/Resource/ResourceProductionSystem.cpp
      Classes/Manager/AnimationManager.cpp
      Classes/Manager/AudioManager.cpp
@@ -89,8 +86,9 @@ list(APPEND GAME_SOURCE
      Classes/Model/TroopConfig.cpp
      Classes/Model/TroopUpgradeConfig.cpp
      Classes/Model/ReplayData.cpp
-     Classes/Layer/LaboratoryLayer.cpp
-     Classes/Util/GridMapUtils.cpp
+     Classes/Scene/StartupScene.cpp
+     Classes/Scene/VillageScene.cpp
+     Classes/Scene/BattleScene.cpp
      Classes/Sprite/BuildingSprite.cpp
      Classes/Sprite/BattleUnitSprite.cpp
      Classes/UI/PlacementConfirmUI.cpp
@@ -99,12 +97,22 @@ list(APPEND GAME_SOURCE
      Classes/Util/FindPathUtil.cpp
      Classes/Util/DebugHelper.cpp
      Classes/Util/RandomBattleMapGenerator.cpp
+     Classes/Util/GridMapUtils.cpp
      )
 list(APPEND GAME_HEADER
      Classes/AppDelegate/AppDelegate.h
-     Classes/Scene/StartupScene.h
-     Classes/Scene/VillageScene.h
-     Classes/Scene/BattleScene.h
+     Classes/Component/ConstructionAnimation.h
+     Classes/Component/DefenseBuildingAnimation.h
+     Classes/Component/HealthBarComponent.h
+     Classes/Controller/MoveMapController.h
+     Classes/Controller/MoveBuildingController.h
+     Classes/Controller/BuildingPlacementController.h
+     Classes/Controller/BattleProcessController.h
+     Classes/Controller/BattleRecorder.h
+     Classes/Controller/TargetFinder.h
+     Classes/Controller/TrapSystem.h
+     Classes/Controller/DefenseSystem.h
+     Classes/Controller/DestructionTracker.h
      Classes/Layer/BattleTroopLayer.h
      Classes/Layer/ShopLayer.h
      Classes/Layer/VillageLayer.h
@@ -115,20 +123,8 @@ list(APPEND GAME_HEADER
      Classes/Layer/DebugLayer.h
      Classes/Layer/ReplayListLayer.h
      Classes/Layer/ThemeSwitchLayer.h
-     Classes/Component/ConstructionAnimation.h
-     Classes/Component/DefenseBuildingAnimation.h
-     Classes/Component/HealthBarComponent.h
-     Classes/Component/Projectile.h
+     Classes/Layer/LaboratoryLayer.h
      Classes/Layer/TrainingLayer.h
-     Classes/Controller/MoveMapController.h
-     Classes/Controller/MoveBuildingController.h
-     Classes/Controller/BuildingPlacementController.h
-     Classes/Controller/BattleProcessController.h
-     Classes/Controller/BattleRecorder.h
-     Classes/Controller/TargetFinder.h
-     Classes/Controller/TrapSystem.h
-     Classes/Controller/DefenseSystem.h
-     Classes/Controller/DestructionTracker.h
      Classes/Manager/Resource/ResourceProductionSystem.h
      Classes/Manager/AnimationManager.h
      Classes/Manager/AudioManager.h
@@ -143,15 +139,17 @@ list(APPEND GAME_HEADER
      Classes/Model/TroopConfig.h
      Classes/Model/TroopUpgradeConfig.h
      Classes/Model/ReplayData.h
-     Classes/Layer/LaboratoryLayer.h
-     Classes/Util/GridMapUtils.h
+     Classes/Model/BattleMapData.h
+     Classes/Scene/StartupScene.h
+     Classes/Scene/VillageScene.h
+     Classes/Scene/BattleScene.h
      Classes/Sprite/BuildingSprite.h
      Classes/Sprite/BattleUnitSprite.h
      Classes/UI/PlacementConfirmUI.h
      Classes/UI/ResourceCollectionUI.h
      Classes/UI/BattleProgressUI.h
+     Classes/Util/GridMapUtils.h
      Classes/Util/DebugHelper.h
-     Classes/Model/BattleMapData.h
      Classes/Util/RandomBattleMapGenerator.h
      )
 
