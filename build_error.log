@@ -1,9 +1,41 @@
-﻿[1/1] Linking CXX shared library ..\..\..\..\build\intermediates\cmake\debug\obj\armeabi-v7a\libMyGame.so
-FAILED: ../../../../build/intermediates/cmake/debug/obj/armeabi-v7a/libMyGame.so 
-cmd.exe /C "cd . && E:\AndriodSDK\ndk\16.1.4479499\toolchains\llvm\prebuilt\windows-x86_64\bin\clang++.exe --target=armv7-none-linux-androideabi --gcc-toolchain=E:/AndriodSDK/ndk/16.1.4479499/toolchains/arm-linux-androideabi-4.9/prebuilt/windows-x86_64 --sysroot=E:/AndriodSDK/ndk/16.1.4479499/sysroot -fPIC -isystem E:/AndriodSDK/ndk/16.1.4479499/sysroot/usr/include/arm-linux-androideabi -D__ANDROID_API__=16 -g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 -fno-integrated-as -mthumb -mfpu=neon -Wa,--noexecstack -Wformat -Werror=format-security -std=c++11 -frtti -fexceptions -fsigned-char -O0 -fno-limit-debug-info  -Wl,--exclude-libs,libgcc.a -Wl,--exclude-libs,libatomic.a --sysroot E:/AndriodSDK/ndk/16.1.4479499/platforms/android-16/arch-arm -Wl,--build-id -Wl,--warn-shared-textrel -Wl,--fatal-warnings -Wl,--fix-cortex-a8 -Wl,--exclude-libs,libunwind.a -LE:/AndriodSDK/ndk/16.1.4479499/sources/cxx-stl/llvm-libc++/libs/armeabi-v7a -Wl,--no-undefined -Wl,-z,noexecstack -Qunused-arguments -Wl,-z,relro -Wl,-z,now -shared -Wl,-soname,libMyGame.so -o ..\..\..\..\build\intermediates\cmake\debug\obj\armeabi-v7a\libMyGame.so @CMakeFiles/MyGame.rsp  && cd ."
-../../../../../../Classes/Util/RandomBattleMapGenerator.cpp:257: error: undefined reference to 'RandomBattleMapGenerator::CANNON'
-../../../../../../Classes/Util/RandomBattleMapGenerator.cpp:257: error: undefined reference to 'RandomBattleMapGenerator::ARCHER_TOWER'
-../../../../../../Classes/Util/RandomBattleMapGenerator.cpp:564: error: undefined reference to 'RandomBattleMapGenerator::BOMB'
-../../../../../../Classes/Util/RandomBattleMapGenerator.cpp:564: error: undefined reference to 'RandomBattleMapGenerator::GIANT_BOMB'
-clang++.exe: error: linker command failed with exit code 1 (use -v to see invocation)
-ninja: build stopped: subcommand failed.
+适用于 .NET Framework MSBuild 版本 17.14.23+b0019275e
+
+  ext_clipper.vcxproj -> D:\ClashOfClans\build\lib\Debug\ext_clipper.lib
+  ext_convertUTF.vcxproj -> D:\ClashOfClans\build\lib\Debug\ext_convertUTF.lib
+  ext_edtaa3func.vcxproj -> D:\ClashOfClans\build\lib\Debug\ext_edtaa3func.lib
+  ext_md5.vcxproj -> D:\ClashOfClans\build\lib\Debug\ext_md5.lib
+  ext_poly2tri.vcxproj -> D:\ClashOfClans\build\lib\Debug\ext_poly2tri.lib
+  ext_recast.vcxproj -> D:\ClashOfClans\build\lib\Debug\ext_recast.lib
+  ext_tinyxml2.vcxproj -> D:\ClashOfClans\build\lib\Debug\ext_tinyxml2.lib
+  ext_unzip.vcxproj -> D:\ClashOfClans\build\lib\Debug\ext_unzip.lib
+  ext_xxhash.vcxproj -> D:\ClashOfClans\build\lib\Debug\ext_xxhash.lib
+  ext_xxtea.vcxproj -> D:\ClashOfClans\build\lib\Debug\ext_xxtea.lib
+  external.vcxproj -> D:\ClashOfClans\build\lib\Debug\external.lib
+  cocos2d.vcxproj -> D:\ClashOfClans\build\lib\Debug\cocos2d.lib
+  BattleProcessController.cpp
+D:\ClashOfClans\Classes\Controller\TargetFinder.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失 [D:\ClashOfClans\build\ClashOfClans.vcxproj]
+  (编译源文件“../Classes/Controller/BattleProcessController.cpp”)
+  
+D:\ClashOfClans\Classes\Model\VillageData.h(6,8): warning C4099: “BuildingInstance”: 类型名称以前使用“class”现在使用的是“struct” [D:\ClashOfClans\build\ClashOfClans.vcxproj]
+  (编译源文件“../Classes/Controller/BattleProcessController.cpp”)
+      D:\ClashOfClans\Classes\Model\VillageData.h(6,8):
+      参见“BuildingInstance”的声明
+  
+D:\ClashOfClans\Classes\Controller\BattleProcessController.cpp(216,22): error C3861: “findTargetWithResourcePriority”: 找不到标识符 [D:\ClashOfClans\build\ClashOfClans.vcxproj]
+D:\ClashOfClans\Classes\Controller\BattleProcessController.cpp(218,22): error C3861: “findTargetWithDefensePriority”: 找不到标识符 [D:\ClashOfClans\build\ClashOfClans.vcxproj]
+D:\ClashOfClans\Classes\Controller\BattleProcessController.cpp(220,22): error C3861: “findTargetWithResourcePriority”: 找不到标识符 [D:\ClashOfClans\build\ClashOfClans.vcxproj]
+D:\ClashOfClans\Classes\Controller\BattleProcessController.cpp(253,9): warning C4566: 由通用字符名称“\u2713”表示的字符不能在当前代码页(936)中表示出来 [D:\ClashOfClans\build\ClashOfClans.vcxproj]
+D:\ClashOfClans\Classes\Controller\BattleProcessController.cpp(257,5): warning C4566: 由通用字符名称“\u2717”表示的字符不能在当前代码页(936)中表示出来 [D:\ClashOfClans\build\ClashOfClans.vcxproj]
+D:\ClashOfClans\Classes\Controller\BattleProcessController.cpp(367,13): warning C4566: 由通用字符名称“\u2713”表示的字符不能在当前代码页(936)中表示出来 [D:\ClashOfClans\build\ClashOfClans.vcxproj]
+D:\ClashOfClans\Classes\Controller\BattleProcessController.cpp(373,13): warning C4566: 由通用字符名称“\u2717”表示的字符不能在当前代码页(936)中表示出来 [D:\ClashOfClans\build\ClashOfClans.vcxproj]
+D:\ClashOfClans\Classes\Controller\BattleProcessController.cpp(400,9): warning C4566: 由通用字符名称“\u26A0”表示的字符不能在当前代码页(936)中表示出来 [D:\ClashOfClans\build\ClashOfClans.vcxproj]
+D:\ClashOfClans\Classes\Controller\BattleProcessController.cpp(400,9): warning C4566: 由通用字符名称“\uFE0F”表示的字符不能在当前代码页(936)中表示出来 [D:\ClashOfClans\build\ClashOfClans.vcxproj]
+D:\ClashOfClans\Classes\Controller\BattleProcessController.cpp(447,21): warning C4566: 由通用字符名称“\u2713”表示的字符不能在当前代码页(936)中表示出来 [D:\ClashOfClans\build\ClashOfClans.vcxproj]
+D:\ClashOfClans\Classes\Controller\BattleProcessController.cpp(490,21): warning C4566: 由通用字符名称“\u2713”表示的字符不能在当前代码页(936)中表示出来 [D:\ClashOfClans\build\ClashOfClans.vcxproj]
+D:\ClashOfClans\Classes\Controller\BattleProcessController.cpp(535,1): warning C4566: 由通用字符名称“\u2713”表示的字符不能在当前代码页(936)中表示出来 [D:\ClashOfClans\build\ClashOfClans.vcxproj]
+D:\ClashOfClans\Classes\Controller\BattleProcessController.cpp(543,5): warning C4566: 由通用字符名称“\u2717”表示的字符不能在当前代码页(936)中表示出来 [D:\ClashOfClans\build\ClashOfClans.vcxproj]
+D:\ClashOfClans\Classes\Controller\BattleProcessController.cpp(671,27): warning C4244: “初始化”: 从“const int”转换到“float”，可能丢失数据 [D:\ClashOfClans\build\ClashOfClans.vcxproj]
+D:\ClashOfClans\Classes\Controller\BattleProcessController.cpp(889,5): warning C4566: 由通用字符名称“\u2713”表示的字符不能在当前代码页(936)中表示出来 [D:\ClashOfClans\build\ClashOfClans.vcxproj]
+D:\ClashOfClans\Classes\Controller\BattleProcessController.cpp(1234,13): warning C4566: 由通用字符名称“\u2B50”表示的字符不能在当前代码页(936)中表示出来 [D:\ClashOfClans\build\ClashOfClans.vcxproj]
+D:\ClashOfClans\Classes\Controller\BattleProcessController.cpp(1254,13): warning C4566: 由通用字符名称“\u2B50”表示的字符不能在当前代码页(936)中表示出来 [D:\ClashOfClans\build\ClashOfClans.vcxproj]
+D:\ClashOfClans\Classes\Controller\BattleProcessController.cpp(1275,13): warning C4566: 由通用字符名称“\u2B50”表示的字符不能在当前代码页(936)中表示出来 [D:\ClashOfClans\build\ClashOfClans.vcxproj]

@@ -71,6 +71,11 @@ list(APPEND GAME_SOURCE
      Classes/Controller/MoveBuildingController.cpp
      Classes/Controller/BuildingPlacementController.cpp
      Classes/Controller/BattleProcessController.cpp
+     Classes/Controller/BattleRecorder.cpp
+     Classes/Controller/TargetFinder.cpp
+     Classes/Controller/TrapSystem.cpp
+     Classes/Controller/DefenseSystem.cpp
+     Classes/Controller/DestructionTracker.cpp
      Classes/Manager/Resource/ResourceProductionSystem.cpp
      Classes/Manager/AnimationManager.cpp
      Classes/Manager/AudioManager.cpp
@@ -83,7 +88,7 @@ list(APPEND GAME_SOURCE
      Classes/Model/BuildingConfig.cpp
      Classes/Model/TroopConfig.cpp
      Classes/Model/TroopUpgradeConfig.cpp
-     Classes/Model/Replaydata.cpp
+     Classes/Model/ReplayData.cpp
      Classes/Layer/LaboratoryLayer.cpp
      Classes/Util/GridMapUtils.cpp
      Classes/Sprite/BuildingSprite.cpp
@@ -91,11 +96,8 @@ list(APPEND GAME_SOURCE
      Classes/UI/PlacementConfirmUI.cpp
      Classes/UI/ResourceCollectionUI.cpp
      Classes/UI/BattleProgressUI.cpp
-     Classes/Util/GridMapUtils.cpp
-     Classes/Util/FindPathUtil.cpp
      Classes/Util/FindPathUtil.cpp
      Classes/Util/DebugHelper.cpp
-     Classes/Layer/DebugLayer.cpp
      Classes/Util/RandomBattleMapGenerator.cpp
      )
 list(APPEND GAME_HEADER
@@ -122,6 +124,11 @@ list(APPEND GAME_HEADER
      Classes/Controller/MoveBuildingController.h
      Classes/Controller/BuildingPlacementController.h
      Classes/Controller/BattleProcessController.h
+     Classes/Controller/BattleRecorder.h
+     Classes/Controller/TargetFinder.h
+     Classes/Controller/TrapSystem.h
+     Classes/Controller/DefenseSystem.h
+     Classes/Controller/DestructionTracker.h
      Classes/Manager/Resource/ResourceProductionSystem.h
      Classes/Manager/AnimationManager.h
      Classes/Manager/AudioManager.h
@@ -135,19 +142,15 @@ list(APPEND GAME_HEADER
      Classes/Model/BuildingConfig.h
      Classes/Model/TroopConfig.h
      Classes/Model/TroopUpgradeConfig.h
-     Classes/Model/Replaydata.h
+     Classes/Model/ReplayData.h
      Classes/Layer/LaboratoryLayer.h
      Classes/Util/GridMapUtils.h
      Classes/Sprite/BuildingSprite.h
      Classes/Sprite/BattleUnitSprite.h
      Classes/UI/PlacementConfirmUI.h
      Classes/UI/ResourceCollectionUI.h
-     Classes/UI/BattleProgressUI.cpp
-     Classes/Util/GridMapUtils.h
-     Classes/Util/FindPathUtil.h
-     Classes/Util/FindPathUtil.h
+     Classes/UI/BattleProgressUI.h
      Classes/Util/DebugHelper.h
-     Classes/Layer/DebugLayer.h
      Classes/Model/BattleMapData.h
      Classes/Util/RandomBattleMapGenerator.h
      )

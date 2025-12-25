@@ -4,6 +4,7 @@
 #include "../Model/TroopConfig.h"
 #include "../Manager/AudioManager.h"
 #include "../Controller/BattleProcessController.h"
+#include "../Controller/DestructionTracker.h"
 #include "ui/CocosGUI.h"
 
 USING_NS_CC;
@@ -127,7 +128,7 @@ void BattleResultLayer::playResultMusic() {
     auto audioManager = AudioManager::getInstance();
     
     // 获取当前战斗的星数
-    int stars = BattleProcessController::getInstance()->getCurrentStars();
+    int stars = DestructionTracker::getInstance()->getStars();
     
     CCLOG("========================================");
     CCLOG("BattleResultLayer::playResultMusic - START");
