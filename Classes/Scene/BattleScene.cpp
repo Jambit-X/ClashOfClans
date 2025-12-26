@@ -454,6 +454,10 @@ void BattleScene::onReturnHomeClicked() {
         _combatMusicID = -1;
     }
     
+    // ✅ 关键修复：停止所有音频（包括结算音乐等可能遗漏的音频）
+    audioManager->stopAllAudio();
+    CCLOG("BattleScene: All audio stopped");
+    
     // ========== 关键修复：清除资源回调，防止回调访问即将销毁的HUDLayer ==========
     auto dataManager = VillageDataManager::getInstance();
     dataManager->setResourceCallback(nullptr);  // 清除旧的回调

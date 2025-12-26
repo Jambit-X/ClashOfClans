@@ -100,8 +100,8 @@ void BattleRecorder::initReplayMode(const BattleReplayData& replayData) {
 void BattleRecorder::startReplay(BattleHUDLayer* hudLayer, std::function<void()> onSwitchToFighting) {
     if (!_isReplayMode) return;
 
-    CCLOG("BattleRecorder: Starting replay playback with %zu events",
-          _replayData.troopEvents.size());
+    CCLOG("BattleRecorder: Starting replay playback with %zu events, duration: %.2fs",
+          _replayData.troopEvents.size(), _replayData.battleDuration);
 
     // 隐藏 HUD 中的兵种选择栏
     if (hudLayer) {
@@ -129,10 +129,12 @@ void BattleRecorder::updateReplay(float dt, BattleTroopLayer* troopLayer,
     // 检查是否有兵种需要部署
     checkAndDeployNextTroop(elapsedTime, troopLayer);
 
-    // 当所有事件播放完毕后触发结束回调
-    if (_currentEventIndex >= _replayData.troopEvents.size() && !_isEndingScheduled) {
+    // 当已经过了完整的战斗持续时间后触发结束回调
+    // 这样回放会完整播放整个战斗过程，而不是兵种部署完就结束
+    if (elapsedTime >= _replayData.battleDuration && !_isEndingScheduled) {
         _isEndingScheduled = true;
-        CCLOG("BattleRecorder: All replay events deployed, triggering finish callback...");
+        CCLOG("BattleRecorder: Battle duration (%.2fs) reached, triggering finish callback...", 
+              _replayData.battleDuration);
         
         if (onReplayFinished) {
             onReplayFinished();

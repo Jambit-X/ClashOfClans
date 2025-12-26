@@ -21,16 +21,22 @@ public:
      * @return 血条组件实例
      */
     struct Config {
-        float width = 40.0f;           // 血条宽度（像素）
-        float height = 6.0f;            // 血条高度（像素）
-        Vec2 offset = Vec2(0, 10);      // 相对于父节点的偏移（X, Y）
-        float highThreshold = 60.0f;    // 高血量阈值（%），超过此值显示绿色
-        float mediumThreshold = 30.0f;  // 中血量阈值（%），介于此值和高阈值之间显示黄色
-        bool showWhenFull = false;      // 满血时是否显示
-        float fadeInDuration = 0.2f;    // 淡入动画时长（秒）
+        float width;           // 血条宽度（像素）
+        float height;          // 血条高度（像素）
+        Vec2 offset;           // 相对于父节点的偏移（X, Y）
+        float highThreshold;   // 高血量阈值（%），超过此值显示绿色
+        float mediumThreshold; // 中血量阈值（%），介于此值和高阈值之间显示黄色
+        bool showWhenFull;     // 满血时是否显示
+        float fadeInDuration;  // 淡入动画时长（秒）
+        
+        // 构造函数提供默认值（兼容 C++11/Android NDK）
+        Config() : width(40.0f), height(6.0f), offset(Vec2(0, 10)),
+                   highThreshold(60.0f), mediumThreshold(30.0f),
+                   showWhenFull(false), fadeInDuration(0.2f) {}
     };
 
-    static HealthBarComponent* create(const Config& config = Config());
+    static HealthBarComponent* create();  // 无参版本
+    static HealthBarComponent* create(const Config& config);
 
     virtual bool init(const Config& config);
 

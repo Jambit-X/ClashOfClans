@@ -2,6 +2,11 @@
 
 USING_NS_CC;
 
+// 无参版本（使用默认配置）
+HealthBarComponent* HealthBarComponent::create() {
+    return create(Config());
+}
+
 HealthBarComponent* HealthBarComponent::create(const Config& config) {
     auto component = new (std::nothrow) HealthBarComponent();
     if (component && component->init(config)) {
