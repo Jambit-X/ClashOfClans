@@ -1,4 +1,7 @@
-﻿#pragma once
+﻿// BattleTroopLayer.h
+// 战斗单位层声明，管理所有军队单位的显示和墓碑系统
+
+#pragma once
 
 #include "cocos2d.h"
 #include "../Sprite/BattleUnitSprite.h"
@@ -6,77 +9,43 @@
 
 USING_NS_CC;
 
-/**
- * @brief 战斗单位层 - 管理所有军队单位的显示
- * 
- * 职责：
- * 1. 管理所有战斗单位的生命周期
- * 2. 提供单位生成、移除接口
- * 3. 纯粹的显示层，不包含控制逻辑
- * 4. 管理战斗墓碑显示
- */
+// 战斗单位层 - 管理所有军队单位的显示
+// 职责：
+// 1. 管理所有战斗单位的生命周期
+// 2. 提供单位生成、移除接口
+// 3. 纯粹的显示层，不包含控制逻辑
+// 4. 管理战斗墓碑显示
 class BattleTroopLayer : public Layer {
 public:
     static BattleTroopLayer* create();
     
     virtual bool init() override;
     
-    /**
-     * @brief 在指定网格位置生成单位
-     * @param unitType 单位类型，如 "Barbarian"
-     * @param gridX 网格X坐标
-     * @param gridY 网格Y坐标
-     * @return 生成的单位精灵
-     */
+    // 在指定网格位置生成单位
     BattleUnitSprite* spawnUnit(const std::string& unitType, int gridX, int gridY);
     
-    /**
-     * @brief 批量生成单位（用于测试/快速初始化）
-     * @param unitType 单位类型
-     * @param spacing 网格间隔距离
-     */
+    // 批量生成单位（用于测试/快速初始化）
     void spawnUnitsGrid(const std::string& unitType, int spacing = 3);
     
-    /**
-     * @brief 移除所有单位
-     */
+    // 移除所有单位
     void removeAllUnits();
     
-    /**
-     * @brief 获取所有单位
-     */
+    // 获取所有单位
     const std::vector<BattleUnitSprite*>& getAllUnits() const { return _units; }
     
-    /**
-     * @brief 移除指定单位（死亡时调用）
-     */
+    // 移除指定单位（死亡时调用）
     void removeUnit(BattleUnitSprite* unit);
     
-    /**
-     * @brief 在指定位置生成墓碑
-     */
-    //void spawnTombstone(const Vec2& position);
-
-    /**
-     * @brief 在指定位置生成墓碑(支持兵种类型)
-     * @param position 墓碑生成位置
-     * @param unitType 兵种类型,用于选择正确的墓碑图片
-     */
+    // 在指定位置生成墓碑
     void spawnTombstone(const Vec2& position, UnitTypeID unitType);
 
-    /**
-     * @brief 清除所有墓碑（战斗结束时调用）
-     */
+    // 清除所有墓碑（战斗结束时调用）
     void clearAllTombstones();
     
 private:
-    // 所有单位列表
-    std::vector<BattleUnitSprite*> _units;
+    std::vector<BattleUnitSprite*> _units;  // 所有单位列表
+    std::vector<Node*> _tombstones;         // 墓碑列表
     
-    // 墓碑列表
-    std::vector<Node*> _tombstones;
-    
-    // 网格常量（从 GridMapUtils 获取）
     static const int GRID_WIDTH = 44;
     static const int GRID_HEIGHT = 44;
 };

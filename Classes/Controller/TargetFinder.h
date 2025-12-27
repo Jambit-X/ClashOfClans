@@ -1,3 +1,6 @@
+﻿// TargetFinder.h
+// 战斗目标查找器声明，为不同类型兵种提供目标选择策略
+
 #ifndef __TARGET_FINDER_H__
 #define __TARGET_FINDER_H__
 
@@ -7,12 +10,9 @@ struct BuildingInstance;
 enum class UnitTypeID;
 
 /**
- * TargetFinder - 战斗目标查找器
+ * 战斗目标查找器类
  * 
- * 职责：
- * 1. 为不同类型的兵种找到合适的攻击目标
- * 2. 根据兵种优先级（资源/防御）选择目标
- * 3. 为炸弹兵查找最近城墙
+ * 职责：为不同兵种找到合适的攻击目标、根据优先级选择目标
  */
 class TargetFinder {
 public:

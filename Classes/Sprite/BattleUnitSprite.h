@@ -1,4 +1,6 @@
 ﻿// BattleUnitSprite.h
+// 战斗单位精灵，支持动画、移动、攻击和生命值系统
+
 #ifndef __BATTLE_UNIT_SPRITE_H__
 #define __BATTLE_UNIT_SPRITE_H__
 
@@ -9,7 +11,7 @@
 
 USING_NS_CC;
 
-// ========== 单位类型枚举（性能优化：避免运行时字符串匹配）==========
+// 单位类型枚举
 enum class UnitTypeID {
     UNKNOWN = 0,
     BARBARIAN = 1001,
@@ -36,55 +38,38 @@ public:
   void playAttackAnimation(const std::function<void()>& callback = nullptr);
   void playDeathAnimation(const std::function<void()>& callback = nullptr);
 
-  // ===== 像素坐标行走 =====
-  
-  // 行走到指定像素位置
+  // 像素坐标行走
   void walkToPosition(const Vec2& targetPos, float duration = 2.0f,
                       const std::function<void()>& callback = nullptr);
   
-  // 沿向量偏移行走
   void walkByOffset(const Vec2& offset, float duration = 2.0f,
                     const std::function<void()>& callback = nullptr);
 
-  // ===== 网格坐标行走 =====
-  
-  // 从当前网格位置行走到目标网格位置
+  // 网格坐标行走
   void walkToGrid(int targetGridX, int targetGridY, float speed = 100.0f,
                   const std::function<void()>& callback = nullptr);
   
-  // 从指定网格行走到目标网格
   void walkFromGridToGrid(int startGridX, int startGridY, 
                          int targetGridX, int targetGridY,
                          float speed = 100.0f,
                          const std::function<void()>& callback = nullptr);
 
-  // ===== 方向攻击 =====
-  
-  // 向指定方向攻击（只播放动画，不移动）
+  // 方向攻击
   void attackInDirection(const Vec2& direction, 
                         const std::function<void()>& callback = nullptr);
   
-  // 攻击指定位置（计算方向，站定攻击）
   void attackTowardPosition(const Vec2& targetPos, 
                            const std::function<void()>& callback = nullptr);
   
-  // 攻击指定网格（计算方向，站定攻击）
   void attackTowardGrid(int targetGridX, int targetGridY,
                        const std::function<void()>& callback = nullptr);
 
-  // ===== 网格位置管理 =====
-  
-  // 设置单位当前网格位置
+  // 网格位置管理
   void setGridPosition(int gridX, int gridY);
-  
-  // 获取单位当前网格位置
   Vec2 getGridPosition() const { return _currentGridPos; }
-  
-  // 将单位瞬移到网格位置（不播放动画）
   void teleportToGrid(int gridX, int gridY);
 
-  // ===== 寻路移动 =====
-  
+  // 寻路移动
   void moveToTargetWithPathfinding(
       const Vec2& targetWorldPos, 
       float speed = 100.0f,
@@ -101,33 +86,27 @@ public:
       float speed = 100.0f,
       const std::function<void()>& callback = nullptr);
 
-  // ===== 生命值系统 =====
-  
+  // 生命值系统
   void takeDamage(int damage);
   int getCurrentHP() const { return _currentHP; }
   int getMaxHP() const { return _maxHP; }
   bool isDead() const { return _currentHP <= 0; }
 
-  // ===== 属性访问 =====
-  
+  // 属性访问
   std::string getUnitType() const { return _unitType; }
-  UnitTypeID getUnitTypeID() const { return _unitTypeID; }  // 高效获取单位类型
+  UnitTypeID getUnitTypeID() const { return _unitTypeID; }
   AnimationType getCurrentAnimation() const { return _currentAnimation; }
   bool isAnimating() const { return _isAnimating; }
   
-  // ===== 状态标志 =====
-  
+  // 状态标志
   bool isChangingTarget() const { return _isChangingTarget; }
   void setChangingTarget(bool changing) { _isChangingTarget = changing; }
   
-  // ===== 建筑锁定状态 =====
-  
+  // 建筑锁定状态
   bool isTargetedByBuilding() const { return _isTargetedByBuilding; }
   void setTargetedByBuilding(bool targeted);
-  /**
- * @brief 更新血条显示
- */
   void updateHealthBar();
+
 protected:
   std::string _unitType;
   UnitTypeID _unitTypeID = UnitTypeID::UNKNOWN;
@@ -137,31 +116,24 @@ protected:
   int _lastGridX = -999;
   int _lastGridY = -999;
   bool _isChangingTarget = false;
-  bool _isTargetedByBuilding = false;  // 是否被建筑锁定
+  bool _isTargetedByBuilding = false;
 
-  // 记录上次移动方向（用于待机动画）
   Vec2 _lastMoveDirection = Vec2::ZERO;
   
-  // 生命值系统
   int _currentHP = 0;
   int _maxHP = 0;
   
   static const int ANIMATION_TAG = 1000;
   static const int MOVE_TAG = 1001;
 
-  // ✅ 使用通用血条组件
   HealthBarComponent* _healthBar = nullptr;
 
-  // 根据移动方向选择动画类型和是否需要翻转
   void selectWalkAnimation(const Vec2& direction, AnimationType& outAnimType, bool& outFlipX);
   void selectAttackAnimation(const Vec2& direction, AnimationType& outAnimType, bool& outFlipX);
   
-  // 计算角度（0度=右，逆时针）
   float getAngleFromDirection(const Vec2& direction);
   
-  // 解析单位类型字符串为枚举（只在初始化时调用一次）
   static UnitTypeID parseUnitType(const std::string& unitType);
-  // 根据兵种类型获取缩放比例
   static float getScaleForUnitType(UnitTypeID typeID);
 };
 

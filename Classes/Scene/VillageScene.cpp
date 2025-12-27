@@ -1,4 +1,7 @@
-﻿#include "VillageScene.h"
+﻿// VillageScene.cpp
+// 村庄场景实现，包含村庄层、军队层和HUD层
+
+#include "VillageScene.h"
 #include "Layer/HUDLayer.h"
 #include "Layer/BattleTroopLayer.h"
 #include "Layer/ReplayListLayer.h"
@@ -20,31 +23,30 @@ bool VillageScene::init() {
 
   auto dataManager = VillageDataManager::getInstance();
   
-  // ✅ 预加载背景音乐（避免播放时还在加载）
+  // 预加载背景音乐
   auto audioManager = AudioManager::getInstance();
   audioManager->preloadAudio("Audios/village_background_music.m4a");
 
-  // 1. 村庄层（地图、建筑）
+  // 村庄层（地图、建筑）
   auto villageLayer = VillageLayer::create();
   villageLayer->setTag(1);
   this->addChild(villageLayer, 0);
 
-  // 2. 军队层（战斗单位）
-  // ? 关键修复：作为 VillageLayer 的子节点，而不是 Scene 的子节点
-  // 这样军队会跟随地图的缩放和移动
+  // 军队层（战斗单位）
+  // 作为VillageLayer的子节点，军队会跟随地图的缩放和移动
   auto troopLayer = BattleTroopLayer::create();
   troopLayer->setTag(2);
-  villageLayer->addChild(troopLayer, 10);  // ? 添加到 villageLayer，zOrder=10 在地图之上
+  villageLayer->addChild(troopLayer, 10);  // 添加到villageLayer，zOrder=10在地图之上
   
   CCLOG("========================================");
   CCLOG("BattleTroopLayer added as CHILD of VillageLayer");
   CCLOG("  This ensures troops scale with map (0.345x)");
   CCLOG("========================================");
 
-  // 3. HUD 层（UI 界面，商店按钮）
+  // HUD层（UI界面，商店按钮）
   auto hudLayer = HUDLayer::create();
   hudLayer->setTag(100);
-  this->addChild(hudLayer, 10);  // HUD 保持在 Scene 级别，不受地图缩放影响
+  this->addChild(hudLayer, 10);  // HUD保持在Scene级别，不受地图缩放影响
 
   CCLOG("VillageScene initialized:");
   CCLOG("  - VillageLayer (tag=1, zOrder=0)");
@@ -54,7 +56,7 @@ bool VillageScene::init() {
   // 获取可见区域大小
   auto visibleSize = Director::getInstance()->getVisibleSize();
 
-  // ✅ 新增：回放按钮
+  // 回放按钮
   auto replayBtn = Button::create("UI/replay/replay_enter.png");
   replayBtn->setPosition(Vec2(60, visibleSize.height - 200));
   replayBtn->setScale(0.8f);
@@ -73,6 +75,7 @@ void VillageScene::onEnter() {
   
   _backgroundMusicID = -1;
   
+  // 播放背景音乐
   auto audioManager = AudioManager::getInstance();
   _backgroundMusicID = audioManager->playBackgroundMusic(
       "Audios/village_background_music.mp3",
@@ -82,6 +85,7 @@ void VillageScene::onEnter() {
 }
 
 void VillageScene::onExit() {
+  // 停止背景音乐
   auto audioManager = AudioManager::getInstance();
   if (_backgroundMusicID != -1) {
     audioManager->stopAudio(_backgroundMusicID);

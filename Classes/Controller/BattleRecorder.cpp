@@ -1,3 +1,6 @@
+﻿// BattleRecorder.cpp
+// 战斗回放录制和播放管理器实现，处理战斗过程的记录与重放
+
 #pragma execution_character_set("utf-8")
 #include "BattleRecorder.h"
 #include "../Layer/BattleTroopLayer.h"
@@ -103,7 +106,7 @@ void BattleRecorder::startReplay(BattleHUDLayer* hudLayer, std::function<void()>
     CCLOG("BattleRecorder: Starting replay playback with %zu events, duration: %.2fs",
           _replayData.troopEvents.size(), _replayData.battleDuration);
 
-    // 隐藏 HUD 中的兵种选择栏
+    // 隐藏HUD中的兵种选择栏
     if (hudLayer) {
         hudLayer->hideReplayControls();
         CCLOG("BattleRecorder: HUD controls hidden for replay mode");
@@ -129,8 +132,7 @@ void BattleRecorder::updateReplay(float dt, BattleTroopLayer* troopLayer,
     // 检查是否有兵种需要部署
     checkAndDeployNextTroop(elapsedTime, troopLayer);
 
-    // 当已经过了完整的战斗持续时间后触发结束回调
-    // 这样回放会完整播放整个战斗过程，而不是兵种部署完就结束
+    // 当经过完整战斗时长后触发结束回调
     if (elapsedTime >= _replayData.battleDuration && !_isEndingScheduled) {
         _isEndingScheduled = true;
         CCLOG("BattleRecorder: Battle duration (%.2fs) reached, triggering finish callback...", 
@@ -197,7 +199,7 @@ void BattleRecorder::loadReplayMap(BattleMapLayer* mapLayer, BattleHUDLayer* hud
     CCLOG("BattleRecorder: Loading replay map with %zu buildings",
           _replayData.initialBuildings.size());
 
-    // 将回放的建筑数据加载到 VillageDataManager
+    // 将回放的建筑数据加载到VillageDataManager
     auto dataManager = VillageDataManager::getInstance();
 
     // 清空当前战斗地图数据
@@ -211,7 +213,7 @@ void BattleRecorder::loadReplayMap(BattleMapLayer* mapLayer, BattleHUDLayer* hud
     // 刷新地图层显示
     mapLayer->reloadMapFromData();
 
-    // 通知 HUD 更新资源显示
+    // 通知HUD更新资源显示
     if (hudLayer) {
         hudLayer->initLootDisplay(_replayData.lootedGold, _replayData.lootedElixir);
     }

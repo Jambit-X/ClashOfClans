@@ -1,4 +1,6 @@
-﻿// Manager/ReplayManager.cpp
+﻿// ReplayManager.cpp
+// 回放管理器实现，处理战斗回放的保存、加载和管理
+
 #include "ReplayManager.h"
 #include "json/document.h"
 #include "json/writer.h"
@@ -36,7 +38,6 @@ ReplayManager::~ReplayManager() {
     saveMetadata();
 }
 
-// ========== 文件路径管理 ==========
 std::string ReplayManager::getReplayDirectory() {
     return FileUtils::getInstance()->getWritablePath() + "replays/";
 }
@@ -49,13 +50,12 @@ std::string ReplayManager::getMetadataFilePath() {
     return getReplayDirectory() + "metadata.json";
 }
 
-// ========== 保存回放 ==========
 void ReplayManager::saveReplay(const BattleReplayData& data) {
-    // 1. 分配回放ID
+    // 分配回放ID
     BattleReplayData saveData = data;
     saveData.replayId = _nextReplayId++;
 
-    // 2. 保存完整回放数据到独立文件
+    // 保存完整回放数据到独立文件
     ValueMap replayMap = saveData.toValueMap();
     std::string filePath = getReplayFilePath(saveData.replayId);
 
@@ -66,7 +66,7 @@ void ReplayManager::saveReplay(const BattleReplayData& data) {
         return;
     }
 
-    // 3. 添加元数据
+    // 添加元数据
     ReplayMetadata meta;
     meta.replayId = saveData.replayId;
     meta.timestamp = saveData.timestamp;
@@ -75,19 +75,18 @@ void ReplayManager::saveReplay(const BattleReplayData& data) {
     meta.destructionPercentage = saveData.destructionPercentage;
     meta.lootedGold = saveData.lootedGold;
     meta.lootedElixir = saveData.lootedElixir;
-    meta.usedTroops = saveData.usedTroops;  // ✅ 兵种消耗
+    meta.usedTroops = saveData.usedTroops;
     meta.battleDuration = saveData.battleDuration;
 
     addMetadata(meta);
 
-    // 4. 强制执行10场限制
+    // 强制执行10场限制
     enforceReplayLimit();
 
-    // 5. 保存元数据
+    // 保存元数据
     saveMetadata();
 }
 
-// ========== 加载回放 ==========
 BattleReplayData ReplayManager::loadReplay(int replayId) {
     std::string filePath = getReplayFilePath(replayId);
     ValueMap replayMap = FileUtils::getInstance()->getValueMapFromFile(filePath);
@@ -100,27 +99,24 @@ BattleReplayData ReplayManager::loadReplay(int replayId) {
     return BattleReplayData::fromValueMap(replayMap);
 }
 
-// ========== 获取回放列表 ==========
 std::vector<ReplayMetadata> ReplayManager::getReplayList() {
     return _metadataList;
 }
 
-// ========== 删除回放 ==========
 void ReplayManager::deleteReplay(int replayId) {
-    // 1. 删除文件
+    // 删除文件
     std::string filePath = getReplayFilePath(replayId);
     if (FileUtils::getInstance()->removeFile(filePath)) {
         CCLOG("ReplayManager: Deleted replay file #%d", replayId);
     }
 
-    // 2. 移除元数据
+    // 移除元数据
     removeMetadata(replayId);
 
-    // 3. 保存元数据
+    // 保存元数据
     saveMetadata();
 }
 
-// ========== 元数据管理 ==========
 void ReplayManager::loadMetadata() {
     std::string metaPath = getMetadataFilePath();
     if (!FileUtils::getInstance()->isFileExist(metaPath)) {
@@ -131,12 +127,12 @@ void ReplayManager::loadMetadata() {
     ValueMap metaMap = FileUtils::getInstance()->getValueMapFromFile(metaPath);
     if (metaMap.empty()) return;
 
-    // 读取 nextReplayId
+    // 读取nextReplayId
     if (metaMap.find("nextReplayId") != metaMap.end()) {
         _nextReplayId = metaMap["nextReplayId"].asInt();
     }
 
-    // 读取 replays 数组
+    // 读取replays数组
     if (metaMap.find("replays") != metaMap.end()) {
         ValueVector replaysVec = metaMap["replays"].asValueVector();
         for (const auto& replayValue : replaysVec) {
@@ -180,7 +176,7 @@ void ReplayManager::removeMetadata(int replayId) {
 
 void ReplayManager::enforceReplayLimit() {
     while (_metadataList.size() > MAX_REPLAYS) {
-        // 找到最旧的回放（时间戳最小）
+        // 找到最旧的回放
         auto oldestIt = std::min_element(_metadataList.begin(), _metadataList.end(),
                                          [](const ReplayMetadata& a, const ReplayMetadata& b) {
             return a.timestamp < b.timestamp;

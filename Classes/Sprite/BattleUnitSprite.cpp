@@ -1,4 +1,6 @@
 ﻿// BattleUnitSprite.cpp
+// 战斗单位精灵类实现，负责战斗单位的动画、移动、攻击和生命值管理
+
 #include "BattleUnitSprite.h"
 #include "Util/GridMapUtils.h"
 #include "Util/FindPathUtil.h"
@@ -26,9 +28,9 @@ bool BattleUnitSprite::init(const std::string& unitType) {
     _isAnimating = false;
     _currentGridPos = Vec2::ZERO;
 
-    // 初始化生命值
     auto troopConfig = TroopConfig::getInstance();
 
+    // 根据兵种类型映射troopID
     int troopID = 0;
     switch (_unitTypeID) {
         case UnitTypeID::BARBARIAN:    troopID = 1001; break;
@@ -43,6 +45,7 @@ bool BattleUnitSprite::init(const std::string& unitType) {
             break;
     }
 
+    // 从配置获取生命值
     TroopInfo troopInfo = troopConfig->getTroopById(troopID);
     _maxHP = troopInfo.hitpoints;
     _currentHP = _maxHP;
@@ -50,15 +53,13 @@ bool BattleUnitSprite::init(const std::string& unitType) {
     CCLOG("BattleUnitSprite: Initialized %s with HP: %d/%d",
           unitType.c_str(), _currentHP, _maxHP);
 
-    // ========== ✅ 气球兵特殊处理:直接加载独立图片 ==========
     bool success = false;
     if (_unitTypeID == UnitTypeID::BALLOON) {
-        // 气球兵使用独立图片,不使用精灵图集
+        // 气球兵使用独立图片文件
         success = Sprite::initWithFile("Animation/troop/balloon/balloon.png");
 
         if (!success) {
             CCLOG("BattleUnitSprite: Failed to load balloon image, trying fallback...");
-            // 尝试备用路径
             success = Sprite::initWithFile("Animation/troop/balloon/balloon1.0.png");
         }
 
@@ -66,7 +67,7 @@ bool BattleUnitSprite::init(const std::string& unitType) {
             CCLOG("BattleUnitSprite: Loaded balloon from independent image file");
         }
     } else {
-        // 其他兵种使用精灵图集
+        // 其他兵种从精灵帧缓存加载
         std::string unitTypeLower = unitType;
         std::transform(unitTypeLower.begin(), unitTypeLower.end(),
                        unitTypeLower.begin(), ::tolower);
@@ -74,7 +75,6 @@ bool BattleUnitSprite::init(const std::string& unitType) {
         std::string firstFrameName = unitTypeLower + "1.0.png";
         success = Sprite::initWithSpriteFrameName(firstFrameName);
     }
-    // ========================================================
 
     if (!success) {
         CCLOG("BattleUnitSprite: Failed to load sprite for %s", unitType.c_str());
@@ -83,23 +83,21 @@ bool BattleUnitSprite::init(const std::string& unitType) {
 
     this->setAnchorPoint(Vec2(0.5f, 0.0f));
 
-    // ========== ✅ 气球兵特殊效果:上下飘动 ==========
     if (_unitTypeID == UnitTypeID::BALLOON) {
-        auto floatUp = MoveBy::create(1.0f, Vec2(0, 10));   // 向上飘 10 像素
-        auto floatDown = MoveBy::create(1.0f, Vec2(0, -10)); // 向下飘 10 像素
+        // 气球兵添加上下飘动动画
+        auto floatUp = MoveBy::create(1.0f, Vec2(0, 10));
+        auto floatDown = MoveBy::create(1.0f, Vec2(0, -10));
         auto floatSequence = Sequence::create(floatUp, floatDown, nullptr);
         auto floatForever = RepeatForever::create(floatSequence);
-        floatForever->setTag(9999); // 使用特殊 Tag,避免与移动动作冲突
+        floatForever->setTag(9999);
         this->runAction(floatForever);
 
         CCLOG("BattleUnitSprite: Balloon floating animation started");
     }
 
-    // 根据兵种类型设置缩放比例
     float scale = getScaleForUnitType(_unitTypeID);
     this->setScale(scale);
     CCLOG("BattleUnitSprite: Set scale to %.2f for %s", scale, unitType.c_str());
-
 
     this->scheduleUpdate();
 
@@ -107,29 +105,22 @@ bool BattleUnitSprite::init(const std::string& unitType) {
     return true;
 }
 
-// ========== ✅ 新增：根据兵种类型返回缩放比例 ==========
 float BattleUnitSprite::getScaleForUnitType(UnitTypeID typeID) {
     switch (typeID) {
-        case UnitTypeID::BARBARIAN:
-            return 0.8f;  // 野蛮人：缩小到80%
-        case UnitTypeID::ARCHER:
-            return 0.75f; // 弓箭手：缩小到75%
-        case UnitTypeID::GOBLIN:
-            return 0.7f;  // 哥布林：缩小到70%（体型较小）
-        case UnitTypeID::GIANT:
-            return 1.2f;  // 巨人：放大到120%（体型较大）
-        case UnitTypeID::WALL_BREAKER:
-            return 0.65f; // 炸弹兵：缩小到65%（体型很小）
-        case UnitTypeID::BALLOON:
-            return 1.0f;  // 气球兵：保持原始大小
-        default:
-            return 1.0f;  // 默认：不缩放
+        case UnitTypeID::BARBARIAN:    return 0.8f;
+        case UnitTypeID::ARCHER:       return 0.75f;
+        case UnitTypeID::GOBLIN:       return 0.7f;
+        case UnitTypeID::GIANT:        return 1.2f;
+        case UnitTypeID::WALL_BREAKER: return 0.65f;
+        case UnitTypeID::BALLOON:      return 1.0f;
+        default:                       return 1.0f;
     }
 }
 
 void BattleUnitSprite::update(float dt) {
     Sprite::update(dt);
     
+    // 获取当前网格位置
     Vec2 currentPos = this->getPosition();
     Vec2 gridPos = GridMapUtils::pixelToGrid(currentPos);
     int currentGridX = static_cast<int>(std::floor(gridPos.x));
@@ -140,10 +131,9 @@ void BattleUnitSprite::update(float dt) {
         _lastGridX = currentGridX;
         _lastGridY = currentGridY;
         
-        // ✅ 动态更新 Z-Order，确保移动时透视正确
+        // 根据网格位置更新Z轴顺序以实现正确的深度渲染
         int zOrder = GridMapUtils::calculateZOrder(currentGridX, currentGridY);
         
-        // 飞行单位（气球兵）额外加 1000 偏移
         if (_unitTypeID == UnitTypeID::BALLOON) {
             zOrder += 1000;
         }
@@ -152,10 +142,9 @@ void BattleUnitSprite::update(float dt) {
     }
 }
 
-// ========== 建筑锁定状态可视化 ==========
 void BattleUnitSprite::setTargetedByBuilding(bool targeted) {
-    // ✅ 如果兵种已死亡，拒绝接受锁定
     if (this->isDead()) {
+        // 死亡单位拒绝被锁定
         if (_isTargetedByBuilding) {
             _isTargetedByBuilding = false;
             this->setColor(Color3B::WHITE);
@@ -169,13 +158,12 @@ void BattleUnitSprite::setTargetedByBuilding(bool targeted) {
     _isTargetedByBuilding = targeted;
 
     if (targeted) {
-        this->setColor(Color3B(255, 100, 100));  // 红色高亮
+        this->setColor(Color3B(255, 100, 100));
     } else {
         this->setColor(Color3B::WHITE);
     }
 }
 
-// ========== 静态方法：解析单位类型字符串为枚举（只在初始化时调用一次）==========
 UnitTypeID BattleUnitSprite::parseUnitType(const std::string& unitType) {
     std::string lower = unitType;
     std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
@@ -202,9 +190,6 @@ UnitTypeID BattleUnitSprite::parseUnitType(const std::string& unitType) {
     CCLOG("BattleUnitSprite::parseUnitType: Unknown unit type '%s'", unitType.c_str());
     return UnitTypeID::UNKNOWN;
 }
-
-// ===== 基础动画控制 =====
-
 void BattleUnitSprite::playAnimation(
     AnimationType animType,
     bool loop,
@@ -212,12 +197,11 @@ void BattleUnitSprite::playAnimation(
 ) {
     stopCurrentAnimation();
 
-    // ========== ✅ 气球兵特殊处理:没有帧动画,直接返回 ==========
     if (_unitTypeID == UnitTypeID::BALLOON) {
+        // 气球兵无帧动画，使用静态图片和延迟回调
         _currentAnimation = animType;
         _isAnimating = false;
 
-        // 如果是死亡动画,切换到墓碑图片
         if (animType == AnimationType::DEATH) {
             auto tombstoneTexture = Director::getInstance()->getTextureCache()->addImage(
                 "Animation/troop/balloon/balloon_death.png"
@@ -231,7 +215,6 @@ void BattleUnitSprite::playAnimation(
                 CCLOG("BattleUnitSprite: Balloon switched to tombstone texture");
             }
 
-            // 延迟触发回调
             if (callback) {
                 this->runAction(Sequence::create(
                     DelayTime::create(0.5f),
@@ -242,25 +225,23 @@ void BattleUnitSprite::playAnimation(
         } else if (animType == AnimationType::ATTACK || 
                    animType == AnimationType::ATTACK_UP || 
                    animType == AnimationType::ATTACK_DOWN) {
-            // ✅ 所有方向的攻击动画都需要延迟，模拟投弹时间
+            // 攻击动画添加延迟模拟投弹
             if (callback) {
                 this->runAction(Sequence::create(
-                    DelayTime::create(0.8f),  // 0.8 秒攻击间隔
+                    DelayTime::create(0.8f),
                     CallFunc::create(callback),
                     nullptr
                 ));
             }
         } else {
-            // 其他动画(待机/行走)不需要做任何事,直接触发回调
             if (callback) {
                 callback();
             }
         }
         return;
     }
-    // ============================================================
 
-    // 其他兵种的正常动画逻辑
+    // 其他兵种使用AnimationManager创建帧动画
     auto animMgr = AnimationManager::getInstance();
 
     _currentAnimation = animType;
@@ -303,57 +284,45 @@ void BattleUnitSprite::stopCurrentAnimation() {
   _isAnimating = false;
 }
 
-// ✅ 修改：根据上次移动方向选择待机动画
-// ========== 修复：待机动画也支持镜像翻转 ==========
 void BattleUnitSprite::playIdleAnimation() {
-    AnimationType idleAnimType = AnimationType::IDLE;  // 默认向右
+    AnimationType idleAnimType = AnimationType::IDLE;
     bool flipX = false;
 
-    // 如果有上次移动方向记录,根据方向选择待机动画
     if (_lastMoveDirection != Vec2::ZERO) {
+        // 根据上次移动方向选择待机动画朝向
         float angle = getAngleFromDirection(_lastMoveDirection);
 
-        // 归一化角度到 [0, 360)
         while (angle < 0) angle += 360;
         while (angle >= 360) angle -= 360;
 
-        // ========== 8 方向判断（与行走动画保持一致）==========
+        // 根据角度区间选择动画类型和翻转
         if (angle >= 337.5f || angle < 22.5f) {
-            // 向右 (0°)
             idleAnimType = AnimationType::IDLE;
             flipX = false;
         } else if (angle >= 22.5f && angle < 67.5f) {
-            // 向右上 (45°)
             idleAnimType = AnimationType::IDLE_UP;
             flipX = false;
         } else if (angle >= 67.5f && angle < 112.5f) {
-            // 向上 (90°) - 使用右上动画，不翻转
             idleAnimType = AnimationType::IDLE_UP;
             flipX = false;
         } else if (angle >= 112.5f && angle < 157.5f) {
-            // ✅ 向左上 (135°) - 使用右上动画 + 镜像翻转
             idleAnimType = AnimationType::IDLE_UP;
             flipX = true;
         } else if (angle >= 157.5f && angle < 202.5f) {
-            // ✅ 向左 (180°) - 使用向右动画 + 镜像翻转
             idleAnimType = AnimationType::IDLE;
             flipX = true;
         } else if (angle >= 202.5f && angle < 247.5f) {
-            // ✅ 向左下 (225°) - 使用右下动画 + 镜像翻转
             idleAnimType = AnimationType::IDLE_DOWN;
             flipX = true;
         } else if (angle >= 247.5f && angle < 292.5f) {
-            // 向下 (270°) - 使用右下动画，不翻转
             idleAnimType = AnimationType::IDLE_DOWN;
             flipX = false;
         } else {
-            // 向右下 (315°)
             idleAnimType = AnimationType::IDLE_DOWN;
             flipX = false;
         }
     }
 
-    // ✅ 应用镜像翻转
     this->setFlippedX(flipX);
     playAnimation(idleAnimType, true);
 }
@@ -366,8 +335,6 @@ void BattleUnitSprite::playAttackAnimation(const std::function<void()>& callback
   playAnimation(AnimationType::ATTACK, false, callback);
 }
 
-// ===== 方向计算 =====
-
 float BattleUnitSprite::getAngleFromDirection(const Vec2& direction) {
   return CC_RADIANS_TO_DEGREES(atan2f(direction.y, direction.x));
 }
@@ -375,14 +342,15 @@ float BattleUnitSprite::getAngleFromDirection(const Vec2& direction) {
 void BattleUnitSprite::selectWalkAnimation(const Vec2& direction,
                                            AnimationType& outAnimType,
                                            bool& outFlipX) {
-  // 记录移动方向
   _lastMoveDirection = direction;
 
   float angle = getAngleFromDirection(direction);
 
+  // 角度归一化到[0, 360)
   while (angle < 0) angle += 360;
   while (angle >= 360) angle -= 360;
 
+  // 八方向选择行走动画
   if (angle >= 337.5f || angle < 22.5f) {
     outAnimType = AnimationType::WALK;
     outFlipX = false;
@@ -415,9 +383,11 @@ void BattleUnitSprite::selectAttackAnimation(const Vec2& direction,
                                              bool& outFlipX) {
   float angle = getAngleFromDirection(direction);
 
+  // 角度归一化到[0, 360)
   while (angle < 0) angle += 360;
   while (angle >= 360) angle -= 360;
 
+  // 八方向选择攻击动画
   if (angle >= 337.5f || angle < 22.5f) {
     outAnimType = AnimationType::ATTACK;
     outFlipX = false;
@@ -444,8 +414,6 @@ void BattleUnitSprite::selectAttackAnimation(const Vec2& direction,
     outFlipX = false;
   }
 }
-
-// ===== 像素坐标行走 =====
 
 void BattleUnitSprite::walkToPosition(const Vec2& targetPos, float duration,
                                       const std::function<void()>& callback) {
@@ -490,8 +458,6 @@ void BattleUnitSprite::walkByOffset(const Vec2& offset, float duration,
   walkToPosition(targetPos, duration, callback);
 }
 
-// ===== 网格坐标行走 =====
-
 void BattleUnitSprite::setGridPosition(int gridX, int gridY) {
   _currentGridPos = Vec2(gridX, gridY);
   CCLOG("BattleUnitSprite: Grid position set to (%d, %d)", gridX, gridY);
@@ -520,6 +486,7 @@ void BattleUnitSprite::walkToGrid(int targetGridX, int targetGridY, float speed,
     return;
   }
 
+  // 计算移动距离和持续时间
   Vec2 currentPixelPos = this->getPosition();
   Vec2 targetPixelPos = GridMapUtils::gridToPixelCenter(targetGridX, targetGridY);
   float distance = currentPixelPos.distance(targetPixelPos);
@@ -556,6 +523,7 @@ void BattleUnitSprite::walkFromGridToGrid(int startGridX, int startGridY,
     return;
   }
 
+  // 先传送到起点，再移动到终点
   teleportToGrid(startGridX, startGridY);
   walkToGrid(targetGridX, targetGridY, speed, callback);
 
@@ -563,13 +531,12 @@ void BattleUnitSprite::walkFromGridToGrid(int startGridX, int startGridY,
         startGridX, startGridY, targetGridX, targetGridY);
 }
 
-// ===== 方向攻击（站定不动）=====
-
 void BattleUnitSprite::attackInDirection(const Vec2& direction,
                                          const std::function<void()>& callback) {
   Vec2 normalizedDir = direction;
 
   if (normalizedDir.length() < 0.1f) {
+    // 方向向量过短，默认朝右攻击
     normalizedDir = Vec2(1, 0);
     CCLOG("BattleUnitSprite: Direction too short, defaulting to right");
   } else {
@@ -623,17 +590,14 @@ void BattleUnitSprite::attackTowardGrid(int targetGridX, int targetGridY,
   attackTowardPosition(targetPixelPos, callback);
 }
 
-// ===== ? 新增：寻路移动 =====
-
 void BattleUnitSprite::moveToTargetWithPathfinding(
     const Vec2& targetWorldPos,
     float speed,
     const std::function<void()>& callback) {
 
-    // 1. 获取当前世界坐标
     Vec2 currentWorldPos = this->getPosition();
 
-    // 2. 使用寻路工具查找路径
+    // 使用寻路工具查找路径
     auto pathfinder = FindPathUtil::getInstance();
     std::vector<Vec2> path = pathfinder->findPathInWorld(currentWorldPos, targetWorldPos);
 
@@ -646,7 +610,6 @@ void BattleUnitSprite::moveToTargetWithPathfinding(
 
     CCLOG("BattleUnitSprite: Path found with %lu waypoints", path.size());
 
-    // 3. 沿路径移动
     followPath(path, speed, callback);
 }
 
@@ -656,17 +619,15 @@ void BattleUnitSprite::moveToGridWithPathfinding(
     float speed,
     const std::function<void()>& callback) {
 
-    // 1. 检查目标合法性
     if (!GridMapUtils::isValidGridPosition(targetGridX, targetGridY)) {
         CCLOG("BattleUnitSprite: Invalid target grid (%d, %d)", targetGridX, targetGridY);
         if (callback) callback();
         return;
     }
 
-    // 2. 转换为世界坐标
+    // 网格坐标转换为世界坐标后寻路
     Vec2 targetWorldPos = GridMapUtils::gridToPixelCenter(targetGridX, targetGridY);
 
-    // 3. 寻路并移动
     moveToTargetWithPathfinding(targetWorldPos, speed, callback);
 }
 
@@ -681,39 +642,35 @@ void BattleUnitSprite::followPath(
         return;
     }
 
-    // 停止当前移动
     this->stopActionByTag(MOVE_TAG);
 
-    // 创建动作序列
     Vector<FiniteTimeAction*> actions;
 
     Vec2 currentPos = this->getPosition();
-    bool hasValidMovement = false;  // ✅ 追踪是否有有效移动
+    bool hasValidMovement = false;
 
+    // 遍历路径点创建移动动画序列
     for (const auto& waypoint : path) {
-        // 计算方向和距离
         Vec2 direction = waypoint - currentPos;
         float distance = direction.length();
 
         if (distance < 0.1f) {
-            continue; // 跳过太近的点
+            continue;
         }
 
-        hasValidMovement = true;  // ✅ 标记有有效移动
+        hasValidMovement = true;
         direction.normalize();
 
-        // 选择动画
         AnimationType animType;
         bool flipX;
         selectWalkAnimation(direction, animType, flipX);
 
-        // 播放行走动画
+        // 为每个路径点创建动画和移动动作
         auto playAnim = CallFunc::create([this, animType, flipX]() {
             this->setFlippedX(flipX);
             playAnimation(animType, true);
         });
 
-        // 移动到路径点
         float duration = distance / speed;
         auto moveAction = MoveTo::create(duration, waypoint);
 
@@ -723,13 +680,12 @@ void BattleUnitSprite::followPath(
         currentPos = waypoint;
     }
 
-    // ✅ 如果没有有效移动，添加最小延迟防止立即回调导致秒杀
     if (!hasValidMovement) {
         CCLOG("BattleUnitSprite: No valid movement, adding minimum delay");
         actions.pushBack(DelayTime::create(0.1f));
     }
 
-    // 到达后播放待机动画
+    // 路径完成后恢复待机状态
     auto finishCallback = CallFunc::create([this, callback]() {
         this->setFlippedX(false);
         playIdleAnimation();
@@ -743,7 +699,6 @@ void BattleUnitSprite::followPath(
 
     actions.pushBack(finishCallback);
 
-    // 执行动作序列
     auto sequence = Sequence::create(actions);
     sequence->setTag(MOVE_TAG);
     this->runAction(sequence);
@@ -751,15 +706,12 @@ void BattleUnitSprite::followPath(
     CCLOG("BattleUnitSprite: Following path with %lu waypoints", path.size());
 }
 
-// ===== 生命值系统 =====
-
 void BattleUnitSprite::takeDamage(int damage) {
     if (_currentHP <= 0) return;
 
     _currentHP -= damage;
     if (_currentHP < 0) _currentHP = 0;
 
-    // ✅ 更新血条
     updateHealthBar();
 
     CCLOG("BattleUnitSprite: %s took %d damage, HP: %d/%d",
@@ -767,23 +719,22 @@ void BattleUnitSprite::takeDamage(int damage) {
 }
 
 void BattleUnitSprite::updateHealthBar() {
-    // ✅ 惰性创建血条组件
     if (!_healthBar) {
-        // 根据兵种大小配置血条
+        // 首次创建血条，根据兵种类型设置宽度
         HealthBarComponent::Config barConfig;
 
         switch (_unitTypeID) {
             case UnitTypeID::GOBLIN:
             case UnitTypeID::WALL_BREAKER:
-                barConfig.width = 30.0f;  // 小型兵种
+                barConfig.width = 30.0f;
                 break;
             case UnitTypeID::BARBARIAN:
             case UnitTypeID::ARCHER:
-                barConfig.width = 40.0f;  // 中型兵种
+                barConfig.width = 40.0f;
                 break;
             case UnitTypeID::GIANT:
             case UnitTypeID::BALLOON:
-                barConfig.width = 60.0f;  // 大型兵种
+                barConfig.width = 60.0f;
                 break;
             default:
                 barConfig.width = 40.0f;
@@ -791,33 +742,28 @@ void BattleUnitSprite::updateHealthBar() {
         }
 
         barConfig.height = 6.0f;
-        barConfig.offset = Vec2(0, 10);  // 兵种头顶上方10像素
+        barConfig.offset = Vec2(0, 10);
         barConfig.highThreshold = 60.0f;
         barConfig.mediumThreshold = 30.0f;
         barConfig.showWhenFull = false;
         barConfig.fadeInDuration = 0.2f;
 
-        // 创建血条组件
         _healthBar = HealthBarComponent::create(barConfig);
         this->addChild(_healthBar, 100);
 
-        // 更新血条位置
         _healthBar->updatePosition(this->getContentSize());
     }
 
-    // 更新血条
     _healthBar->updateHealth(_currentHP, _maxHP);
 }
 
 void BattleUnitSprite::playDeathAnimation(const std::function<void()>& callback) {
-    // ✅ 第一时间恢复正常颜色
+    // 重置颜色和不透明度
     this->setColor(Color3B::WHITE);
     this->setOpacity(255);
 
-    // ✅ 立即取消建筑锁定状态（触发颜色恢复）
     this->setTargetedByBuilding(false);
 
-    // 隐藏血条
     if (_healthBar) {
         _healthBar->hide();
     }

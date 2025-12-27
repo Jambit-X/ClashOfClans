@@ -1,3 +1,6 @@
+﻿// TargetFinder.cpp
+// 战斗目标查找器实现，为不同兵种提供智能目标选择策略
+
 #include "TargetFinder.h"
 #include "../Manager/VillageDataManager.h"
 #include "../Model/BuildingConfig.h"
@@ -22,21 +25,19 @@ void TargetFinder::destroyInstance() {
     }
 }
 
-// ========== 辅助函数 ==========
-
+// 判断是否为资源建筑
 static bool isResourceBuilding(int buildingType) {
     return buildingType == 1 || buildingType == 202 || buildingType == 203 || 
            buildingType == 204 || buildingType == 205;
 }
 
+// 判断是否为防御建筑
 static bool isDefenseBuilding(int buildingType) {
     return buildingType == 301 || buildingType == 302;
 }
 
-// ========== 通用入口 ==========
-
 const BuildingInstance* TargetFinder::findTarget(const Vec2& unitWorldPos, UnitTypeID unitType) {
-    // 炸弹人特殊处理：只攻击城墙
+    // 炸弹兵：只攻击城墙
     if (unitType == UnitTypeID::WALL_BREAKER) {
         return findNearestWall(unitWorldPos);
     }
@@ -55,8 +56,6 @@ const BuildingInstance* TargetFinder::findTarget(const Vec2& unitWorldPos, UnitT
     return findTargetWithResourcePriority(unitWorldPos, unitType);
 }
 
-// ========== 资源优先查找 ==========
-
 const BuildingInstance* TargetFinder::findTargetWithResourcePriority(const Vec2& unitWorldPos, UnitTypeID unitType) {
     auto dataManager = VillageDataManager::getInstance();
     const auto& buildings = dataManager->getAllBuildings();
@@ -72,7 +71,7 @@ const BuildingInstance* TargetFinder::findTargetWithResourcePriority(const Vec2&
         if (building.isDestroyed || building.currentHP <= 0) continue;
         if (building.state == BuildingInstance::State::PLACING) continue;
         
-        // 跳过城墙（303）和陷阱（4xx）
+        // 跳过城墙和陷阱
         if (building.type == 303) continue;
         if (building.type >= 400 && building.type < 500) continue;
 
@@ -86,18 +85,21 @@ const BuildingInstance* TargetFinder::findTargetWithResourcePriority(const Vec2&
         float distSq = unitWorldPos.distanceSquared(bPos);
 
         if (unitType == UnitTypeID::GOBLIN) {
+            // 哥布林优先攻击资源建筑
             if (isResourceBuilding(building.type)) {
                 if (distSq < minDistanceSq) {
                     minDistanceSq = distSq;
                     bestBuilding = &building;
                 }
             } else {
+                // 备选目标：非资源建筑
                 if (distSq < fallbackMinDistanceSq) {
                     fallbackMinDistanceSq = distSq;
                     fallbackBuilding = &building;
                 }
             }
         } else {
+            // 其他兵种选择最近建筑
             if (distSq < minDistanceSq) {
                 minDistanceSq = distSq;
                 bestBuilding = &building;
@@ -105,14 +107,13 @@ const BuildingInstance* TargetFinder::findTargetWithResourcePriority(const Vec2&
         }
     }
 
+    // 哥布林如果没找到资源建筑，使用备选目标
     if (unitType == UnitTypeID::GOBLIN && !bestBuilding && fallbackBuilding) {
         return fallbackBuilding;
     }
 
     return bestBuilding;
 }
-
-// ========== 防御优先查找 ==========
 
 const BuildingInstance* TargetFinder::findTargetWithDefensePriority(const Vec2& unitWorldPos, UnitTypeID unitType) {
     auto dataManager = VillageDataManager::getInstance();
@@ -129,7 +130,7 @@ const BuildingInstance* TargetFinder::findTargetWithDefensePriority(const Vec2& 
         if (building.isDestroyed || building.currentHP <= 0) continue;
         if (building.state == BuildingInstance::State::PLACING) continue;
         
-        // 跳过城墙（303）和陷阱（4xx）
+        // 跳过城墙和陷阱
         if (building.type == 303) continue;
         if (building.type >= 400 && building.type < 500) continue;
         
@@ -146,12 +147,14 @@ const BuildingInstance* TargetFinder::findTargetWithDefensePriority(const Vec2& 
         float distSq = unitWorldPos.distanceSquared(bPos);
 
         if (unitType == UnitTypeID::GIANT || unitType == UnitTypeID::BALLOON) {
+            // 巨人、气球优先攻击防御建筑
             if (isDefenseBuilding(building.type)) {
                 if (distSq < minDistanceSq) {
                     minDistanceSq = distSq;
                     bestBuilding = &building;
                 }
             } else {
+                // 备选目标：非防御建筑（排除城墙）
                 if (building.type != 303) {
                     if (distSq < fallbackMinDistanceSq) {
                         fallbackMinDistanceSq = distSq;
@@ -160,6 +163,7 @@ const BuildingInstance* TargetFinder::findTargetWithDefensePriority(const Vec2& 
                 }
             }
         } else {
+            // 其他兵种选择最近建筑
             if (distSq < minDistanceSq) {
                 minDistanceSq = distSq;
                 bestBuilding = &building;
@@ -167,14 +171,13 @@ const BuildingInstance* TargetFinder::findTargetWithDefensePriority(const Vec2& 
         }
     }
 
+    // 如果没找到防御建筑，使用备选目标
     if ((unitType == UnitTypeID::GIANT || unitType == UnitTypeID::BALLOON) && !bestBuilding && fallbackBuilding) {
         return fallbackBuilding;
     }
 
     return bestBuilding;
 }
-
-// ========== 查找最近城墙（炸弹兵专用）==========
 
 const BuildingInstance* TargetFinder::findNearestWall(const Vec2& unitWorldPos) {
     auto dataManager = VillageDataManager::getInstance();

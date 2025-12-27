@@ -1,4 +1,6 @@
-﻿#pragma once
+﻿// BuildingUpgradeManager.h
+// 建筑升级管理器头文件，处理建筑升级逻辑
+
 #pragma once
 #include "cocos2d.h"
 #include <vector>
@@ -8,7 +10,7 @@ public:
   static BuildingUpgradeManager* getInstance();
   static void destroyInstance();
 
-  // 更新所有升级中的建筑(每帧调用)
+  // 更新所有升级中的建筑
   void update(float dt);
 
   // 检查并完成所有到期的升级

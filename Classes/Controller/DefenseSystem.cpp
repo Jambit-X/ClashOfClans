@@ -1,3 +1,6 @@
+﻿// DefenseSystem.cpp
+// 建筑防御系统实现，管理防御建筑的自动锁定和攻击逻辑
+
 #include "DefenseSystem.h"
 #include "../Layer/BattleTroopLayer.h"
 #include "../Manager/VillageDataManager.h"
@@ -25,10 +28,6 @@ void DefenseSystem::destroyInstance() {
     }
 }
 
-// ==========================================
-// 查找攻击范围内最近的兵种
-// ==========================================
-
 BattleUnitSprite* DefenseSystem::findNearestUnitInRange(
     const BuildingInstance& building, 
     float attackRangeGrids,
@@ -39,6 +38,7 @@ BattleUnitSprite* DefenseSystem::findNearestUnitInRange(
     auto config = BuildingConfig::getInstance()->getConfig(building.type);
     if (!config) return nullptr;
     
+    // 计算建筑中心网格坐标
     int centerX = building.gridX + config->gridWidth / 2;
     int centerY = building.gridY + config->gridHeight / 2;
     
@@ -52,16 +52,16 @@ BattleUnitSprite* DefenseSystem::findNearestUnitInRange(
     for (auto unit : allUnits) {
         if (!unit) continue;
         
-        // 气球兵是飞行单位，只有箭塔（302）能攻击它
-        // 加农炮（301）只能攻击地面单位
+        // 气球兵是飞行单位，只有箭塔能攻击
         if (unit->getUnitTypeID() == UnitTypeID::BALLOON && building.type != 302) {
-            continue;  // 跳过气球兵
+            continue;
         }
         
         Vec2 unitGridPos = unit->getGridPosition();
         int unitGridX = static_cast<int>(unitGridPos.x);
         int unitGridY = static_cast<int>(unitGridPos.y);
         
+        // 计算网格距离（切比雪夫距离）
         int gridDistance = std::max(
             std::abs(unitGridX - centerX),
             std::abs(unitGridY - centerY)
@@ -82,10 +82,6 @@ BattleUnitSprite* DefenseSystem::findNearestUnitInRange(
     return nearestUnit;
 }
 
-// ==========================================
-// 获取攻击范围内所有兵种
-// ==========================================
-
 std::vector<BattleUnitSprite*> DefenseSystem::getAllUnitsInRange(
     const BuildingInstance& building, 
     float attackRangeGrids,
@@ -98,6 +94,7 @@ std::vector<BattleUnitSprite*> DefenseSystem::getAllUnitsInRange(
     auto config = BuildingConfig::getInstance()->getConfig(building.type);
     if (!config) return unitsInRange;
     
+    // 计算建筑中心网格坐标
     int centerX = building.gridX + config->gridWidth / 2;
     int centerY = building.gridY + config->gridHeight / 2;
     
@@ -124,10 +121,6 @@ std::vector<BattleUnitSprite*> DefenseSystem::getAllUnitsInRange(
     return unitsInRange;
 }
 
-// ==========================================
-// 建筑防御自动更新系统
-// ==========================================
-
 void DefenseSystem::updateBuildingDefense(BattleTroopLayer* troopLayer) {
     if (!troopLayer) return;
 
@@ -151,13 +144,13 @@ void DefenseSystem::updateBuildingDefense(BattleTroopLayer* troopLayer) {
 
         BattleUnitSprite* currentTarget = static_cast<BattleUnitSprite*>(building.lockedTarget);
 
-        // ========== 目标有效性检查 ==========
+        // 目标有效性检查
         bool targetValid = false;
 
         if (currentTarget) {
             auto allUnits = troopLayer->getAllUnits();
 
-            // 检查1: 目标是否还存活
+            // 检查目标是否还存活
             for (auto unit : allUnits) {
                 if (unit == currentTarget && !unit->isDead()) {
                     targetValid = true;
@@ -165,7 +158,7 @@ void DefenseSystem::updateBuildingDefense(BattleTroopLayer* troopLayer) {
                 }
             }
 
-            // 检查2: 是否还在范围内
+            // 检查目标是否还在范围内
             if (targetValid) {
                 int centerX = building.gridX + config->gridWidth / 2;
                 int centerY = building.gridY + config->gridHeight / 2;
@@ -188,7 +181,7 @@ void DefenseSystem::updateBuildingDefense(BattleTroopLayer* troopLayer) {
             }
         }
 
-        // ========== 寻找新目标 ==========
+        // 寻找新目标
         if (!currentTarget) {
             BattleUnitSprite* newTarget = findNearestUnitInRange(building, attackRange, troopLayer);
             if (newTarget && !newTarget->isDead()) {
@@ -198,17 +191,18 @@ void DefenseSystem::updateBuildingDefense(BattleTroopLayer* troopLayer) {
             }
         }
 
-        // ========== 攻击逻辑 ==========
+        // 攻击逻辑
         if (currentTarget) {
             targetedUnitsThisFrame.insert(currentTarget);
 
             building.attackCooldown -= deltaTime;
 
             if (building.attackCooldown <= 0.0f) {
+                // 计算伤害
                 int damagePerShot = static_cast<int>(config->damagePerSecond * attackSpeed);
                 currentTarget->takeDamage(damagePerShot);
 
-                // 转换到 MapLayer 坐标系播放攻击动画
+                // 播放攻击动画
                 auto mapLayer = troopLayer->getParent();
                 if (mapLayer) {
                     std::string spriteName = "Building_" + std::to_string(building.id);
@@ -235,7 +229,7 @@ void DefenseSystem::updateBuildingDefense(BattleTroopLayer* troopLayer) {
 
                 building.attackCooldown = attackSpeed;
 
-                // 目标死亡，立即清除锁定并播放死亡动画
+                // 目标死亡处理
                 if (currentTarget->isDead()) {
                     building.lockedTarget = nullptr;
                     targetedUnitsThisFrame.erase(currentTarget);
@@ -252,7 +246,7 @@ void DefenseSystem::updateBuildingDefense(BattleTroopLayer* troopLayer) {
         }
     }
 
-    // ========== 更新兵种锁定状态 ==========
+    // 更新兵种锁定状态
     auto allUnits = troopLayer->getAllUnits();
     for (auto unit : allUnits) {
         if (!unit || unit->isDead()) continue;

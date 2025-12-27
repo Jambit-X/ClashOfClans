@@ -1,4 +1,7 @@
-﻿#pragma execution_character_set("utf-8")
+﻿// ResourceCollectionUI.cpp
+// 资源收集UI实现，处理金币和圣水的收集逻辑与显示更新
+
+#pragma execution_character_set("utf-8")
 #include "ResourceCollectionUI.h"
 #include "Manager/Resource/ResourceProductionSystem.h"
 
@@ -22,52 +25,50 @@ bool ResourceCollectionUI::init() {
     return false;
   }
 
-  // ? 初始化有效标志
+  // 初始化有效标志
   _isValid = std::make_shared<bool>(true);
 
   initButtons();
 
-  // ? 修复：不捕获 this，而是捕获 shared_ptr 并通过它来访问成员
+  // 设置待收集资源回调，使用weak_ptr避免循环引用
   auto productionSystem = ResourceProductionSystem::getInstance();
   
-  // 捕获成员变量的 shared_ptr 引用，而不是 this
   std::weak_ptr<bool> weakValid = _isValid;
-  cocos2d::Label* goldLabel = _pendingGoldLabel;  // 捕获原始指针
+  cocos2d::Label* goldLabel = _pendingGoldLabel;
   cocos2d::Label* elixirLabel = _pendingElixirLabel;
   cocos2d::ui::Button* goldBtn = _collectGoldBtn;
   cocos2d::ui::Button* elixirBtn = _collectElixirBtn;
   
   productionSystem->setPendingResourceCallback([weakValid, goldLabel, elixirLabel, goldBtn, elixirBtn](int gold, int elixir) {
-    // ? 检查对象是否仍然有效
+    // 检查对象是否仍然有效
     auto valid = weakValid.lock();
-  if (!valid || !*valid) {
-    CCLOG("ResourceCollectionUI: Callback ignored - object already destroyed");
-    return;
+    if (!valid || !*valid) {
+      CCLOG("ResourceCollectionUI: Callback ignored - object already destroyed");
+      return;
     }
   
-    // ? 在访问 Cocos2d 对象前检查它们是否还存在于渲染树中
-    // 如果对象已经被 removeFromParent()，getReferenceCount() 可能为 0
+    // 检查UI元素是否还存在
     if (!goldLabel || !elixirLabel || !goldBtn || !elixirBtn) {
       CCLOG("ResourceCollectionUI: Callback ignored - UI elements null");
       return;
     }
     
-    // ? 再次检查引用计数，确保对象仍然有效
+    // 检查引用计数，确保对象仍然有效
     if (goldLabel->getReferenceCount() == 0 || elixirLabel->getReferenceCount() == 0) {
       CCLOG("ResourceCollectionUI: Callback ignored - UI elements released");
       return;
     }
     
-    // 安全地更新显示（内联 updateDisplay 的逻辑以避免调用 this）
+    // 安全地更新显示
     auto prodSystem = ResourceProductionSystem::getInstance();
     if (!prodSystem) return;
 
     int goldCapacity = prodSystem->getGoldStorageCapacity();
     int elixirCapacity = prodSystem->getElixirStorageCapacity();
 
- // 更新金币显示
+    // 更新金币显示
     if (goldLabel && goldLabel->getReferenceCount() > 0) {
-  goldLabel->setString(cocos2d::StringUtils::format("+%d/%d", gold, goldCapacity));
+      goldLabel->setString(cocos2d::StringUtils::format("+%d/%d", gold, goldCapacity));
 
       float goldRatio = (float)gold / goldCapacity;
       if (goldRatio >= 1.0f) {
@@ -81,9 +82,9 @@ bool ResourceCollectionUI::init() {
       if (gold > 0 && goldRatio < 1.0f) {
         goldLabel->stopAllActions();
         goldLabel->runAction(cocos2d::RepeatForever::create(
-      cocos2d::Sequence::create(
+          cocos2d::Sequence::create(
             cocos2d::FadeOut::create(0.8f),
-      cocos2d::FadeIn::create(0.8f),
+            cocos2d::FadeIn::create(0.8f),
             nullptr
           )
         ));
@@ -93,7 +94,7 @@ bool ResourceCollectionUI::init() {
         goldLabel->setOpacity(255);
         if (goldBtn) goldBtn->setEnabled(gold > 0);
       }
-  }
+    }
 
     // 更新圣水显示
     if (elixirLabel && elixirLabel->getReferenceCount() > 0) {
@@ -104,24 +105,24 @@ bool ResourceCollectionUI::init() {
         elixirLabel->setColor(cocos2d::Color3B::RED);
       } else if (elixirRatio >= 0.8f) {
         elixirLabel->setColor(cocos2d::Color3B::ORANGE);
-    } else {
-      elixirLabel->setColor(cocos2d::Color3B::MAGENTA);
+      } else {
+        elixirLabel->setColor(cocos2d::Color3B::MAGENTA);
       }
 
       if (elixir > 0 && elixirRatio < 1.0f) {
         elixirLabel->stopAllActions();
         elixirLabel->runAction(cocos2d::RepeatForever::create(
           cocos2d::Sequence::create(
-    cocos2d::FadeOut::create(0.8f),
-     cocos2d::FadeIn::create(0.8f),
-      nullptr
+            cocos2d::FadeOut::create(0.8f),
+            cocos2d::FadeIn::create(0.8f),
+            nullptr
           )
         ));
-   if (elixirBtn) elixirBtn->setEnabled(true);
+        if (elixirBtn) elixirBtn->setEnabled(true);
       } else {
         elixirLabel->stopAllActions();
         elixirLabel->setOpacity(255);
-    if (elixirBtn) elixirBtn->setEnabled(elixir > 0);
+        if (elixirBtn) elixirBtn->setEnabled(elixir > 0);
       }
     }
   });
@@ -135,13 +136,13 @@ bool ResourceCollectionUI::init() {
 void ResourceCollectionUI::onExit() {
   CCLOG("ResourceCollectionUI::onExit - Cleaning up");
   
-  // ? 标记对象已无效 - 这会阻止回调继续执行
+  // 标记对象已无效，阻止回调继续执行
   if (_isValid) {
     *_isValid = false;
     CCLOG("ResourceCollectionUI::onExit - Marked as invalid");
   }
   
-  // ? 清除所有动画，避免回调在动画中触发
+  // 停止所有动画
   if (_pendingGoldLabel) {
     _pendingGoldLabel->stopAllActions();
   }
@@ -149,13 +150,9 @@ void ResourceCollectionUI::onExit() {
     _pendingElixirLabel->stopAllActions();
   }
   
-  // ? 清除回调，防止对象销毁后仍被调用
-  // 注意：这里可能有竞态条件，如果新的 ResourceCollectionUI 还没设置回调
-  // 所以我们先检查当前回调是否是"我们的"
+  // 清除回调
   auto productionSystem = ResourceProductionSystem::getInstance();
   if (productionSystem) {
-    // 为了安全起见，直接设为 nullptr
-    // 新的 ResourceCollectionUI 会在 init() 中重新设置回调
     productionSystem->setPendingResourceCallback(nullptr);
     CCLOG("ResourceCollectionUI::onExit - Cleared callback");
   }
@@ -167,7 +164,7 @@ void ResourceCollectionUI::initButtons() {
   auto visibleSize = Director::getInstance()->getVisibleSize();
   Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
-  // 金币收集按钮
+  // 创建金币收集按钮
   _collectGoldBtn = Button::create();
   _collectGoldBtn->setTitleText("收集金币");
   _collectGoldBtn->setTitleFontName(FONT_PATH);
@@ -189,7 +186,7 @@ void ResourceCollectionUI::initButtons() {
   _pendingGoldLabel->setPosition(Vec2(130, visibleSize.height - 125));
   this->addChild(_pendingGoldLabel);
 
-  // 圣水收集按钮
+  // 创建圣水收集按钮
   _collectElixirBtn = Button::create();
   _collectElixirBtn->setTitleText("收集圣水");
   _collectElixirBtn->setTitleFontName(FONT_PATH);
@@ -219,14 +216,14 @@ void ResourceCollectionUI::onCollectGold() {
   if (pendingGold > 0) {
     productionSystem->collectGold();
 
-    // 动画效果
+    // 播放按钮缩放动画
     _collectGoldBtn->runAction(Sequence::create(
       ScaleTo::create(0.1f, 1.2f),
       ScaleTo::create(0.1f, 1.0f),
       nullptr
     ));
 
-    // ? 修复：飘字效果 - 检查父节点有效性
+    // 显示飘字效果
     auto parent = this->getParent();
     if (!parent) {
       CCLOG("ResourceCollectionUI::onCollectGold - Parent is null, skip floating text");
@@ -239,7 +236,7 @@ void ResourceCollectionUI::onCollectGold() {
     label->setPosition(_collectGoldBtn->getPosition() + Vec2(0, 40));
     parent->addChild(label, 100);
 
-    // ? 使用 retain/release 保护动画执行
+    // 使用retain/release保护动画执行
     label->retain();
     label->runAction(Sequence::create(
       DelayTime::create(3.0f),
@@ -249,10 +246,10 @@ void ResourceCollectionUI::onCollectGold() {
         nullptr
       ),
       CallFunc::create([label]() {
-     label->removeFromParent();
-        label->release();  // ← 释放引用
+        label->removeFromParent();
+        label->release();
       }),
-nullptr
+      nullptr
     ));
   }
 }
@@ -270,7 +267,7 @@ void ResourceCollectionUI::onCollectElixir() {
       nullptr
     ));
 
-    // ? 修复：飘字效果 - 检查父节点有效性
+    // 显示飘字效果
     auto parent = this->getParent();
     if (!parent) {
       CCLOG("ResourceCollectionUI::onCollectElixir - Parent is null, skip floating text");
@@ -278,23 +275,23 @@ void ResourceCollectionUI::onCollectElixir() {
     }
     
     auto label = Label::createWithTTF("+" + std::to_string(pendingElixir), FONT_PATH, 30);
-  label->setColor(Color3B::MAGENTA);
+    label->setColor(Color3B::MAGENTA);
     label->enableOutline(Color4B::BLACK, 2);
     label->setPosition(_collectElixirBtn->getPosition() + Vec2(0, 40));
     parent->addChild(label, 100);
 
-    // ? 使用 retain/release 保护动画执行
+    // 使用retain/release保护动画执行
     label->retain();
     label->runAction(Sequence::create(
       DelayTime::create(3.0f),
       Spawn::create(
         MoveBy::create(2.0f, Vec2(0, 100)),
-     FadeOut::create(2.0f),
+        FadeOut::create(2.0f),
         nullptr
       ),
       CallFunc::create([label]() {
         label->removeFromParent();
-        label->release();  // ← 释放引用
+        label->release();
       }),
       nullptr
     ));
@@ -323,10 +320,10 @@ void ResourceCollectionUI::updateDisplay(int pendingGold, int pendingElixir) {
       _pendingGoldLabel->stopAllActions();
       _pendingGoldLabel->runAction(RepeatForever::create(
         Sequence::create(
-        FadeOut::create(0.8f),
-        FadeIn::create(0.8f),
-        nullptr
-      )
+          FadeOut::create(0.8f),
+          FadeIn::create(0.8f),
+          nullptr
+        )
       ));
       _collectGoldBtn->setEnabled(true);
     } else {
@@ -352,10 +349,10 @@ void ResourceCollectionUI::updateDisplay(int pendingGold, int pendingElixir) {
       _pendingElixirLabel->stopAllActions();
       _pendingElixirLabel->runAction(RepeatForever::create(
         Sequence::create(
-        FadeOut::create(0.8f),
-        FadeIn::create(0.8f),
-        nullptr
-      )
+          FadeOut::create(0.8f),
+          FadeIn::create(0.8f),
+          nullptr
+        )
       ));
       _collectElixirBtn->setEnabled(true);
     } else {

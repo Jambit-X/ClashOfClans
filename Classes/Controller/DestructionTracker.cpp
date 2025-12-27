@@ -1,3 +1,6 @@
+﻿// DestructionTracker.cpp
+// 摧毁进度追踪系统实现，管理战斗中建筑摧毁进度和星级判定
+
 #include "DestructionTracker.h"
 #include "../Manager/VillageDataManager.h"
 #include "../Model/BuildingConfig.h"

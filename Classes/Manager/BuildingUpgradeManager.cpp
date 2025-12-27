@@ -1,4 +1,7 @@
-﻿#include "BuildingUpgradeManager.h"
+﻿// BuildingUpgradeManager.cpp
+// 建筑升级管理器实现，处理建筑升级逻辑和检查
+
+#include "BuildingUpgradeManager.h"
 #include "VillageDataManager.h"
 #include "Model/BuildingRequirements.h"
 #include "Model/BuildingConfig.h" 
@@ -24,7 +27,7 @@ void BuildingUpgradeManager::destroyInstance() {
 }
 
 void BuildingUpgradeManager::update(float dt) {
-  // 每秒检查一次(避免频繁检查)
+  // 每秒检查一次
   static float timer = 0;
   timer += dt;
   if (timer >= 1.0f) {
@@ -40,7 +43,6 @@ void BuildingUpgradeManager::checkFinishedUpgrades() {
   for (const auto& building : dataManager->getAllBuildings()) {
     if (building.state == BuildingInstance::State::CONSTRUCTING) {
       if (currentTime >= building.finishTime) {
-        // 升级完成
         dataManager->finishUpgradeBuilding(building.id);
         CCLOG("BuildingUpgradeManager: Building %d upgrade finished", building.id);
       }
@@ -62,7 +64,6 @@ bool BuildingUpgradeManager::canUpgrade(int buildingId) {
     return false;
   }
 
-  // 修改1：获取 BuildingConfig 实例而不是 BuildingConfigData 指针
   auto configManager = BuildingConfig::getInstance();
   auto configData = configManager->getConfig(building->type);
 
@@ -70,7 +71,6 @@ bool BuildingUpgradeManager::canUpgrade(int buildingId) {
     return false;
   }
 
-  // 修改2：使用 BuildingConfig 的 canUpgrade 方法
   if (!configManager->canUpgrade(building->type, building->level)) {
     CCLOG("BuildingUpgradeManager: Building %d is already max level", buildingId);
     return false;
@@ -87,7 +87,6 @@ bool BuildingUpgradeManager::canUpgrade(int buildingId) {
     return false;
   }
 
-  // 修改3：使用 BuildingConfig 的 getUpgradeCost 方法
   int cost = configManager->getUpgradeCost(building->type, building->level);
 
   if (configData->costType == "金币") {
@@ -101,11 +100,6 @@ bool BuildingUpgradeManager::canUpgrade(int buildingId) {
       return false;
     }
   }
-
-  // 检查建造工人（如果有 BuilderManager）
-  // if (!builderManager->hasAvailableBuilder()) {
-  //     return false;
-  // }
 
   return true;
 }
@@ -122,7 +116,6 @@ std::string BuildingUpgradeManager::getUpgradeFailReason(int buildingId) const {
     return "建筑未完成建造";
   }
 
-  // 修改4：同样修改这里
   auto configManager = BuildingConfig::getInstance();
   auto configData = configManager->getConfig(building->type);
 
@@ -130,7 +123,6 @@ std::string BuildingUpgradeManager::getUpgradeFailReason(int buildingId) const {
     return "配置错误";
   }
 
-  // 修改5：使用 configManager 调用方法
   if (!configManager->canUpgrade(building->type, building->level)) {
     return "已达最高等级";
   }
@@ -143,7 +135,6 @@ std::string BuildingUpgradeManager::getUpgradeFailReason(int buildingId) const {
     return "需要" + std::to_string(requiredTH) + "级大本营";
   }
 
-  // 修改6：使用 configManager 获取升级成本
   int cost = configManager->getUpgradeCost(building->type, building->level);
 
   if (configData->costType == "金币") {

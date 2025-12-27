@@ -1,4 +1,7 @@
-﻿#pragma execution_character_set("utf-8")
+﻿// DebugLayer.cpp
+// 调试面板层实现，提供可视化界面修改游戏数据
+
+#pragma execution_character_set("utf-8")
 #include "DebugLayer.h"
 #include "../Util/DebugHelper.h"
 #include "../Manager/VillageDataManager.h"
@@ -34,7 +37,7 @@ void DebugLayer::initPanel() {
     auto visibleSize = Director::getInstance()->getVisibleSize();
     
     // 面板背景
-    _panel = LayerColor::create(Color4B(40, 40, 40, 240)); // 深灰色背景
+    _panel = LayerColor::create(Color4B(40, 40, 40, 240));
     _panel->setContentSize(Size(600, 500));
     _panel->setIgnoreAnchorPointForPosition(false);
     _panel->setAnchorPoint(Vec2(0.5, 0.5));
@@ -46,7 +49,7 @@ void DebugLayer::initPanel() {
     title->setPosition(Vec2(300, 470));
     _panel->addChild(title);
 
-    // 关闭按钮 [X]
+    // 关闭按钮[X]
     auto closeBtn = Button::create();
     closeBtn->setTitleText("X");
     closeBtn->setTitleFontSize(20);
@@ -71,7 +74,7 @@ void DebugLayer::initResourceSection() {
 
     auto dataManager = VillageDataManager::getInstance();
 
-    // 通用创建资源行函数
+    // 创建资源行函数
     auto createRow = [&](const std::string& name, int y, int currentVal, 
                         Label** outLabel, const std::function<void(int)>& callback) {
         
@@ -96,8 +99,6 @@ void DebugLayer::initResourceSection() {
             btn->setTitleText(cfg.text);
             btn->setTitleFontSize(14);
             btn->setPosition(Vec2(x, y));
-            // 简单的按钮背景以便看清
-            // 实际项目中可能使用图片，这里仅用文字
             btn->addClickEventListener([=](Ref*) {
                 callback(cfg.val); 
             });
@@ -114,7 +115,7 @@ void DebugLayer::initResourceSection() {
     createRow("圣水:", 370, dataManager->getElixir(), &_elixirValueLabel, 
         [this](int d){ this->onElixirChanged(d); });
     
-    // 宝石 (稍微特殊，数值小一点)
+    // 宝石
     auto gemLabel = Label::createWithSystemFont("宝石:", "Arial", 16);
     gemLabel->setAnchorPoint(Vec2(0, 0.5));
     gemLabel->setPosition(Vec2(30, 330));
@@ -202,9 +203,6 @@ void DebugLayer::close() {
 
 void DebugLayer::refreshBuildingList() {
     // 刷新选中状态文本
-    // 实际项目中可能需要从 VillageLayer 获取当前选中的 ID
-    // 这里简化处理，假设用户通过点击建筑后来到这里
-    // 或者我们可以在 onEnter 时获取
 }
 
 void DebugLayer::onGoldChanged(int delta) {
@@ -227,7 +225,8 @@ void DebugLayer::onGemChanged(int delta) {
 
 void DebugLayer::onCompleteAllConstructions() {
     DebugHelper::completeAllConstructions();
-    // 简单的反馈动画
+    
+    // 反馈动画
     auto s = Director::getInstance()->getWinSize();
     auto label = Label::createWithSystemFont("所有建造已完成!", "Arial", 24);
     label->setPosition(s/2);

@@ -1,18 +1,18 @@
-﻿#pragma once
+﻿// DebugLayer.h
+// 调试面板层声明，提供可视化界面修改游戏数据
+
+#pragma once
 #include "cocos2d.h"
 #include "ui/CocosGUI.h"
 
-/**
- * @brief 调试面板层
- * 提供可视化界面修改游戏数据
- */
+// 调试面板层 - 提供可视化界面修改游戏数据
 class DebugLayer : public cocos2d::Layer {
 public:
     virtual bool init() override;
     CREATE_FUNC(DebugLayer);
 
 private:
-    // UI 初始化
+    // UI初始化
     void initBackground();
     void initPanel();
     void initResourceSection();
@@ -44,17 +44,15 @@ private:
     void initBattleMapSection();
     void onGenerateRandomMap();
 
-    // UI 成员
+    // UI成员
     cocos2d::Node* _panel;
     cocos2d::Label* _goldValueLabel;
     cocos2d::Label* _elixirValueLabel;
     cocos2d::Label* _gemValueLabel;
     
-    // 当前选中的建筑
-    int _selectedBuildingId = -1;
+    int _selectedBuildingId = -1;  // 当前选中的建筑
     cocos2d::Label* _selectedBuildingLabel;
 
-    // 建筑列表滚动视图
-    cocos2d::ui::ScrollView* _buildingScrollView;
+    cocos2d::ui::ScrollView* _buildingScrollView;  // 建筑列表滚动视图
 };
 

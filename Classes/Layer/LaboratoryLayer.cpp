@@ -1,4 +1,7 @@
-﻿#pragma execution_character_set("utf-8")
+﻿// LaboratoryLayer.cpp
+// 实验室层实现，处理兵种升级研究功能
+
+#pragma execution_character_set("utf-8")
 #include "LaboratoryLayer.h"
 #include "Manager/VillageDataManager.h"
 #include "Model/TroopUpgradeConfig.h"
@@ -7,14 +10,13 @@
 USING_NS_CC;
 using namespace ui;
 
-// 字体设置
 const std::string LAB_FONT = "fonts/simhei.ttf";
 
-// 界面尺寸配置（根据背景图 1216x911 的比例）
+// 界面尺寸配置
 const float BG_WIDTH = 800.0f;
 const float BG_HEIGHT = 600.0f;
 
-// 兵种卡片尺寸（大幅度放大）
+// 兵种卡片尺寸
 const float CARD_WIDTH = 180.0f;
 const float CARD_HEIGHT = 235.0f;
 
@@ -30,7 +32,7 @@ bool LaboratoryLayer::init() {
         return false;
     }
 
-    // 1. 全屏半透明遮罩
+    // 全屏半透明遮罩
     auto shieldLayer = LayerColor::create(Color4B(0, 0, 0, 180));
     this->addChild(shieldLayer);
 
@@ -40,11 +42,11 @@ bool LaboratoryLayer::init() {
     listener->onTouchBegan = [](Touch* t, Event* e) { return true; };
     _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
 
-    // 2. 初始化 UI
+    // 初始化UI
     initBackground();
     initTroopCards();
 
-    // 3. 启动更新（用于倒计时）
+    // 启动更新（用于倒计时）
     this->scheduleUpdate();
 
     return true;
@@ -83,24 +85,22 @@ void LaboratoryLayer::initBackground() {
         });
         _bgNode->addChild(closeBtn, 10);
 
-        // 立即完成区域（女角色右侧空白处）
-        // 先添加"立即完成升级："文字标签
+        // 立即完成区域
         auto finishLabel = Label::createWithTTF("立即完成升级：", LAB_FONT, 18);
         if (!finishLabel) finishLabel = Label::createWithSystemFont("立即完成升级：", "Arial", 18);
         finishLabel->setColor(Color3B::WHITE);
         finishLabel->setPosition(Vec2(bgDisplayWidth / 4, bgDisplayHeight / 4 + 10));
         finishLabel->setName("finishLabel");
-        finishLabel->setVisible(false);  // 默认隐藏
+        finishLabel->setVisible(false);
         _bgNode->addChild(finishLabel, 10);
         
-        // 立即完成按钮（在文字下方）
+        // 立即完成按钮
         _instantFinishBtn = Button::create();
         _instantFinishBtn->ignoreContentAdaptWithSize(false);
         _instantFinishBtn->setContentSize(Size(120, 40));
-        // 位置放在文字下方
         _instantFinishBtn->setPosition(Vec2(bgDisplayWidth / 4, bgDisplayHeight / 4 - 25));
         
-        // 按钮背景（绿色风格，参考游戏UI）
+        // 按钮背景
         auto btnBg = LayerColor::create(Color4B(80, 180, 80, 255), 120, 40);
         btnBg->setTouchEnabled(false);
         _instantFinishBtn->addChild(btnBg, -1);
@@ -124,7 +124,7 @@ void LaboratoryLayer::initBackground() {
         _instantFinishBtn->addClickEventListener([=](Ref*) {
             this->onInstantFinishClicked();
         });
-        _instantFinishBtn->setVisible(false);  // 默认隐藏，有研究时才显示
+        _instantFinishBtn->setVisible(false);
         _bgNode->addChild(_instantFinishBtn, 10);
     } else {
         // 如果背景图加载失败，用纯色代替
@@ -152,12 +152,11 @@ void LaboratoryLayer::initBackground() {
 }
 
 void LaboratoryLayer::initTroopCards() {
-    // 创建 ScrollView 放在背景图下方灰色区域
+    // 创建ScrollView放在背景图下方
     _scrollView = ScrollView::create();
     _scrollView->setDirection(ScrollView::Direction::HORIZONTAL);
     _scrollView->setContentSize(Size(BG_WIDTH - 40, CARD_HEIGHT + 30));
     _scrollView->setAnchorPoint(Vec2(0.5f, 0.5f));
-    // 放在背景下方区域（调整Y坐标以填满女角色下方空间）
     _scrollView->setPosition(Vec2(0, -BG_HEIGHT / 2 + 150));
     _scrollView->setScrollBarEnabled(false);
     _scrollView->setBounceEnabled(true);
@@ -198,7 +197,7 @@ LaboratoryLayer::CardState LaboratoryLayer::getCardState(int troopId, int curren
     auto upgradeConfig = TroopUpgradeConfig::getInstance();
     auto troopConfig = TroopConfig::getInstance();
 
-    // 1. 检查是否有正在进行的研究
+    // 检查是否有正在进行的研究
     int researchingId = dataManager->getResearchingTroopId();
     if (researchingId != -1) {
         if (researchingId == troopId) {
@@ -208,20 +207,20 @@ LaboratoryLayer::CardState LaboratoryLayer::getCardState(int troopId, int curren
         }
     }
 
-    // 2. 检查兵种是否已解锁（训练营等级）
+    // 检查兵种是否已解锁（训练营等级）
     TroopInfo info = troopConfig->getTroopById(troopId);
     int barracksLevel = getMaxBarracksLevel();
     if (barracksLevel < info.unlockBarracksLvl) {
         return CardState::TROOP_LOCKED;
     }
 
-    // 3. 检查是否已满级
+    // 检查是否已满级
     int maxLevel = upgradeConfig->getMaxLevel(troopId);
     if (currentLevel >= maxLevel) {
         return CardState::MAX_LEVEL;
     }
 
-    // 4. 检查实验室等级是否足够
+    // 检查实验室等级是否足够
     int labLevel = dataManager->getLaboratoryLevel();
     if (!upgradeConfig->canUpgradeWithLabLevel(troopId, currentLevel, labLevel)) {
         return CardState::LAB_LOCKED;
@@ -238,12 +237,12 @@ Widget* LaboratoryLayer::createTroopCard(const TroopInfo& info, CardState state,
     auto dataManager = VillageDataManager::getInstance();
     auto upgradeConfig = TroopUpgradeConfig::getInstance();
 
-    // 1. 卡片背景
+    // 卡片背景
     Color4B bgColor = (state == CardState::NORMAL) ? Color4B(80, 80, 80, 255) : Color4B(60, 60, 60, 255);
     auto bg = LayerColor::create(bgColor, CARD_WIDTH, CARD_HEIGHT);
     widget->addChild(bg);
 
-    // 2. 兵种头像（放大后的尺寸）
+    // 兵种头像
     auto sprite = Sprite::create(info.iconPath);
     if (sprite) {
         float scale = (CARD_WIDTH - 30) / sprite->getContentSize().width;
@@ -257,7 +256,7 @@ Widget* LaboratoryLayer::createTroopCard(const TroopInfo& info, CardState state,
         widget->addChild(sprite);
     }
 
-    // 3. 左上角等级/状态显示
+    // 左上角等级/状态显示
     std::string levelText;
     if (state == CardState::MAX_LEVEL) {
         levelText = "MAX";
@@ -274,7 +273,7 @@ Widget* LaboratoryLayer::createTroopCard(const TroopInfo& info, CardState state,
     lvlLabel->setPosition(30, 14);
     levelBg->addChild(lvlLabel);
 
-    // 4. 右上角 info 按钮
+    // 右上角info按钮
     auto infoBtn = Button::create("UI/training-camp/troop-cards/info_btn.png");
     if (infoBtn) {
         infoBtn->setPosition(Vec2(CARD_WIDTH - 22, CARD_HEIGHT - 22));
@@ -285,11 +284,11 @@ Widget* LaboratoryLayer::createTroopCard(const TroopInfo& info, CardState state,
         widget->addChild(infoBtn);
     }
 
-    // 5. 底部显示（根据状态不同显示不同内容）
+    // 底部显示（根据状态显示不同内容）
     Label* bottomLabel = nullptr;
     switch (state) {
         case CardState::NORMAL: {
-            // 显示升级费用 + 圣水图标（放大后的尺寸）
+            // 显示升级费用+圣水图标
             int cost = upgradeConfig->getUpgradeCost(info.id, currentLevel);
             auto costBg = LayerColor::create(Color4B(0, 0, 0, 150), CARD_WIDTH - 16, 32);
             costBg->setPosition(8, 8);
@@ -311,7 +310,6 @@ Widget* LaboratoryLayer::createTroopCard(const TroopInfo& info, CardState state,
             break;
         }
         case CardState::MAX_LEVEL:
-            // 不显示费用
             break;
         case CardState::LAB_LOCKED: {
             int requiredLab = upgradeConfig->getRequiredLabLevel(info.id, currentLevel + 1);
@@ -323,7 +321,7 @@ Widget* LaboratoryLayer::createTroopCard(const TroopInfo& info, CardState state,
             break;
         }
         case CardState::RESEARCHING: {
-            // 显示倒计时和研究中（放大后的尺寸）
+            // 显示倒计时和研究中
             long long finishTime = dataManager->getResearchFinishTime();
             long long currentTime = time(nullptr);
             int remaining = (int)(finishTime - currentTime);
@@ -356,7 +354,7 @@ Widget* LaboratoryLayer::createTroopCard(const TroopInfo& info, CardState state,
         widget->addChild(bottomLabel);
     }
 
-    // 6. 点击事件
+    // 点击事件
     widget->addClickEventListener([=](Ref*) {
         this->onTroopCardClicked(info.id);
     });
@@ -400,7 +398,7 @@ void LaboratoryLayer::showUpgradePopup(int troopId) {
     int currentLevel = dataManager->getTroopLevel(troopId);
     int maxLevel = upgradeConfig->getMaxLevel(troopId);
 
-    // 1. 全屏遮罩
+    // 全屏遮罩
     auto shieldLayer = LayerColor::create(Color4B(0, 0, 0, 180));
     this->addChild(shieldLayer, 200);
 
@@ -412,7 +410,7 @@ void LaboratoryLayer::showUpgradePopup(int troopId) {
     };
     _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, shieldLayer);
 
-    // 2. 弹窗主面板
+    // 弹窗主面板
     float popupW = 600;
     float popupH = 400;
     auto bg = LayerColor::create(Color4B(210, 200, 190, 255), popupW, popupH);
@@ -423,12 +421,12 @@ void LaboratoryLayer::showUpgradePopup(int troopId) {
     bg->setPosition(visibleSize.width / 2, visibleSize.height / 2);
     shieldLayer->addChild(bg);
 
-    // 3. 顶部标题栏
+    // 顶部标题栏
     auto titleBg = LayerColor::create(Color4B(180, 160, 140, 255), popupW, 50);
     titleBg->setPosition(0, popupH - 50);
     bg->addChild(titleBg);
 
-    // 标题文字：显示升级方向（如果未满级）
+    // 标题文字
     std::string titleStr;
     if (currentLevel < maxLevel) {
         titleStr = StringUtils::format("%d→%d级 %s", currentLevel, currentLevel + 1, info.name.c_str());
@@ -454,7 +452,7 @@ void LaboratoryLayer::showUpgradePopup(int troopId) {
     });
     bg->addChild(closeBtn);
 
-    // 4. 左侧：兵种大图
+    // 左侧：兵种大图
     auto sprite = Sprite::create(info.iconPath);
     if (sprite) {
         sprite->setScale(1.5f);
@@ -462,7 +460,7 @@ void LaboratoryLayer::showUpgradePopup(int troopId) {
         bg->addChild(sprite);
     }
 
-    // 5. 右侧：属性列表（显示原属性 + 增量）
+    // 右侧：属性列表
     float startX = popupW * 0.5f;
     float startY = popupH - 80;
     float lineHeight = 35;
@@ -491,7 +489,7 @@ void LaboratoryLayer::showUpgradePopup(int troopId) {
         lineCount++;
     };
 
-    // 属性显示：如果未满级，显示"原属性 + 增量"格式
+    // 属性显示
     if (currentData && nextData && currentLevel < maxLevel) {
         int hpIncrease = nextData->hitpoints - currentData->hitpoints;
         int dpsIncrease = nextData->damagePerSecond - currentData->damagePerSecond;
@@ -508,16 +506,14 @@ void LaboratoryLayer::showUpgradePopup(int troopId) {
     addStatRow("伤害类型:", info.damageType);
     addStatRow("攻击目标:", info.target);
 
-    // 6. 底部：升级按钮（替换原来的描述）
+    // 底部：升级按钮或描述
     if (currentLevel < maxLevel && getCardState(troopId, currentLevel) == CardState::NORMAL) {
         int cost = upgradeConfig->getUpgradeCost(troopId, currentLevel);
 
-        // 分割线
         auto line = LayerColor::create(Color4B(150, 150, 150, 255), popupW - 40, 2);
         line->setPosition(20, 70);
         bg->addChild(line);
 
-        // 升级按钮
         auto upgradeBtn = Button::create();
         upgradeBtn->ignoreContentAdaptWithSize(false);
         upgradeBtn->setContentSize(Size(200, 50));
@@ -526,7 +522,6 @@ void LaboratoryLayer::showUpgradePopup(int troopId) {
         btnBg->setTouchEnabled(false);
         upgradeBtn->addChild(btnBg, -1);
 
-        // 按钮内容：圣水图标 + 费用 + 确认
         auto elixirIcon = Sprite::create("ImageElements/elixir_icon.png");
         if (elixirIcon) {
             elixirIcon->setScale(0.25f);
@@ -546,7 +541,6 @@ void LaboratoryLayer::showUpgradePopup(int troopId) {
         });
         bg->addChild(upgradeBtn);
     } else {
-        // 已满级或不可升级，显示描述文字
         auto line = LayerColor::create(Color4B(150, 150, 150, 255), popupW - 40, 2);
         line->setPosition(20, 70);
         bg->addChild(line);
@@ -616,14 +610,11 @@ void LaboratoryLayer::showToast(const std::string& message) {
 void LaboratoryLayer::update(float dt) {
     auto dataManager = VillageDataManager::getInstance();
 
-    // 记录之前的研究状态
     bool wasResearching = dataManager->isResearching();
     int previousResearchId = dataManager->getResearchingTroopId();
 
-    // 检查研究是否完成
     dataManager->checkAndFinishResearch();
 
-    // 如果研究刚刚完成，立即刷新卡片
     bool isNowResearching = dataManager->isResearching();
     if (wasResearching && !isNowResearching) {
         CCLOG("LaboratoryLayer: Research completed, refreshing cards");
@@ -631,7 +622,7 @@ void LaboratoryLayer::update(float dt) {
         return;
     }
 
-    // 如果有研究正在进行，每秒刷新卡片更新倒计时
+    // 每秒刷新卡片更新倒计时
     static float refreshTimer = 0;
     refreshTimer += dt;
     if (refreshTimer >= 1.0f) {
@@ -677,25 +668,22 @@ std::string LaboratoryLayer::formatTime(int seconds) const {
 int LaboratoryLayer::getInstantFinishCost() const {
     auto dataManager = VillageDataManager::getInstance();
     
-    // 如果没有正在研究的兵种，返回0
     int troopId = dataManager->getResearchingTroopId();
     if (troopId == -1) {
         return 0;
     }
     
-    // 获取当前兵种等级（正在升级中，所以目标等级是当前等级+1）
     int currentLevel = dataManager->getTroopLevel(troopId);
     int targetLevel = currentLevel + 1;
     
     // 根据目标等级确定钻石费用
-    // 升级到2级：10钻石，升级到3级：20钻石
     if (targetLevel == 2) {
         return 10;
     } else if (targetLevel == 3) {
         return 20;
     }
     
-    return 10;  // 默认值
+    return 10;
 }
 
 void LaboratoryLayer::updateInstantFinishButton() {
@@ -704,17 +692,14 @@ void LaboratoryLayer::updateInstantFinishButton() {
     auto dataManager = VillageDataManager::getInstance();
     bool isResearching = dataManager->isResearching();
     
-    // 只有正在研究时才显示按钮和文字标签
     _instantFinishBtn->setVisible(isResearching);
     
-    // 同时控制文字标签的显示
     auto finishLabel = _bgNode->getChildByName("finishLabel");
     if (finishLabel) {
         finishLabel->setVisible(isResearching);
     }
     
     if (isResearching) {
-        // 更新费用显示
         int cost = getInstantFinishCost();
         auto costLabel = dynamic_cast<Label*>(_instantFinishBtn->getChildByName("costLabel"));
         if (costLabel) {
@@ -726,34 +711,25 @@ void LaboratoryLayer::updateInstantFinishButton() {
 void LaboratoryLayer::onInstantFinishClicked() {
     auto dataManager = VillageDataManager::getInstance();
     
-    // 检查是否有正在研究的兵种
     int troopId = dataManager->getResearchingTroopId();
     if (troopId == -1) {
         showToast("没有正在进行的研究");
         return;
     }
     
-    // 计算所需钻石
     int cost = getInstantFinishCost();
     
-    // 检查钻石是否足够
     if (dataManager->getGems() < cost) {
         showToast("钻石不足！");
         return;
     }
     
-    // 扣除钻石
     dataManager->addGems(-cost);
-    
-    // 立即完成升级 - 将完成时间设为当前时间
     dataManager->finishResearchImmediately();
-    
-    // 检查并完成研究
     dataManager->checkAndFinishResearch();
     
     showToast("研究已完成！");
     
-    // 刷新界面
     refreshCards();
     updateInstantFinishButton();
 }

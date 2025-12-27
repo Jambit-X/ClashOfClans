@@ -1,4 +1,6 @@
-﻿// Classes/Model/BuildingRequirements.h
+﻿// BuildingRequirements.h
+// 建筑解锁和升级需求管理器
+
 #ifndef BUILDING_REQUIREMENTS_H
 #define BUILDING_REQUIREMENTS_H
 
@@ -18,14 +20,14 @@ struct BuildingUnlockRule {
     , minTownHallLevel(1) {}
 };
 
-// 建筑需求管理器（单例模式）
+// 建筑需求管理器（单例）
 class BuildingRequirements {
 public:
   static BuildingRequirements* getInstance();
   static void destroyInstance();
 
-  // ========== 核心查询接口 ==========
-
+  // 核心查询接口
+  
   // 检查是否可以购买建筑（检查解锁等级和数量限制）
   bool canPurchase(int buildingType, int currentTHLevel, int currentCount) const;
 
@@ -57,7 +59,7 @@ private:
   BuildingRequirements();
   ~BuildingRequirements();
 
-  void initializeRules();                 // 初始化所有建筑规则
+  void initializeRules();  // 初始化所有建筑规则
   void addRule(const BuildingUnlockRule& rule);  // 添加单条规则
 
   static BuildingRequirements* instance;

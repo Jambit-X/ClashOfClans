@@ -1,10 +1,12 @@
-﻿// Model/ReplayData.cpp
+﻿// ReplayData.cpp
+// 战斗回放数据序列化实现
+
 #include "ReplayData.h"
-#include "BuildingConfig.h"  // ✅ 新增：用于读取 maxHP
+#include "BuildingConfig.h"
 
 USING_NS_CC;
 
-// ========== TroopDeployEvent 序列化 ==========
+// TroopDeployEvent 序列化
 ValueMap TroopDeployEvent::toValueMap() const {
     ValueMap map;
     map["timestamp"] = timestamp;
@@ -23,7 +25,7 @@ TroopDeployEvent TroopDeployEvent::fromValueMap(const ValueMap& map) {
     return event;
 }
 
-// ========== BattleReplayData 序列化 ==========
+// BattleReplayData 序列化
 ValueMap BattleReplayData::toValueMap() const {
     ValueMap map;
 
@@ -65,12 +67,12 @@ ValueMap BattleReplayData::toValueMap() const {
         buildingMap["gridY"] = building.gridY;
         buildingMap["currentHP"] = building.currentHP;
 
-        // ✅ 修复：从 BuildingConfig 读取 maxHP
+        // 从BuildingConfig读取maxHP
         auto config = BuildingConfig::getInstance()->getConfig(building.type);
         if (config) {
             buildingMap["maxHP"] = config->hitPoints;
         } else {
-            buildingMap["maxHP"] = building.currentHP;  // 降级方案
+            buildingMap["maxHP"] = building.currentHP;
         }
 
         buildingsVec.push_back(Value(buildingMap));
@@ -136,14 +138,11 @@ BattleReplayData BattleReplayData::fromValueMap(const ValueMap& map) {
             building.gridY = buildingMap.at("gridY").asInt();
             building.currentHP = buildingMap.at("currentHP").asInt();
 
-            // ✅ 修复1：maxHP 仅用于加载时验证，不需要保存到 building
-            // (BuildingInstance 没有 maxHP 字段，在战斗时从 BuildingConfig 读取)
-
-            // ✅ 修复2：使用 BUILT 代替 NORMAL
+            // 使用BUILT状态
             building.state = BuildingInstance::State::BUILT;
             building.isDestroyed = false;
-            building.finishTime = 0;  // ✅ 补充：初始化必填字段
-            building.isInitialConstruction = false;  // ✅ 补充
+            building.finishTime = 0;
+            building.isInitialConstruction = false;
 
             data.initialBuildings.push_back(building);
         }
@@ -161,7 +160,7 @@ BattleReplayData BattleReplayData::fromValueMap(const ValueMap& map) {
     return data;
 }
 
-// ========== ReplayMetadata 序列化 ==========
+// ReplayMetadata 序列化
 ValueMap ReplayMetadata::toValueMap() const {
     ValueMap map;
     map["replayId"] = replayId;
@@ -173,7 +172,7 @@ ValueMap ReplayMetadata::toValueMap() const {
     map["lootedElixir"] = lootedElixir;
     map["battleDuration"] = battleDuration;
 
-    // 兵种消耗（轻量级）
+    // 兵种消耗
     ValueMap usedTroopsMap;
     for (const auto& pair : usedTroops) {
         usedTroopsMap[std::to_string(pair.first)] = pair.second;

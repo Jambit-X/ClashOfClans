@@ -1,4 +1,7 @@
-﻿#pragma execution_character_set("utf-8")
+﻿// BattleScene.cpp
+// 战斗场景实现，包含战斗逻辑、兵种部署和资源掠夺
+
+#pragma execution_character_set("utf-8")
 #include "BattleScene.h"
 #include "Layer/BattleMapLayer.h"
 #include "Layer/BattleHUDLayer.h"
@@ -36,29 +39,29 @@ bool BattleScene::init() {
     _currentState = BattleState::PREPARE;
     _isSearching = false;
 
-    // ========== 初始化音频 ID ==========
+    // 初始化音频ID
     _combatPlanningMusicID = -1;
     _combatMusicID = -1;
 
-    // 【新增】初始化战斗兵种数据
+    // 初始化战斗兵种数据
     initBattleTroops();
 
-    // 1. 地图层
+    // 地图层
     _mapLayer = BattleMapLayer::create();
     if (_mapLayer) {
         this->addChild(_mapLayer, 0);
 
-        // 【新增】把 TroopLayer 加为 MapLayer 的子节点，Tag 设为 999
+        // 将TroopLayer作为MapLayer的子节点，Tag设为999
         auto troopLayer = BattleTroopLayer::create();
         troopLayer->setTag(999);
         _mapLayer->addChild(troopLayer, 10);
     }
 
-    // 2. UI 层 (Z=10)
+    // UI层（Z=10）
     _hudLayer = BattleHUDLayer::create();
     if (_hudLayer) this->addChild(_hudLayer, 10);
 
-    // 3. 初始化云层遮罩
+    // 初始化云层遮罩
     _cloudSprite = Sprite::create("UI/battle/battle-prepare/cloud.jpg");
     if (_cloudSprite) {
         auto visibleSize = Director::getInstance()->getVisibleSize();
@@ -75,20 +78,17 @@ bool BattleScene::init() {
         this->addChild(_cloudSprite, 100);
     }
 
-    // 4. ✅ 关键修复：只在非回放模式下生成地图
+    // 进入战斗模式
     VillageDataManager::getInstance()->setInBattleMode(true);
     CCLOG("BattleScene: Entered battle mode");
 
-    // ❌ 删除这一行（移到 onEnter 中根据模式判断）
-    // loadEnemyVillage();
-
-    // ========== 更新寻路地图 ==========
+    // 更新寻路地图
     FindPathUtil::getInstance()->updatePathfindingMap();
     CCLOG("BattleScene: Pathfinding map updated for battle");
 
     switchState(BattleState::PREPARE);
 
-    // 5. 启动时执行一次"进入动画"
+    // 启动时执行进入动画
     float randomStartDelay = cocos2d::RandomHelper::random_real(0.5f, 1.0f);
     this->scheduleOnce([this](float) {
         performCloudTransition(nullptr, true);
@@ -96,23 +96,20 @@ bool BattleScene::init() {
 
     this->scheduleUpdate();
 
-    // 【新增】最后开启触摸监听
+    // 开启触摸监听
     setupTouchListener();
 
-    // 【新增】设置建筑摧毁事件监听
+    // 设置建筑摧毁事件监听
     setupBuildingDestroyedListener();
 
-    // ❌ 删除这一行（移到 onEnter 中）
-    // DestructionTracker::getInstance()->initTracking();
-
-    // ✅ 新增：创建战斗进度UI
+    // 创建战斗进度UI
     _battleProgressUI = BattleProgressUI::create();
     if (_battleProgressUI) {
         this->addChild(_battleProgressUI, 200);
         CCLOG("BattleScene: Battle progress UI initialized");
     }
 
-    // ✅ 注册事件监听
+    // 注册事件监听
     auto dispatcher = Director::getInstance()->getEventDispatcher();
 
     _progressListener = dispatcher->addCustomEventListener(
@@ -128,7 +125,7 @@ bool BattleScene::init() {
     return true;
 }
 
-// ✅ 新增：在 onEnter 中完成初始化
+//在 onEnter 中完成初始化
 void BattleScene::onEnter() {
     Scene::onEnter();
 
@@ -138,28 +135,27 @@ void BattleScene::onEnter() {
 
     CCLOG("BattleScene::onEnter - Completing initialization");
 
-    // ✅ 根据模式加载不同的地图数据
+    // 根据模式加载不同的地图数据
     if (_recorder.isReplayMode()) {
         CCLOG("BattleScene: Initializing in REPLAY mode");
 
-        // ✅ 回放模式：加载回放地图（不生成新地图）
+        // 回放模式：加载回放地图（不生成新地图）
         loadReplayMap();
 
     } else {
         CCLOG("BattleScene: Initializing in NORMAL mode");
 
-        // ✅ 正常模式：生成随机地图
+        // 正常模式：生成随机地图
         loadEnemyVillage();
         setupTouchListener();
         setupBuildingDestroyedListener();
 
-        // ✅ 初始化摧毁追踪（只在正常模式）
+        // 初始化摧毁追踪（只在正常模式）
         DestructionTracker::getInstance()->initTracking();
 
         startRecording();
     }
 }
-
 
 void BattleScene::update(float dt) {
     if (_currentState == BattleState::PREPARE || _currentState == BattleState::FIGHTING) {
@@ -168,28 +164,25 @@ void BattleScene::update(float dt) {
 
         if (_stateTimer <= 0) {
             if (_currentState == BattleState::PREPARE) {
-                // ✅ 修复：准备时间结束后自动进入战斗状态，而不是返回村庄
+                // 准备时间结束后自动进入战斗状态
                 CCLOG("BattleScene: Preparation time expired, auto-starting battle");
                 switchState(BattleState::FIGHTING);
             } else if (_currentState == BattleState::FIGHTING) {
-                onEndBattleClicked(); // 战斗时间到，进入结算
+                onEndBattleClicked();
             }
         }
         
-        // ========== 建筑防御系统和陷阱系统自动更新 ==========
+        // 建筑防御系统和陷阱系统自动更新
         if (_currentState == BattleState::FIGHTING) {
             auto troopLayer = dynamic_cast<BattleTroopLayer*>(_mapLayer->getChildByTag(999));
             if (troopLayer) {
-                // ✅ 建筑防御系统（已迁移到DefenseSystem）
                 DefenseSystem::getInstance()->updateBuildingDefense(troopLayer);
-                
-                // ✅ 陷阱检测系统（已迁移到TrapSystem）
                 TrapSystem::getInstance()->updateTrapDetection(troopLayer);
             }
         }
-        // =========================================
     }
-    // ✅ 新增：回放播放逻辑
+    
+    // 回放播放逻辑
     if (_recorder.isReplayMode() && _currentState == BattleState::FIGHTING) {
         updateReplay(dt);
     }
@@ -216,12 +209,12 @@ void BattleScene::switchState(BattleState newState) {
             CCLOG(">>> Entering PREPARE state");
             _stateTimer = 30.0f;
             
-            // ========== 播放准备战斗音乐（循环） ==========
+            // 播放准备战斗音乐（循环）
             CCLOG(">>> Attempting to play combat planning music...");
             _combatPlanningMusicID = audioManager->playBackgroundMusic(
                 "Audios/combat_planning_music.mp3", 
-                0.8f,   // 音量 0.8
-                true    // 循环播放
+                0.8f,
+                true
             );
             
             if (_combatPlanningMusicID == -1) {
@@ -235,7 +228,7 @@ void BattleScene::switchState(BattleState newState) {
             CCLOG(">>> Entering FIGHTING state");
             _stateTimer = 180.0f;
             
-            // ========== 停止准备音乐，播放战斗音乐（循环） ==========
+            // 停止准备音乐，播放战斗音乐（循环）
             CCLOG(">>> Stopping combat planning music (ID: %d)", _combatPlanningMusicID);
             if (_combatPlanningMusicID != -1) {
                 audioManager->stopAudio(_combatPlanningMusicID);
@@ -248,8 +241,8 @@ void BattleScene::switchState(BattleState newState) {
             CCLOG(">>> Attempting to play combat music...");
             _combatMusicID = audioManager->playBackgroundMusic(
                 "Audios/combat_music.mp3", 
-                0.8f,   // 音量 0.8
-                true    // 循环播放
+                0.8f,
+                true
             );
             
             if (_combatMusicID == -1) {
@@ -258,7 +251,7 @@ void BattleScene::switchState(BattleState newState) {
                 CCLOG(">>> Combat music started (ID: %d)", _combatMusicID);
             }
             
-            // ✅ 进入战斗状态时显示进度UI
+            // 进入战斗状态时显示进度UI
             if (_battleProgressUI) {
                 _battleProgressUI->show();
                 CCLOG(">>> Battle progress UI shown");
@@ -269,7 +262,7 @@ void BattleScene::switchState(BattleState newState) {
             CCLOG(">>> Entering RESULT state");
             _stateTimer = 0;
             
-            // ========== 停止所有战斗音乐 ==========
+            // 停止所有战斗音乐
             CCLOG(">>> Stopping all combat music");
             CCLOG("    Planning music ID: %d", _combatPlanningMusicID);
             CCLOG("    Combat music ID: %d", _combatMusicID);
@@ -285,7 +278,7 @@ void BattleScene::switchState(BattleState newState) {
             
             CCLOG(">>> All music stopped");
             
-            // ✅ 播放进度UI的结算动画
+            // 播放进度UI的结算动画
             if (_battleProgressUI) {
                 _battleProgressUI->playResultAnimation([this]() {
                     CCLOG(">>> Progress UI animation completed");
@@ -293,7 +286,7 @@ void BattleScene::switchState(BattleState newState) {
             }
             
             if (!_resultLayer) {
-                // 【修改】传递消耗数据和掠夺资源给结算页面
+                // 传递消耗数据和掠夺资源给结算页面
                 _resultLayer = BattleResultLayer::createWithData(
                     _usedTroops, _troopLevels, _lootedGold, _lootedElixir);
                 this->addChild(_resultLayer, 100);
@@ -308,14 +301,14 @@ void BattleScene::switchState(BattleState newState) {
 
 void BattleScene::loadEnemyVillage() {
     if (_mapLayer) {
-        // 这里执行刷新地图的逻辑
+        // 刷新地图
         _mapLayer->reloadMap();
         
-        // 【新增】初始化资源掠夺数据
+        // 初始化资源掠夺数据
         _lootedGold = 0;
         _lootedElixir = 0;
         
-        // 从 VillageDataManager 获取战斗地图数据
+        // 从VillageDataManager获取战斗地图数据
         auto dataManager = VillageDataManager::getInstance();
         const auto& battleMap = dataManager->getBattleMapData();
         
@@ -338,7 +331,7 @@ void BattleScene::loadEnemyVillage() {
         CCLOG("BattleScene: Loot initialized - Gold: %d (%d per storage), Elixir: %d (%d per storage)",
               _totalLootableGold, _goldPerStorage, _totalLootableElixir, _elixirPerStorage);
         
-        // 【新增】通知 HUD 更新资源显示
+        // 通知HUD更新资源显示
         if (_hudLayer) {
             _hudLayer->initLootDisplay(_totalLootableGold, _totalLootableElixir);
         }
@@ -346,11 +339,11 @@ void BattleScene::loadEnemyVillage() {
 }
 
 void BattleScene::onNextOpponentClicked() {
-    if (_isSearching) return; // 防止重复点击
+    if (_isSearching) return;
 
-    // 执行完整的云层过渡动画
+    // 执行云层过渡动画
     performCloudTransition([this]() {
-        // 这里的代码会在云层完全变白（遮住屏幕）时执行
+        // 云层遮住屏幕时刷新地图
         this->loadEnemyVillage();
 
         // 重置侦查倒计时
@@ -358,14 +351,12 @@ void BattleScene::onNextOpponentClicked() {
     }, false);
 }
 
-// ========== 修复 2：回放结束时不生成新回放 ==========
-
 void BattleScene::onEndBattleClicked() {
     CCLOG("========================================");
     CCLOG("BattleScene::onEndBattleClicked - START");
     CCLOG("========================================");
 
-    // ========== 停止所有战斗音乐 ==========
+    // 停止所有战斗音乐
     auto audioManager = AudioManager::getInstance();
     if (_combatPlanningMusicID != -1) {
         audioManager->stopAudio(_combatPlanningMusicID);
@@ -378,8 +369,7 @@ void BattleScene::onEndBattleClicked() {
         CCLOG("BattleScene: Stopped combat music");
     }
 
-    // ========== ✅ 关键修复：保存回放数据 ==========
-    // 只在正常战斗模式下保存（回放模式不生成新回放）
+    // 保存回放数据（只在正常战斗模式下）
     if (!_recorder.isReplayMode()) {
         CCLOG("----------------------------------------");
         CCLOG("BattleScene: Normal battle mode detected");
@@ -395,7 +385,7 @@ void BattleScene::onEndBattleClicked() {
             }
         }
 
-        // ✅ 调用保存回放（委托给 _recorder）
+        // 调用保存回放（委托给_recorder）
         stopRecording();
 
         CCLOG("BattleScene: ✅ Replay saved successfully!");
@@ -403,11 +393,10 @@ void BattleScene::onEndBattleClicked() {
     } else {
         CCLOG("BattleScene: In replay mode, skipping recording");
     }
-    // ================================================
 
-    // 【新增】从村庄数据中扣除消耗的兵种
+    // 从村庄数据中扣除消耗的兵种（回放模式下不扣除）
     auto dataManager = VillageDataManager::getInstance();
-    if (!_recorder.isReplayMode()) {  // 回放模式下不扣除兵种
+    if (!_recorder.isReplayMode()) {
         for (const auto& pair : _usedTroops) {
             int troopId = pair.first;
             int usedCount = pair.second;
@@ -418,7 +407,7 @@ void BattleScene::onEndBattleClicked() {
         }
     }
 
-    // ✅ 修复：战斗结束时让兵种停止AI但保持在原地
+    // 战斗结束时让兵种停止AI但保持在原地
     auto troopLayer = dynamic_cast<BattleTroopLayer*>(_mapLayer->getChildByTag(999));
     if (troopLayer) {
         auto allUnits = troopLayer->getAllUnits();
@@ -438,12 +427,10 @@ void BattleScene::onEndBattleClicked() {
     CCLOG("========================================");
 }
 
-// ========== 修复 4：回放模式下"回营"按钮应该返回回放列表 ==========
-
 void BattleScene::onReturnHomeClicked() {
     CCLOG("BattleScene: Returning home, resetting building states");
 
-    // ========== 停止所有战斗音乐 ==========
+    // 停止所有战斗音乐
     auto audioManager = AudioManager::getInstance();
     if (_combatPlanningMusicID != -1) {
         audioManager->stopAudio(_combatPlanningMusicID);
@@ -454,17 +441,16 @@ void BattleScene::onReturnHomeClicked() {
         _combatMusicID = -1;
     }
     
-    // ✅ 关键修复：停止所有音频（包括结算音乐等可能遗漏的音频）
+    // 停止所有音频（包括结算音乐等可能遗漏的音频）
     audioManager->stopAllAudio();
     CCLOG("BattleScene: All audio stopped");
     
-    // ========== 关键修复：清除资源回调，防止回调访问即将销毁的HUDLayer ==========
+    // 清除资源回调，防止回调访问即将销毁的HUDLayer
     auto dataManager = VillageDataManager::getInstance();
-    dataManager->setResourceCallback(nullptr);  // 清除旧的回调
+    dataManager->setResourceCallback(nullptr);
     CCLOG("BattleScene: Resource callback cleared before adding loot");
-    // ===========================================================================
     
-    // 【新增】将掠夺的资源添加到玩家账户
+    // 将掠夺的资源添加到玩家账户
     if (_lootedGold > 0) {
         dataManager->addGold(_lootedGold);
         CCLOG("BattleScene: Added %d gold to player", _lootedGold);
@@ -474,20 +460,20 @@ void BattleScene::onReturnHomeClicked() {
         CCLOG("BattleScene: Added %d elixir to player", _lootedElixir);
     }
     
-    // 【关键修复】退出战斗模式，切换回村庄数据源
+    // 退出战斗模式，切换回村庄数据源
     dataManager->setInBattleMode(false);
     
-    // ✅ 修复：只在返回村庄时才重置建筑状态
+    // 只在返回村庄时才重置建筑状态
     BattleProcessController::getInstance()->resetBattleState();
     CCLOG("BattleScene: Building states reset when returning home");
     
-    // 【新增】清理建筑摧毁事件监听器
+    // 清理建筑摧毁事件监听器
     if (_buildingDestroyedListener) {
         _eventDispatcher->removeEventListener(_buildingDestroyedListener);
         _buildingDestroyedListener = nullptr;
     }
     
-    // ✅ 新增：重置战斗进度UI
+    // 重置战斗进度UI
     if (_battleProgressUI) {
         _battleProgressUI->reset();
         CCLOG("BattleScene: Battle progress UI reset");
@@ -598,7 +584,7 @@ bool BattleScene::onTouchBegan(cocos2d::Touch* touch, cocos2d::Event* event) {
 
     CCLOG("BattleScene: Troop selected (ID=%d), handling touch event", _hudLayer->getSelectedTroopId());
     
-    // 【新增】立即尝试放置一次
+    //立即尝试放置一次
     if (tryDeployTroopAt(_touchStartPos)) {
         _isLongPressDeploying = true;
         
@@ -629,7 +615,7 @@ void BattleScene::onTouchMoved(cocos2d::Touch* touch, cocos2d::Event* event) {
 }
 
 void BattleScene::onTouchEnded(cocos2d::Touch* touch, cocos2d::Event* event) {
-    // 【新增】停止长按放置
+    //停止长按放置
     stopLongPressDeploy();
     
     // 如果没有选中兵种，不处理
@@ -648,7 +634,7 @@ void BattleScene::onTouchEnded(cocos2d::Touch* touch, cocos2d::Event* event) {
     CCLOG("BattleScene: Touch ended, deployment already handled in onTouchBegan");
 }
 
-// ========== 【新增】停止长按放置 ==========
+// ==========停止长按放置 ==========
 void BattleScene::stopLongPressDeploy() {
     if (_isLongPressDeploying) {
         _isLongPressDeploying = false;
@@ -657,7 +643,7 @@ void BattleScene::stopLongPressDeploy() {
     }
 }
 
-// ========== 【新增】尝试在指定位置放置兵种 ==========
+// ==========尝试在指定位置放置兵种 ==========
 bool BattleScene::tryDeployTroopAt(const cocos2d::Vec2& touchPos) {
     // 检查是否在 UI 区域
     if (isTouchOnUI(touchPos)) {
@@ -916,7 +902,7 @@ void BattleScene::onBuildingDestroyed(cocos2d::EventCustom* event) {
         CCLOG("BattleScene: Elixir storage destroyed, looted %d elixir", _elixirPerStorage);
     }
     
-    // 【新增】检查是否所有建筑都已被摧毁
+    //检查是否所有建筑都已被摧毁
     if (_currentState == BattleState::FIGHTING) {
         checkAllBuildingsDestroyed();
     }
@@ -962,12 +948,11 @@ void BattleScene::checkAllBuildingsDestroyed() {
     }
 }
 
-// ========== 进度更新回调 ==========
 void BattleScene::onProgressUpdated(EventCustom* event) {
     auto data = static_cast<DestructionProgressEventData*>(event->getUserData());
     if (!data) return;
 
-    // ✅ 更新战斗进度UI
+    //更新战斗进度UI
     if (_battleProgressUI) {
         _battleProgressUI->updateProgress(data->progress);
     }
@@ -976,7 +961,6 @@ void BattleScene::onProgressUpdated(EventCustom* event) {
           data->progress, data->stars);
 }
 
-// ========== 星星获得回调 ==========
 void BattleScene::onStarAwarded(EventCustom* event) {
     auto data = static_cast<StarAwardedEventData*>(event->getUserData());
     if (!data) return;
@@ -986,7 +970,7 @@ void BattleScene::onStarAwarded(EventCustom* event) {
     CCLOG("BattleScene: Star #%d awarded! Reason: %s",
           starIndex + 1, data->reason.c_str());
 
-    // ✅ 更新战斗进度UI的星星
+    //更新战斗进度UI的星星
     if (_battleProgressUI) {
         _battleProgressUI->updateStars(starIndex + 1);
     }
@@ -996,10 +980,8 @@ void BattleScene::onStarAwarded(EventCustom* event) {
 void BattleScene::onExit() {
     CCLOG("BattleScene::onExit - Cleaning up resources");
 
-    // 1. 清理触摸监听器
     cleanupTouchListener();
 
-    // 2. 移除进度和星星事件监听
     if (_progressListener) {
         Director::getInstance()->getEventDispatcher()->removeEventListener(_progressListener);
         _progressListener = nullptr;
@@ -1010,7 +992,6 @@ void BattleScene::onExit() {
         _starListener = nullptr;
     }
 
-    // 3. 调用父类的 onExit
     Scene::onExit();
 }
 
@@ -1043,23 +1024,18 @@ void BattleScene::startReplay() {
     CCLOG("BattleScene: Starting replay playback with %zu events",
           replayData.troopEvents.size());
 
-    // ✅ 委托给 _recorder 启动回放
     _recorder.startReplay(_hudLayer, [this]() {
         switchState(BattleState::FIGHTING);
     });
 }
-
-// ========== 修复：回放结束逻辑（委托给 _recorder）==========
 
 void BattleScene::updateReplay(float dt) {
     auto troopLayer = dynamic_cast<BattleTroopLayer*>(_mapLayer->getChildByTag(999));
     if (!troopLayer) return;
 
     _recorder.updateReplay(dt, troopLayer, [this]() {
-        // 回放完成回调
         CCLOG("BattleScene: All replay events deployed, preparing to show results...");
 
-        // 缩短延迟到 1 秒
         this->scheduleOnce([this](float) {
             CCLOG("BattleScene: Showing actual battle results from replay data");
 
@@ -1092,14 +1068,12 @@ void BattleScene::updateReplay(float dt) {
                   replayData.finalStars, replayData.destructionPercentage,
                   replayData.lootedGold, replayData.lootedElixir);
 
-            // 立即进入结算状态
             switchState(BattleState::RESULT);
 
         }, 1.0f, "show_replay_result");
     });
 }
 
-// ========== ✅ 新增：加载回放地图（委托给 _recorder）==========
 void BattleScene::loadReplayMap() {
     _recorder.loadReplayMap(_mapLayer, _hudLayer);
 
@@ -1111,15 +1085,12 @@ void BattleScene::loadReplayMap() {
     _totalLootableElixir = replayData.lootedElixir;
 
     // 回放模式下重新初始化摧毁追踪
-    // 因为此时建筑数据已切换为回放地图数据
     DestructionTracker::getInstance()->initTracking();
     CCLOG("BattleScene: Destruction tracker re-initialized for replay mode");
 
     if (_recorder.isReplayMode()) {
         CCLOG("BattleScene: Skipping PREPARE phase, switching to FIGHTING immediately");
         switchState(BattleState::FIGHTING);
-
-        // 启动回放播放
         startReplay();
     }
     CCLOG("BattleScene: Replay map loaded successfully");

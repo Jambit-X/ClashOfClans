@@ -1,4 +1,7 @@
-﻿#include "ResourceProductionSystem.h"
+﻿// ResourceProductionSystem.cpp
+// 资源生产系统实现，负责计算和累积资源
+
+#include "ResourceProductionSystem.h"
 #include "Manager/VillageDataManager.h"
 #include "Model/BuildingConfig.h"
 #include <algorithm>
@@ -98,7 +101,7 @@ int ResourceProductionSystem::calculateGoldProductionRate() const {
 
   for (const auto& building : dataManager->getAllBuildings()) {
     if (building.state != BuildingInstance::State::BUILT) continue;
-    if (building.type != 202) continue; // 金矿
+    if (building.type != 202) continue;
 
     auto buildingConfig = config->getConfig(building.type);
     if (buildingConfig && buildingConfig->productionRate > 0) {
@@ -118,7 +121,7 @@ int ResourceProductionSystem::calculateElixirProductionRate() const {
 
   for (const auto& building : dataManager->getAllBuildings()) {
     if (building.state != BuildingInstance::State::BUILT) continue;
-    if (building.type != 203) continue; // 圣水收集器
+    if (building.type != 203) continue;
 
     auto buildingConfig = config->getConfig(building.type);
     if (buildingConfig && buildingConfig->productionRate > 0) {

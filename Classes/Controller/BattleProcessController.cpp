@@ -1,4 +1,7 @@
-﻿#include "BattleProcessController.h"
+﻿// BattleProcessController.cpp
+// 战斗流程控制器实现，管理单位AI、寻路、攻击和战斗循环逻辑
+
+#include "BattleProcessController.h"
 #include "../Layer/BattleTroopLayer.h"
 #include "../Manager/VillageDataManager.h"
 #include "../Model/BuildingConfig.h"
@@ -17,10 +20,7 @@ USING_NS_CC;
 
 BattleProcessController* BattleProcessController::_instance = nullptr;
 
-// ==========================================
-// 静态辅助函数
-// ==========================================
-
+// 计算路径总长度
 static float calculatePathLength(const std::vector<Vec2>& path) {
     if (path.size() < 2) return 0.0f;
     float totalDist = 0.0f;
@@ -30,6 +30,7 @@ static float calculatePathLength(const std::vector<Vec2>& path) {
     return totalDist;
 }
 
+// 根据兵种类型获取伤害值
 static int getDamageByUnitType(UnitTypeID typeID) {
     switch (typeID) {
         case UnitTypeID::BARBARIAN:
@@ -49,6 +50,7 @@ static int getDamageByUnitType(UnitTypeID typeID) {
     }
 }
 
+// 根据兵种类型获取攻击范围
 static int getAttackRangeByUnitType(UnitTypeID typeID) {
     switch (typeID) {
         case UnitTypeID::ARCHER:
@@ -56,7 +58,7 @@ static int getAttackRangeByUnitType(UnitTypeID typeID) {
         case UnitTypeID::BARBARIAN:
         case UnitTypeID::GOBLIN:
         case UnitTypeID::GIANT:
-        case UnitTypeID::BALLOON:  // 气球兵也需要 1 格攻击范围，否则无法正常攻击
+        case UnitTypeID::BALLOON:
             return 1;
         case UnitTypeID::WALL_BREAKER:
             return 0;
@@ -64,10 +66,6 @@ static int getAttackRangeByUnitType(UnitTypeID typeID) {
             return 1;
     }
 }
-
-// ==========================================
-// 生命周期管理
-// ==========================================
 
 BattleProcessController* BattleProcessController::getInstance() {
     if (!_instance) {
@@ -82,10 +80,6 @@ void BattleProcessController::destroyInstance() {
         _instance = nullptr;
     }
 }
-
-// ==========================================
-// 战斗状态重置
-// ==========================================
 
 void BattleProcessController::resetBattleState() {
     auto dataManager = VillageDataManager::getInstance();
@@ -105,18 +99,15 @@ void BattleProcessController::resetBattleState() {
         // 清除防御建筑的锁定目标
         building.lockedTarget = nullptr;
 
-        // ✅ 重置攻击冷却
+        // 重置攻击冷却
         building.attackCooldown = 0.0f;
     }
 
-    // ✅ 清理陷阱触发状态（委托给TrapSystem）
+    // 清理陷阱触发状态
     TrapSystem::getInstance()->reset();
 
     dataManager->saveToFile("village.json");
 }
-// ==========================================
-// 核心攻击逻辑（提取公共代码）
-// ==========================================
 
 void BattleProcessController::executeAttack(
     BattleUnitSprite* unit,
@@ -149,20 +140,16 @@ void BattleProcessController::executeAttack(
         return;
     }
 
-    // ========== ✅ 炸弹兵自爆特判 ==========
+    // 炸弹兵自爆特判
     if (unit->getUnitTypeID() == UnitTypeID::WALL_BREAKER) {
         CCLOG("BattleProcessController: Wall Breaker executing suicide attack");
 
-        // 执行自爆攻击
         performWallBreakerSuicideAttack(unit, liveTarget, troopLayer, [onTargetDestroyed]() {
-            // 炸弹兵死后，不继续攻击，直接调用目标摧毁回调
-            // 注意：这里不管目标是否被摧毁，炸弹兵都已经死了
             if (onTargetDestroyed) {
                 onTargetDestroyed();
             }
         });
 
-        // 立即返回，不执行后续的普通攻击逻辑
         return;
     }
 
@@ -184,13 +171,13 @@ void BattleProcessController::executeAttack(
         
         FindPathUtil::getInstance()->updatePathfindingMap();
         
-        // 【新增】发送建筑摧毁事件
+        // 发送建筑摧毁事件
         Director::getInstance()->getEventDispatcher()->dispatchCustomEvent(
             "EVENT_BUILDING_DESTROYED", 
             static_cast<void*>(liveTarget)
         );
 
-        // 更新摧毁进度（已迁移到DestructionTracker）
+        // 更新摧毁进度
         DestructionTracker::getInstance()->updateProgress();
 
         onTargetDestroyed();
@@ -199,10 +186,6 @@ void BattleProcessController::executeAttack(
         onContinueAttack();
     }
 }
-
-// ==========================================
-// 砍城墙时检查是否有更好的路径
-// ==========================================
 
 bool BattleProcessController::shouldAbandonWallForBetterPath(BattleUnitSprite* unit, int currentWallID) {
     Vec2 unitPos = unit->getPosition();
@@ -214,7 +197,7 @@ bool BattleProcessController::shouldAbandonWallForBetterPath(BattleUnitSprite* u
     CCLOG("  Current wall ID: %d", currentWallID);
     
     const BuildingInstance* bestTarget = nullptr;
-    // 使用 TargetFinder 查找最佳目标
+    // 使用TargetFinder查找最佳目标
     bestTarget = TargetFinder::getInstance()->findTarget(unitPos, unit->getUnitTypeID());
     
     if (!bestTarget) {
@@ -256,12 +239,6 @@ bool BattleProcessController::shouldAbandonWallForBetterPath(BattleUnitSprite* u
     return false;
 }
 
-
-
-// ==========================================
-// 核心 AI 逻辑入口
-// ==========================================
-
 void BattleProcessController::startUnitAI(BattleUnitSprite* unit, BattleTroopLayer* troopLayer) {
     if (!unit) {
         return;
@@ -276,7 +253,7 @@ void BattleProcessController::startUnitAI(BattleUnitSprite* unit, BattleTroopLay
     
     const BuildingInstance* target = nullptr;
     
-    // ========== 炸弹人特殊处理：只攻击城墙 ==========
+    // 炸弹兵特殊处理：只攻击城墙
     auto targetFinder = TargetFinder::getInstance();
     
     if (unit->getUnitTypeID() == UnitTypeID::WALL_BREAKER) {
@@ -287,9 +264,8 @@ void BattleProcessController::startUnitAI(BattleUnitSprite* unit, BattleTroopLay
             return;  // 没有城墙则原地待机
         }
     }
-    // ============================================
     else {
-        // 使用 TargetFinder 的通用入口
+        // 使用TargetFinder的通用入口
         target = targetFinder->findTarget(unitPos, unit->getUnitTypeID());
     }
 
@@ -302,7 +278,7 @@ void BattleProcessController::startUnitAI(BattleUnitSprite* unit, BattleTroopLay
     CCLOG("Target selected: ID=%d, Type=%d at grid(%d, %d)",
           target->id, target->type, target->gridX, target->gridY);
 
-    // 【新增】发送目标锁定事件，通知显示 Beacon
+    // 发送目标锁定事件
     EventCustom event("EVENT_UNIT_TARGET_LOCKED");
     event.setUserData(reinterpret_cast<void*>(static_cast<intptr_t>(target->id)));
     Director::getInstance()->getEventDispatcher()->dispatchEvent(&event);
@@ -313,9 +289,9 @@ void BattleProcessController::startUnitAI(BattleUnitSprite* unit, BattleTroopLay
     int attackRange = getAttackRangeByUnitType(unit->getUnitTypeID());
     CCLOG("Attack range: %d grids", attackRange);
     
-    //气球兵是飞行单位，直接飞向目标建筑边缘，无视城墙和地面障碍物
+    // 气球兵飞行单位特殊处理
     if (unit->getUnitTypeID() == UnitTypeID::BALLOON) {
-        // 计算飞到建筑边缘的攻击位置（而不是飞到中心）
+        // 计算建筑边缘攻击位置
         auto config = BuildingConfig::getInstance()->getConfig(target->type);
         int buildingWidth = config ? config->gridWidth : 2;
         int buildingHeight = config ? config->gridHeight : 2;
@@ -328,15 +304,15 @@ void BattleProcessController::startUnitAI(BattleUnitSprite* unit, BattleTroopLay
             static_cast<int>(buildingCenterY)
         );
         
-        // 计算从气球当前位置到建筑中心的方向
+        // 计算从气球到建筑中心的方向
         Vec2 direction = buildingCenter - unitPos;
         direction.normalize();
         
-        // 计算建筑边缘的攻击点（中心位置减去攻击范围距离）
-        float attackDistancePixels = (attackRange + buildingWidth / 2.0f) * 32.0f;  // 假设每格 32 像素
+        // 计算建筑边缘攻击点
+        float attackDistancePixels = (attackRange + buildingWidth / 2.0f) * 32.0f;
         Vec2 attackPosition = buildingCenter - direction * attackDistancePixels;
         
-        // 如果攻击位置比当前位置更远，就直接飞到建筑中心
+        // 如果攻击位置更远，直接飞到建筑中心
         if (unitPos.distance(attackPosition) > unitPos.distance(buildingCenter)) {
             attackPosition = buildingCenter;
         }
@@ -407,10 +383,6 @@ void BattleProcessController::startUnitAI(BattleUnitSprite* unit, BattleTroopLay
     CCLOG("========== END UNIT AI DEBUG ==========\n");
 }
 
-// ==========================================
-// 辅助方法
-// ==========================================
-
 const BuildingInstance* BattleProcessController::getFirstWallInLine(const Vec2& startPixel, const Vec2& endPixel) {
     auto dataManager = VillageDataManager::getInstance();
     auto pathfinder = FindPathUtil::getInstance();
@@ -424,7 +396,7 @@ const BuildingInstance* BattleProcessController::getFirstWallInLine(const Vec2& 
     CCLOG("  Start grid: (%.1f, %.1f)", startGridF.x, startGridF.y);
     CCLOG("  End grid: (%.1f, %.1f)", endGridF.x, endGridF.y);
 
-    // 方法1: 使用寻路器找到穿墙路径
+    // 方法1：使用寻路器找穿墙路径
     std::vector<Vec2> throughPath = pathfinder->findPathIgnoringWalls(startPixel, endPixel);
     CCLOG("  findPathIgnoringWalls returned %zu points", throughPath.size());
     
@@ -450,14 +422,14 @@ const BuildingInstance* BattleProcessController::getFirstWallInLine(const Vec2& 
 
     CCLOG("  No wall found via pathfinder, trying enhanced line scan...");
     
-    // 方法2: 改进的线性扫描 - 使用更多采样点
+    // 方法2：线性扫描，使用更多采样点
     Vec2 startGrid = GridMapUtils::pixelToGrid(startPixel);
     Vec2 endGrid = GridMapUtils::pixelToGrid(endPixel);
     Vec2 diff = endGrid - startGrid;
     
-    // ✅ 修复：使用更细的步长，确保每个格子都被检测到
+    // 使用更细步长确保检测到每个格子
     float maxDiff = std::max(std::abs(diff.x), std::abs(diff.y));
-    int steps = static_cast<int>(std::ceil(maxDiff)) * 2;  // 乘以2确保更细的采样
+    int steps = static_cast<int>(std::ceil(maxDiff)) * 2;
     if (steps < 1) steps = 1;
     
     CCLOG("  Enhanced line scan: %d steps from grid(%.1f, %.1f) to grid(%.1f, %.1f)",
@@ -466,14 +438,13 @@ const BuildingInstance* BattleProcessController::getFirstWallInLine(const Vec2& 
     Vec2 direction = diff / static_cast<float>(steps);
     Vec2 current = startGrid;
     
-    // 用于避免重复检测同一格子
+    // 避免重复检测同一格子
     std::set<std::pair<int, int>> checkedGrids;
     
     for (int i = 0; i <= steps; ++i) {
         int gx = static_cast<int>(std::floor(current.x));
         int gy = static_cast<int>(std::floor(current.y));
         
-        // 检查是否已经检测过这个格子
         auto gridKey = std::make_pair(gx, gy);
         if (checkedGrids.find(gridKey) == checkedGrids.end()) {
             checkedGrids.insert(gridKey);
@@ -492,7 +463,7 @@ const BuildingInstance* BattleProcessController::getFirstWallInLine(const Vec2& 
         current += direction;
     }
     
-    // 方法3: 遍历所有城墙，检查是否在路径上
+    // 方法3：遍历所有城墙检查路径交叉
     CCLOG("  Line scan failed, checking all walls for intersection...");
     const auto& buildings = dataManager->getAllBuildings();
     
@@ -500,18 +471,17 @@ const BuildingInstance* BattleProcessController::getFirstWallInLine(const Vec2& 
         if (building.type != 303) continue;
         if (building.isDestroyed || building.currentHP <= 0) continue;
         
-        // 检查城墙是否在起点和终点之间
         int wallX = building.gridX;
         int wallY = building.gridY;
         
-        // 计算城墙是否在路径的包围盒内
+        // 计算城墙是否在路径包围盒内
         int minX = static_cast<int>(std::min(startGrid.x, endGrid.x)) - 1;
         int maxX = static_cast<int>(std::max(startGrid.x, endGrid.x)) + 1;
         int minY = static_cast<int>(std::min(startGrid.y, endGrid.y)) - 1;
         int maxY = static_cast<int>(std::max(startGrid.y, endGrid.y)) + 1;
         
         if (wallX >= minX && wallX <= maxX && wallY >= minY && wallY <= maxY) {
-            // 检查城墙是否真的在路径上（使用点到线段距离）
+            // 使用点到线段距离判断城墙是否在路径上
             Vec2 wallPos(wallX + 0.5f, wallY + 0.5f);
             Vec2 lineDir = endGrid - startGrid;
             float lineLen = lineDir.length();
@@ -526,7 +496,7 @@ const BuildingInstance* BattleProcessController::getFirstWallInLine(const Vec2& 
                     Vec2 projPoint = startGrid + lineDir * proj;
                     float dist = wallPos.distance(projPoint);
                     
-                    // 如果距离小于1格，认为城墙在路径上
+                    // 距离小于1.5格认为城墙在路径上
                     if (dist < 1.5f) {
                         CCLOG("  ✓ Found wall ID=%d at grid(%d, %d) via intersection check! (dist=%.2f)",
                               building.id, wallX, wallY, dist);
@@ -541,18 +511,6 @@ const BuildingInstance* BattleProcessController::getFirstWallInLine(const Vec2& 
     CCLOG("--- END getFirstWallInLine ---");
     return nullptr;
 }
-
-
-
-// ==========================================
-// 建筑防御系统已迁移到 DefenseSystem 类
-// 使用 DefenseSystem::getInstance()->updateBuildingDefense()
-// ==========================================
-
-
-// ==========================================
-// 战斗循环逻辑
-// ==========================================
 
 void BattleProcessController::startCombatLoop(BattleUnitSprite* unit, BattleTroopLayer* troopLayer) {
     if (!unit || !troopLayer) return;
@@ -592,7 +550,7 @@ void BattleProcessController::startCombatLoop(BattleUnitSprite* unit, BattleTroo
     CCLOG("  Target ID=%d Type=%d at grid(%d, %d), size(%d x %d)",
           mutableTarget->id, mutableTarget->type, bX, bY, bW, bH);
 
-    // ========== 距离计算逻辑 ==========
+    // 计算到建筑的网格距离
     int gridDistX = 0;
     int gridDistY = 0;
 
@@ -614,7 +572,7 @@ void BattleProcessController::startCombatLoop(BattleUnitSprite* unit, BattleTroo
     CCLOG("  Distance: X=%d, Y=%d, Max=%d, AttackRange=%d",
           gridDistX, gridDistY, gridDistance, attackRangeGrid);
 
-    // 气球兵特殊判定
+    // 气球兵使用像素距离判定
     if (unit->getUnitTypeID() == UnitTypeID::BALLOON) {
         Vec2 buildingCenter = GridMapUtils::gridToPixelCenter(
             bX + bW / 2,
@@ -637,7 +595,7 @@ void BattleProcessController::startCombatLoop(BattleUnitSprite* unit, BattleTroo
     CCLOG("  ✓ In range, attacking target!");
     CCLOG("--- END startCombatLoop ---");
 
-    // 攻击逻辑
+    // 执行攻击
     Vec2 buildingPos = GridMapUtils::gridToPixelCenter(mutableTarget->gridX, mutableTarget->gridY);
     int targetID = mutableTarget->id;
 
@@ -666,7 +624,7 @@ void BattleProcessController::startCombatLoopWithForcedTarget(BattleUnitSprite* 
         return;
     }
 
-    // ✅ 持续检查：如果正在攻击城墙，随时检查是否有更好的路径
+    // 持续检查：如果正在攻击城墙，检查是否有更好的路径
     if (liveTarget->type == 303 && shouldAbandonWallForBetterPath(unit, targetID)) {
         CCLOG("BattleProcessController: Found better path! Abandoning wall attack.");
         startUnitAI(unit, troopLayer);
@@ -707,7 +665,6 @@ void BattleProcessController::startCombatLoopWithForcedTarget(BattleUnitSprite* 
     int attackRangeGrid = getAttackRangeByUnitType(unit->getUnitTypeID());
     
     if (gridDistance > attackRangeGrid) {
-        
         auto pathfinder = FindPathUtil::getInstance();
         std::vector<Vec2> pathToTarget = pathfinder->findPathToAttackBuilding(unitPos, *liveTarget, attackRangeGrid);
         
@@ -730,14 +687,13 @@ void BattleProcessController::startCombatLoopWithForcedTarget(BattleUnitSprite* 
     unit->attackTowardPosition(targetPos, [this, unit, troopLayer, targetID]() {
         executeAttack(unit, troopLayer, targetID, true,
             [this, unit, troopLayer]() {
-                // 目标被摧毁，重新寻找目标
                 startUnitAI(unit, troopLayer);
             },
             [this, unit, troopLayer, targetID]() {
                 auto dm = VillageDataManager::getInstance();
                 auto t = dm->getBuildingById(targetID);
                 if (t && !t->isDestroyed && t->currentHP > 0) {
-                    // ✅ 每次攻击后都检查是否有更好的路径
+                    // 每次攻击后都检查是否有更好的路径
                     if (t->type == 303 && shouldAbandonWallForBetterPath(unit, targetID)) {
                         CCLOG("BattleProcessController: Better path found after attack! Switching target.");
                         startUnitAI(unit, troopLayer);
@@ -752,9 +708,6 @@ void BattleProcessController::startCombatLoopWithForcedTarget(BattleUnitSprite* 
     });
 }
 
-// ==========================================
-// 炸弹兵自爆攻击逻辑
-// ==========================================
 void BattleProcessController::performWallBreakerSuicideAttack(
     BattleUnitSprite* unit,
     BuildingInstance* target,
@@ -768,40 +721,36 @@ void BattleProcessController::performWallBreakerSuicideAttack(
 
     CCLOG("BattleProcessController: Wall Breaker suicide attack on building %d", target->id);
 
-    // 1. 获取炸弹兵伤害值
+    // 获取炸弹兵伤害值
     int damage = getDamageByUnitType(unit->getUnitTypeID());
     
-    // ========== 对城墙造成10倍伤害 ==========
-    if (target->type == 303) {  // 城墙
+    // 对城墙造成10倍伤害
+    if (target->type == 303) {
         damage *= 10;
         CCLOG("BattleProcessController: Wall Breaker deals 10x damage to wall!");
     }
 
-    // 2. 对目标建筑造成伤害
+    // 对目标建筑造成伤害
     target->currentHP -= damage;
-
     CCLOG("BattleProcessController: Target HP: %d (damage: %d)", target->currentHP, damage);
 
-    // 3. 检查目标是否被摧毁
+    // 检查目标是否被摧毁
     if (target->currentHP <= 0) {
         target->isDestroyed = true;
         target->currentHP = 0;
 
-        // 更新寻路地图
         FindPathUtil::getInstance()->updatePathfindingMap();
 
-        // 发送建筑摧毁事件
         Director::getInstance()->getEventDispatcher()->dispatchCustomEvent(
             "EVENT_BUILDING_DESTROYED",
             static_cast<void*>(target)
         );
 
-        // 更新摧毁进度（已迁移到DestructionTracker）
         DestructionTracker::getInstance()->updateProgress();
         CCLOG("BattleProcessController: Target destroyed!");
     }
 
-    // 4. 播放爆炸特效
+    // 播放爆炸特效
     auto explosion = ParticleExplosion::create();
     explosion->setPosition(unit->getPosition());
     explosion->setDuration(0.2f);
@@ -809,7 +758,7 @@ void BattleProcessController::performWallBreakerSuicideAttack(
     explosion->setAutoRemoveOnFinish(true);
     troopLayer->getParent()->addChild(explosion, 1000);
 
-    // 5. 屏幕震动（可选）
+    // 屏幕震动
     auto camera = Camera::getDefaultCamera();
     auto shake = Sequence::create(
         MoveBy::create(0.05f, Vec3(5, 0, 0)),
@@ -819,24 +768,18 @@ void BattleProcessController::performWallBreakerSuicideAttack(
     );
     camera->runAction(shake);
 
-    // 6. 炸弹兵自杀
+    // 炸弹兵自杀
     unit->takeDamage(9999);
-
-    // ✅ 恢复正常颜色（移除红色锁定状态）
     unit->setColor(Color3B::WHITE);
 
-    // 7. 播放死亡动画并移除
+    // 播放死亡动画并移除
     unit->playDeathAnimation([troopLayer, unit, onComplete]() {
         CCLOG("BattleProcessController: Wall Breaker death animation completed");
 
-        // ✅ 在移除前生成墓碑
         Vec2 tombstonePos = unit->getPosition();
         UnitTypeID unitType = unit->getUnitTypeID();
 
-        // 移除兵种
         troopLayer->removeUnit(unit);
-
-        // 生成墓碑（会自动淡出）
         troopLayer->spawnTombstone(tombstonePos, unitType);
 
         if (onComplete) {
@@ -844,9 +787,3 @@ void BattleProcessController::performWallBreakerSuicideAttack(
         }
     });
 }
-
-// ==========================================
-// 摧毁进度追踪系统已迁移到 DestructionTracker 类
-// 使用 DestructionTracker::getInstance()->initTracking()
-// 使用 DestructionTracker::getInstance()->updateProgress()
-// ==========================================

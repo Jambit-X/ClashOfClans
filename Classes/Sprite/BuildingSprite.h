@@ -1,10 +1,10 @@
-﻿#pragma once
+﻿// BuildingSprite.h
+// 建筑精灵，支持建造动画、血条显示和选中效果
+
+#pragma once
 #include "cocos2d.h"
 #include "../Model/VillageData.h"
 #include "Component/HealthBarComponent.h"
-
-//  不再需要 ConstructionAnimation 类
-// class ConstructionAnimation;
 
 class BuildingSprite : public cocos2d::Sprite {
 public:
@@ -34,16 +34,16 @@ public:
   void clearPlacementPreview();
 
   // 选中效果
-  void showSelectionEffect();   // 显示选中效果（弹跳 + 光圈）
-  void hideSelectionEffect();   // 隐藏选中效果
+  void showSelectionEffect();
+  void hideSelectionEffect();
   bool isSelected() const { return _isSelected; }
 
   // 摧毁效果（战斗场景用）
-  void showDestroyedRubble();      // 显示废墟贴图
+  void showDestroyedRubble();
   bool isShowingRubble() const { return _isShowingRubble; }
 
-  // 【修复】目标标记（战斗场景用）- 移到 public
-  void showTargetBeacon();      // 显示目标锁定标记
+  // 目标标记（战斗场景用）
+  void showTargetBeacon();
 
   // 控制主贴图可见性（用于防御建筑动画切换）
   void setMainTextureVisible(bool visible);
@@ -56,22 +56,17 @@ public:
   cocos2d::Vec2 getVisualOffset() const { return _visualOffset; }
 
   void loadSprite(int type, int level);
-
-  /**
- * @brief 更新血条显示
- */
   void updateHealthBar(int currentHP, int maxHP);
 
 private:
   void updateVisuals();
 
-  //  新增：UI 管理方法
-  void initConstructionUI();    // 创建 UI 容器（只调用一次）
-  void showConstructionUI();    // 显示建造 UI
-  void hideConstructionUI();    // 隐藏建造 UI
+  // UI管理方法
+  void initConstructionUI();
+  void showConstructionUI();
+  void hideConstructionUI();
 
-  // 选中效果辅助方法
-  void createSelectionGlow();   // 创建光圈
+  void createSelectionGlow();
 
   int _buildingId;
   int _buildingType;
@@ -80,24 +75,24 @@ private:
   cocos2d::Vec2 _visualOffset;
   cocos2d::Vec2 _gridPos;
 
-  //  新的 UI 容器结构
-  cocos2d::Node* _constructionUIContainer;  // UI 容器
+  // UI容器结构
+  cocos2d::Node* _constructionUIContainer;
 
-  //  子元素指针（便于访问）
-  cocos2d::Sprite* _progressBg;    // 进度条背景
-  cocos2d::ProgressTimer* _progressBar;     // 进度条
-  cocos2d::Label* _countdownLabel;        // 倒计时
-  cocos2d::Label* _percentLabel;            // 百分比标签
+  // 子元素指针
+  cocos2d::Sprite* _progressBg;
+  cocos2d::ProgressTimer* _progressBar;
+  cocos2d::Label* _countdownLabel;
+  cocos2d::Label* _percentLabel;
 
   // 选中效果
-  cocos2d::DrawNode* _selectionGlow;        // 底部光圈
-  bool _isSelected;      // 选中状态
+  cocos2d::DrawNode* _selectionGlow;
+  bool _isSelected;
 
-  // 使用通用血条组件（替换原有的血条成员变量）
+  // 血条组件
   HealthBarComponent* _healthBar = nullptr;
 
   // 摧毁状态
-  bool _isShowingRubble = false;         // 是否正在显示废墟贴图
+  bool _isShowingRubble = false;
 
   // 目标标记
   cocos2d::Sprite* _targetBeacon = nullptr;

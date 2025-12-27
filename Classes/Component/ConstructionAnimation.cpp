@@ -1,11 +1,14 @@
-﻿#pragma execution_character_set("utf-8")
+﻿// ConstructionAnimation.cpp
+// 建筑建造动画组件实现，负责显示建造进度和视觉效果
+
+#pragma execution_character_set("utf-8")
 #include "ConstructionAnimation.h"
 #include "Sprite/BuildingSprite.h"
 
 USING_NS_CC;
 
 ConstructionAnimation::ConstructionAnimation(BuildingSprite* sprite)
-  : _buildingSprite(sprite)  // 改为 _buildingSprite
+  : _buildingSprite(sprite)
   , _progressLabel(nullptr)
   , _isRunning(false) {}
 
@@ -18,7 +21,7 @@ void ConstructionAnimation::start() {
 
   _isRunning = true;
 
-  // 创建进度标签（只创建一次）
+  // 创建进度标签
   if (!_progressLabel) {
     _progressLabel = Label::createWithTTF("建造中...0%", "fonts/simhei.ttf", 20);
     _progressLabel->setColor(Color3B::YELLOW);
@@ -55,7 +58,7 @@ void ConstructionAnimation::stop() {
 void ConstructionAnimation::updateProgress(float progress) {
   if (!_isRunning) return;
 
-  // 只更新进度文字，不重新创建
+  // 更新进度文字
   if (_progressLabel) {
     std::string progressText = StringUtils::format("建造中...%.0f%%", progress * 100);
     _progressLabel->setString(progressText);

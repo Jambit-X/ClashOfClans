@@ -1,4 +1,7 @@
-﻿#include "HealthBarComponent.h"
+﻿// HealthBarComponent.cpp
+// 通用血条组件实现，处理血条显示和颜色变化逻辑
+
+#include "HealthBarComponent.h"
 
 USING_NS_CC;
 
@@ -34,7 +37,7 @@ bool HealthBarComponent::init(const Config& config) {
 }
 
 void HealthBarComponent::createBarComponents() {
-    // 1. 创建背景（深灰色）
+    // 创建背景精灵
     _background = Sprite::create();
     _background->setTextureRect(Rect(0, 0, _config.width, _config.height));
     _background->setColor(Color3B(40, 40, 40));
@@ -43,15 +46,15 @@ void HealthBarComponent::createBarComponents() {
     _background->setPosition(Vec2::ZERO);
     this->addChild(_background, 1);
 
-    // 2. 创建进度条（初始绿色）
+    // 创建进度条精灵
     auto barSprite = Sprite::create();
     barSprite->setTextureRect(Rect(0, 0, _config.width, _config.height));
-    barSprite->setColor(Color3B(50, 205, 50));  // 绿色
+    barSprite->setColor(Color3B(50, 205, 50));
 
     _progressBar = ProgressTimer::create(barSprite);
     _progressBar->setType(ProgressTimer::Type::BAR);
-    _progressBar->setMidpoint(Vec2(0, 0.5f));     // 从左边开始
-    _progressBar->setBarChangeRate(Vec2(1, 0));   // 水平方向变化
+    _progressBar->setMidpoint(Vec2(0, 0.5f));
+    _progressBar->setBarChangeRate(Vec2(1, 0));
     _progressBar->setPercentage(100.0f);
     _progressBar->setAnchorPoint(Vec2(0.5f, 0.5f));
     _progressBar->setPosition(Vec2::ZERO);
@@ -64,7 +67,7 @@ void HealthBarComponent::updateHealth(int currentHP, int maxHP) {
         return;
     }
 
-    // 计算百分比
+    // 计算血量百分比
     float percent = (float)currentHP / (float)maxHP * 100.0f;
     percent = std::max(0.0f, std::min(100.0f, percent));
 
@@ -85,11 +88,10 @@ void HealthBarComponent::updateHealth(int currentHP, int maxHP) {
         show();
     }
 
-    // 更新进度
+    // 更新进度和颜色
     if (_progressBar) {
         _progressBar->setPercentage(percent);
 
-        // 更新颜色
         Color3B barColor = getColorForPercent(percent);
         _progressBar->getSprite()->setColor(barColor);
     }
@@ -118,7 +120,7 @@ void HealthBarComponent::hide() {
 }
 
 void HealthBarComponent::updatePosition(const Size& parentSize) {
-    // 根据父节点大小和配置的偏移量计算位置
+    // 根据父节点大小和配置偏移量计算位置
     Vec2 position;
     position.x = parentSize.width / 2 + _config.offset.x;
     position.y = parentSize.height + _config.offset.y;
