@@ -1,4 +1,7 @@
-﻿#pragma once
+﻿// VillageLayer.h
+// 村庄层声明，管理村庄场景的地图、建筑和输入控制
+
+#pragma once
 #include "cocos2d.h"
 #include "../Model/VillageData.h"
 
@@ -19,9 +22,10 @@ public:
     void clearSelectedBuilding();
     void updateBuildingPreviewPosition(int buildingId, const cocos2d::Vec2& worldPos);
 
-    // ========== 修改：将地图切换改为 public ==========
-    void switchMapBackground(int themeId);  // ✅ 移到 public 区域
-    // ========== 新增：获取当前选中的建筑ID ==========
+    // 地图主题切换
+    void switchMapBackground(int themeId);
+    
+    // 获取当前选中的建筑ID
     int getSelectedBuildingId() const;
 
 private:
@@ -37,6 +41,5 @@ private:
     MoveBuildingController* _moveBuildingController;
     BuildingSprite* _currentSelectedBuilding = nullptr;
 
-    // 粒子效果管理
-    cocos2d::ParticleSystemQuad* _currentParticleEffect = nullptr;
+    cocos2d::ParticleSystemQuad* _currentParticleEffect = nullptr;  // 粒子效果管理
 };

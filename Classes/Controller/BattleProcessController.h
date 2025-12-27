@@ -1,4 +1,7 @@
-﻿#pragma once
+﻿// BattleProcessController.h
+// 战斗流程控制器声明，管理战斗中的单位AI和行为逻辑
+
+#pragma once
 
 #include "cocos2d.h"
 #include "../Model/VillageData.h"
@@ -8,7 +11,6 @@
 
 USING_NS_CC;
 
-// Forward declarations
 class BattleUnitSprite;
 class BattleTroopLayer;
 struct BuildingInstance;
@@ -21,21 +23,20 @@ public:
     static BattleProcessController* getInstance();
     static void destroyInstance();
     
+    // 启动单位AI
     void startUnitAI(BattleUnitSprite* unit, BattleTroopLayer* troopLayer);
+    
+    // 启动战斗循环
     void startCombatLoop(BattleUnitSprite* unit, BattleTroopLayer* troopLayer);
     void startCombatLoopWithForcedTarget(BattleUnitSprite* unit, BattleTroopLayer* troopLayer, const BuildingInstance* forcedTarget);
+    
+    // 重置战斗状态
     void resetBattleState();
 
-    // ========== 常量 =========
+    // 绕路阈值常量（像素）
     static constexpr float PIXEL_DETOUR_THRESHOLD = 800.0f;
 
-    // ========== 建筑防御系统（已迁移到DefenseSystem）==========
-    // 使用 DefenseSystem::getInstance()->updateBuildingDefense()
-
-    // ========== 陷阱系统（已迁移到TrapSystem）==========
-    // 使用 TrapSystem::getInstance()->updateTrapDetection()
-
-    // 炸弹兵自爆攻击（单体伤害版本）
+    // 炸弹兵自爆攻击
     void performWallBreakerSuicideAttack(
         BattleUnitSprite* unit,
         BuildingInstance* target,
@@ -43,11 +44,6 @@ public:
         const std::function<void()>& onComplete
     );
 
-    // ========== 摧毁进度追踪系统（已迁移到DestructionTracker）==========
-    // 使用 DestructionTracker::getInstance()->initTracking()
-    // 使用 DestructionTracker::getInstance()->updateProgress()
-    // 使用 DestructionTracker::getInstance()->getProgress()
-    // 使用 DestructionTracker::getInstance()->getStars()
 private:
     BattleProcessController() = default;
     ~BattleProcessController() = default;
@@ -57,16 +53,13 @@ private:
     
     static BattleProcessController* _instance;
     
-    // ========== 累积伤害系统 ==========
-    std::map<BattleUnitSprite*, float> _accumulatedDamage;  // 兵种 -> 累积伤害
+    // 累积伤害系统
+    std::map<BattleUnitSprite*, float> _accumulatedDamage;
 
-    // ========== 陷阱系统（已迁移到TrapSystem）==========
-
-    // ========== 目标选择（委托给 TargetFinder）==========
-    // 使用 TargetFinder::getInstance()->findTarget() 等方法
+    // 获取直线上第一个城墙
     const BuildingInstance* getFirstWallInLine(const cocos2d::Vec2& startPixel, const cocos2d::Vec2& endPixel);
 
-    // ========== 核心攻击逻辑 =========
+    // 执行攻击逻辑
     void executeAttack(
         BattleUnitSprite* unit,
         BattleTroopLayer* troopLayer,
@@ -76,11 +69,6 @@ private:
         const std::function<void()>& onContinueAttack
     );
 
-
-
-
-
+    // 判断是否应放弃当前城墙寻找更优路径
     bool shouldAbandonWallForBetterPath(BattleUnitSprite* unit, int currentWallID);
 };
-
-// 事件数据结构已迁移到 DestructionTracker.h

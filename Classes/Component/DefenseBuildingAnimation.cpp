@@ -1,4 +1,7 @@
-﻿#include "DefenseBuildingAnimation.h"
+﻿// DefenseBuildingAnimation.cpp
+// 防御建筑动画组件实现，处理炮塔瞄准、开火等动画逻辑
+
+#include "DefenseBuildingAnimation.h"
 #include "Sprite/BuildingSprite.h"
 #include "Util/GridMapUtils.h"
 #include <cmath>
@@ -36,7 +39,7 @@ bool DefenseBuildingAnimation::init(Node* parentNode, int buildingType) {
     _parentNode = parentNode;
     _buildingType = buildingType;
 
-    if (_buildingType == 301) {  // 加农炮
+    if (_buildingType == 301) {
         initCannonSprites(parentNode);
     }
 
@@ -44,7 +47,7 @@ bool DefenseBuildingAnimation::init(Node* parentNode, int buildingType) {
 }
 
 void DefenseBuildingAnimation::initCannonSprites(Node* parentNode) {
-    // 1. 创建底座（静态）
+    // 创建底座精灵
     auto baseFrame = SpriteFrameCache::getInstance()->getSpriteFrameByName(
         "Animation/defence_architecture/cannon/cannon_stand.png"
     );
@@ -57,14 +60,14 @@ void DefenseBuildingAnimation::initCannonSprites(Node* parentNode) {
     _baseSprite = Sprite::createWithSpriteFrame(baseFrame);
     _baseSprite->setAnchorPoint(Vec2(0.5f, 0.0f));
 
-    // 定位到父节点中心 + 整体偏移
+    // 定位到父节点中心
     auto parentSize = parentNode->getContentSize();
     Vec2 basePos = Vec2(parentSize.width / 2, 0) + _animationOffset;
     _baseSprite->setPosition(basePos);
 
     this->addChild(_baseSprite, 0);
 
-    // 2. 创建炮管（可旋转）
+    // 创建炮管精灵
     auto barrelFrame = SpriteFrameCache::getInstance()->getSpriteFrameByName(
         "Animation/defence_architecture/cannon/cannon01.png"
     );
@@ -77,7 +80,7 @@ void DefenseBuildingAnimation::initCannonSprites(Node* parentNode) {
     _barrelSprite = Sprite::createWithSpriteFrame(barrelFrame);
     _barrelSprite->setAnchorPoint(Vec2(0.5f, 0.0f));
 
-    // 将炮管放在底座上方 + 炮管偏移
+    // 将炮管放在底座上方
     auto baseSize = _baseSprite->getContentSize();
     Vec2 barrelPos = Vec2(baseSize.width / 2, baseSize.height * 0.4f) + _barrelOffset;
     _barrelSprite->setPosition(barrelPos);
@@ -108,14 +111,13 @@ void DefenseBuildingAnimation::setBarrelOffset(const Vec2& offset) {
     }
 }
 
-// ========== 核心重构：正确的瞄准逻辑 ==========
 void DefenseBuildingAnimation::aimAt(const Vec2& targetWorldPos) {
     if (!_barrelSprite || !_parentNode) {
         CCLOG("DefenseBuildingAnimation::aimAt - NULL pointer!");
         return;
     }
 
-    // ========== 步骤1：获取建筑信息 ==========
+    // 获取建筑信息
     auto buildingSprite = dynamic_cast<BuildingSprite*>(_parentNode);
     if (!buildingSprite) {
         CCLOG("DefenseBuildingAnimation::aimAt - Not a BuildingSprite!");
@@ -129,14 +131,13 @@ void DefenseBuildingAnimation::aimAt(const Vec2& targetWorldPos) {
     CCLOG("Building Grid Position: (%.0f, %.0f)", gridPos.x, gridPos.y);
     CCLOG("Building Grid Size: (%.0f, %.0f)", gridSize.width, gridSize.height);
 
-    // ========== 步骤2：计算建筑中心的世界坐标 ==========
-    // 关键点：3x3建筑的中心在 (gridX+1.5, gridY+1.5)
+    // 计算建筑中心的世界坐标
     float centerGridX = gridPos.x + gridSize.width * 0.5f;
     float centerGridY = gridPos.y + gridSize.height * 0.5f;
 
     CCLOG("Building Center Grid: (%.1f, %.1f)", centerGridX, centerGridY);
 
-    // 使用 GridMapUtils 的仿射变换公式
+    // 使用网格工具转换为世界坐标
     float buildingCenterX = GridMapUtils::GRID_ORIGIN_X
         + centerGridX * GridMapUtils::GRID_X_UNIT_X
         + centerGridY * GridMapUtils::GRID_Y_UNIT_X;
@@ -150,7 +151,7 @@ void DefenseBuildingAnimation::aimAt(const Vec2& targetWorldPos) {
     CCLOG("Building Center World: (%.1f, %.1f)", buildingCenterWorld.x, buildingCenterWorld.y);
     CCLOG("Target World: (%.1f, %.1f)", targetWorldPos.x, targetWorldPos.y);
 
-    // ========== 步骤3：计算方向向量 ==========
+    // 计算方向向量
     Vec2 direction = targetWorldPos - buildingCenterWorld;
 
     CCLOG("Direction Vector: (%.1f, %.1f)", direction.x, direction.y);
@@ -162,8 +163,7 @@ void DefenseBuildingAnimation::aimAt(const Vec2& targetWorldPos) {
         return;
     }
 
-    // ========== 步骤4：计算 Cocos2d-x 角度 ==========
-    // Cocos2d-x: 0° = 右(3点钟), 90° = 上(12点钟), 逆时针为正
+    // 计算角度
     float angleRadians = atan2(direction.y, direction.x);
     float angleDegrees = CC_RADIANS_TO_DEGREES(angleRadians);
 
@@ -172,26 +172,14 @@ void DefenseBuildingAnimation::aimAt(const Vec2& targetWorldPos) {
     while (angleDegrees >= 360.0f) angleDegrees -= 360.0f;
 
     CCLOG("Cocos2d-x Angle: %.1f°", angleDegrees);
-    // ========== 步骤5：Cocos2d角度 -> 炮管帧角度 ==========
-    // 炮管帧定义（逆时针）：
-    // - cannon01.png (帧1) = 0° = 3点钟(向右) ✅
-    // - cannon10.png (帧10) = 90° = 12点钟(向上) ✅
-    // - cannon19.png (帧19) = 180° = 9点钟(向左) ✅
-    // - cannon28.png (帧28) = 270° = 6点钟(向下) ✅
-    //
-    // Cocos2d-x 角度（逆时针）：
-    // - 0° = 右, 90° = 上, 180° = 左, 270° = 下
-    //
-    // 完美匹配！直接使用 Cocos2d-x 角度即可
 
     float barrelAngle = angleDegrees;
 
-    // 归一化到 [0, 360)
     if (barrelAngle >= 360.0f) barrelAngle -= 360.0f;
 
     CCLOG("Barrel Angle: %.1f°", barrelAngle);
 
-    // ========== 步骤6：设置炮管帧 ==========
+    // 设置炮管帧
     setBarrelFrame(barrelAngle);
 
     CCLOG("========== AIM DEBUG END ==========");
@@ -203,11 +191,10 @@ void DefenseBuildingAnimation::setBarrelFrame(float angleDegrees) {
         return;
     }
 
-    // 36 帧 = 每帧 10°
-    // 帧 1 = 0°(右), 帧 2 = 10°, ..., 帧 36 = 350°
+    // 36帧对应360度，每帧10度
     int frameIndex = static_cast<int>(angleDegrees / 10.0f) + 1;
 
-    // 处理边界情况
+    // 边界检查
     if (frameIndex < 1) frameIndex = 1;
     if (frameIndex > 36) frameIndex = 36;
 
@@ -215,7 +202,6 @@ void DefenseBuildingAnimation::setBarrelFrame(float angleDegrees) {
         "Animation/defence_architecture/cannon/cannon%02d.png", frameIndex
     );
 
-    // ✅ 增强的日志输出
     CCLOG("🎯 [BARREL ROTATION] 正在播放炮管动画:");
     CCLOG("   ├─ 帧序号: %d/36", frameIndex);
     CCLOG("   ├─ 角度: %.1f°", angleDegrees);
@@ -234,10 +220,10 @@ void DefenseBuildingAnimation::playFireAnimation(const std::function<void()>& ca
     playMuzzleFlash();
 
     if (_barrelSprite) {
-        // 停止所有旧动画
+        // 停止旧动画
         _barrelSprite->stopAllActions();
 
-        // 重置到初始位置
+        // 重置位置
         _barrelSprite->setPosition(_barrelInitialPos);
 
         // 后坐力动画
@@ -264,7 +250,6 @@ void DefenseBuildingAnimation::playFireAnimation(const std::function<void()>& ca
 }
 
 void DefenseBuildingAnimation::playMuzzleFlash() {
-    // TODO: 添加炮口火焰特效
     CCLOG("DefenseBuildingAnimation: Muzzle flash played");
 }
 
@@ -279,11 +264,11 @@ void DefenseBuildingAnimation::setVisible(bool visible) {
 }
 
 void DefenseBuildingAnimation::playAttackAnimation(const Vec2& targetWorldPos, const std::function<void()>& callback) {
-    if (_buildingType == 301) {  // 加农炮
-        // 1. 瞄准目标
+    if (_buildingType == 301) {
+        // 瞄准目标
         aimAt(targetWorldPos);
 
-        // 2. 延迟后开火
+        // 延迟后开火
         this->runAction(Sequence::create(
             DelayTime::create(0.15f),
             CallFunc::create([this, callback]() {
@@ -293,7 +278,7 @@ void DefenseBuildingAnimation::playAttackAnimation(const Vec2& targetWorldPos, c
         ));
 
         CCLOG("DefenseBuildingAnimation: Cannon attack animation started");
-    } else if (_buildingType == 302) {  // 箭塔
+    } else if (_buildingType == 302) {
         playFireAnimation(callback);
         CCLOG("DefenseBuildingAnimation: Archer Tower attack animation started");
     } else {
@@ -305,7 +290,6 @@ void DefenseBuildingAnimation::playAttackAnimation() {
     playFireAnimation(nullptr);
 }
 
-// ✅✅✅ 测试函数：按顺序显示所有炮管帧
 void DefenseBuildingAnimation::testAllBarrelFrames() {
     if (!_barrelSprite) {
         CCLOG("DefenseBuildingAnimation::testAllBarrelFrames - _barrelSprite is NULL!");
@@ -321,7 +305,7 @@ void DefenseBuildingAnimation::testAllBarrelFrames() {
     Vector<FiniteTimeAction*> actions;
 
     for (int frameIndex = 1; frameIndex <= 36; frameIndex++) {
-        // 计算角度（帧1=0°, 帧2=10°, ..., 帧36=350°）
+        // 计算角度
         float angle = (frameIndex - 1) * 10.0f;
 
         // 切换帧
@@ -334,7 +318,6 @@ void DefenseBuildingAnimation::testAllBarrelFrames() {
             if (frame) {
                 _barrelSprite->setSpriteFrame(frame);
 
-                // 输出当前帧信息
                 CCLOG("========================================");
                 CCLOG("当前帧: cannon%02d.png", frameIndex);
                 CCLOG("帧编号: %d/36", frameIndex);
@@ -353,7 +336,7 @@ void DefenseBuildingAnimation::testAllBarrelFrames() {
         actions.pushBack(delay);
     }
 
-    // 测试完成后的回调
+    // 测试完成回调
     auto finish = CallFunc::create([]() {
         CCLOG("========================================");
         CCLOG("✅ 测试完成！共36帧已全部显示");

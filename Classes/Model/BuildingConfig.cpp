@@ -1,4 +1,6 @@
-﻿// 【必须加在第一行】强制使用 UTF-8 编码，解决中文乱码
+﻿// BuildingConfig.cpp
+// 建筑配置管理器实现，初始化所有建筑的静态配置数据
+
 #pragma execution_character_set("utf-8")
 
 #include "BuildingConfig.h"
@@ -33,7 +35,7 @@ void BuildingConfig::destroyInstance() {
 }
 
 void BuildingConfig::initConfigs() {
-  // ========== 1: 大本营 (Town Hall) ==========
+  // 大本营 (Town Hall)
   BuildingConfigData townHall;
   townHall.type = 1;
   townHall.name = "大本营";
@@ -44,8 +46,8 @@ void BuildingConfig::initConfigs() {
   townHall.anchorOffset = Vec2(0, -60);
   townHall.maxLevel = 3;
   townHall.initialCost = 0;
-  townHall.costType = "gold";  // 改为英文
-  townHall.buildTimeSeconds = 60;  // 改为60秒
+  townHall.costType = "gold";
+  townHall.buildTimeSeconds = 60;
   townHall.hitPoints = 1500;
   townHall.damagePerSecond = 0;
   townHall.attackRange = 0;
@@ -53,8 +55,8 @@ void BuildingConfig::initConfigs() {
   townHall.productionRate = 0;
   _configs[1] = townHall;
 
-  // ========== 军队建筑 ==========
-  // 101: 兵营
+  // 军队建筑
+  // 兵营
   BuildingConfigData armyCamp;
   armyCamp.type = 101;
   armyCamp.name = "兵营";
@@ -65,7 +67,7 @@ void BuildingConfig::initConfigs() {
   armyCamp.anchorOffset = Vec2(0, -30);
   armyCamp.maxLevel = 3;
   armyCamp.initialCost = 250;
-  armyCamp.costType = "elixir";  // 改为英文
+  armyCamp.costType = "elixir";
   armyCamp.buildTimeSeconds = 30;
   armyCamp.hitPoints = 0;
   armyCamp.damagePerSecond = 0;
@@ -74,7 +76,7 @@ void BuildingConfig::initConfigs() {
   armyCamp.productionRate = 0;
   _configs[101] = armyCamp;
 
-  // 102: 训练营
+  // 训练营
   BuildingConfigData barracks;
   barracks.type = 102;
   barracks.name = "训练营";
@@ -85,7 +87,7 @@ void BuildingConfig::initConfigs() {
   barracks.anchorOffset = Vec2(0, -30);
   barracks.maxLevel = 3;
   barracks.initialCost = 200;
-  barracks.costType = "elixir";  // 改为英文
+  barracks.costType = "elixir";
   barracks.buildTimeSeconds = 20;
   barracks.hitPoints = 0;
   barracks.damagePerSecond = 0;
@@ -94,7 +96,7 @@ void BuildingConfig::initConfigs() {
   barracks.productionRate = 0;
   _configs[102] = barracks;
 
-  // 103: 实验室
+  // 实验室
   BuildingConfigData laboratory;
   laboratory.type = 103;
   laboratory.name = "实验室";
@@ -105,7 +107,7 @@ void BuildingConfig::initConfigs() {
   laboratory.anchorOffset = Vec2(0, -35);
   laboratory.maxLevel = 3;
   laboratory.initialCost = 500;
-  laboratory.costType = "elixir";  // 改为英文
+  laboratory.costType = "elixir";
   laboratory.buildTimeSeconds = 60;
   laboratory.hitPoints = 0;
   laboratory.damagePerSecond = 0;
@@ -114,20 +116,20 @@ void BuildingConfig::initConfigs() {
   laboratory.productionRate = 0;
   _configs[103] = laboratory;
 
-  // ========== 资源建筑 ==========
-  // 201: 建筑工人小屋 
+  // 资源建筑
+  // 建筑工人小屋
   BuildingConfigData builderHut;
   builderHut.type = 201;
   builderHut.name = "建筑工人小屋";
   builderHut.category = "资源";
   builderHut.spritePathTemplate = "buildings/resource_architecture/builders_hut/Builders_Hut{level}.png";
-  builderHut.gridWidth = 2;           // 2x2 占地
+  builderHut.gridWidth = 2;
   builderHut.gridHeight = 2;
-  builderHut.anchorOffset = Vec2(0, -25);  //  2x2建筑标准偏移
-  builderHut.maxLevel = 1;            // 不可升级
-  builderHut.initialCost = 50;        // 固定50宝石
-  builderHut.costType = "gem";        // 宝石购买
-  builderHut.buildTimeSeconds = 0;    // 瞬间完成
+  builderHut.anchorOffset = Vec2(0, -25);
+  builderHut.maxLevel = 1;
+  builderHut.initialCost = 50;
+  builderHut.costType = "gem";
+  builderHut.buildTimeSeconds = 0;
   builderHut.hitPoints = 250;
   builderHut.damagePerSecond = 0;
   builderHut.attackRange = 0;
@@ -135,7 +137,7 @@ void BuildingConfig::initConfigs() {
   builderHut.productionRate = 0;
   _configs[201] = builderHut;
 
-  // 202: 金矿
+  // 金矿
   BuildingConfigData goldMine;
   goldMine.type = 202;
   goldMine.name = "金矿";
@@ -146,7 +148,7 @@ void BuildingConfig::initConfigs() {
   goldMine.anchorOffset = Vec2(0, -35);
   goldMine.maxLevel = 3;
   goldMine.initialCost = 150;
-  goldMine.costType = "elixir";  // 改为英文
+  goldMine.costType = "elixir";
   goldMine.buildTimeSeconds = 20;
   goldMine.hitPoints = 400;
   goldMine.damagePerSecond = 0;
@@ -155,7 +157,7 @@ void BuildingConfig::initConfigs() {
   goldMine.productionRate = 7200;
   _configs[202] = goldMine;
 
-  // 203: 圣水采集器
+  // 圣水采集器
   BuildingConfigData elixirCollector;
   elixirCollector.type = 203;
   elixirCollector.name = "圣水采集器";
@@ -166,7 +168,7 @@ void BuildingConfig::initConfigs() {
   elixirCollector.anchorOffset = Vec2(0, -35);
   elixirCollector.maxLevel = 3;
   elixirCollector.initialCost = 150;
-  elixirCollector.costType = "gold";  // 改为英文
+  elixirCollector.costType = "gold";
   elixirCollector.buildTimeSeconds = 20;
   elixirCollector.hitPoints = 400;
   elixirCollector.damagePerSecond = 0;
@@ -175,7 +177,7 @@ void BuildingConfig::initConfigs() {
   elixirCollector.productionRate = 7200;
   _configs[203] = elixirCollector;
 
-  // 204: 储金罐
+  // 储金罐
   BuildingConfigData goldStorage;
   goldStorage.type = 204;
   goldStorage.name = "储金罐";
@@ -186,7 +188,7 @@ void BuildingConfig::initConfigs() {
   goldStorage.anchorOffset = Vec2(0, -40);
   goldStorage.maxLevel = 3;
   goldStorage.initialCost = 300;
-  goldStorage.costType = "elixir";  // 改为英文
+  goldStorage.costType = "elixir";
   goldStorage.buildTimeSeconds = 30;
   goldStorage.hitPoints = 600;
   goldStorage.damagePerSecond = 0;
@@ -195,7 +197,7 @@ void BuildingConfig::initConfigs() {
   goldStorage.productionRate = 0;
   _configs[204] = goldStorage;
 
-  // 205: 圣水瓶
+  // 圣水瓶
   BuildingConfigData elixirStorage;
   elixirStorage.type = 205;
   elixirStorage.name = "圣水瓶";
@@ -206,7 +208,7 @@ void BuildingConfig::initConfigs() {
   elixirStorage.anchorOffset = Vec2(0, -40);
   elixirStorage.maxLevel = 3;
   elixirStorage.initialCost = 300;
-  elixirStorage.costType = "gold";  // 改为英文
+  elixirStorage.costType = "gold";
   elixirStorage.buildTimeSeconds = 30;
   elixirStorage.hitPoints = 600;
   elixirStorage.damagePerSecond = 0;
@@ -215,8 +217,8 @@ void BuildingConfig::initConfigs() {
   elixirStorage.productionRate = 0;
   _configs[205] = elixirStorage;
 
-  // ========== 防御建筑 ==========
-  // 301: 加农炮
+  // 防御建筑
+  // 加农炮
   BuildingConfigData cannon;
   cannon.type = 301;
   cannon.name = "加农炮";
@@ -227,7 +229,7 @@ void BuildingConfig::initConfigs() {
   cannon.anchorOffset = Vec2(0, -30);
   cannon.maxLevel = 3;
   cannon.initialCost = 250;
-  cannon.costType = "gold";  // 改为英文
+  cannon.costType = "gold";
   cannon.buildTimeSeconds = 15;
   cannon.hitPoints = 620;
   cannon.damagePerSecond = 11;
@@ -237,7 +239,7 @@ void BuildingConfig::initConfigs() {
   cannon.productionRate = 0;
   _configs[301] = cannon;
 
-  // 302: 箭塔
+  // 箭塔
   BuildingConfigData archerTower;
   archerTower.type = 302;
   archerTower.name = "箭塔";
@@ -248,7 +250,7 @@ void BuildingConfig::initConfigs() {
   archerTower.anchorOffset = Vec2(0, -35);
   archerTower.maxLevel = 3;
   archerTower.initialCost = 1000;
-  archerTower.costType = "gold";  // 改为英文
+  archerTower.costType = "gold";
   archerTower.buildTimeSeconds = 30;
   archerTower.hitPoints = 380;
   archerTower.damagePerSecond = 11;
@@ -258,7 +260,7 @@ void BuildingConfig::initConfigs() {
   archerTower.productionRate = 0;
   _configs[302] = archerTower;
 
-  // 303: 城墙
+  // 城墙
   BuildingConfigData wall;
   wall.type = 303;
   wall.name = "城墙";
@@ -269,7 +271,7 @@ void BuildingConfig::initConfigs() {
   wall.anchorOffset = Vec2(0, -15);
   wall.maxLevel = 3;
   wall.initialCost = 50;
-  wall.costType = "gold";  // 改为英文
+  wall.costType = "gold";
   wall.buildTimeSeconds = 0;
   wall.hitPoints = 300;
   wall.damagePerSecond = 0;
@@ -278,8 +280,8 @@ void BuildingConfig::initConfigs() {
   wall.productionRate = 0;
   _configs[303] = wall;
 
-  // ========== 陷阱 ==========
-  // 401: 炸弹
+  // 陷阱
+  // 炸弹
   BuildingConfigData bomb;
   bomb.type = 401;
   bomb.name = "炸弹";
@@ -290,7 +292,7 @@ void BuildingConfig::initConfigs() {
   bomb.anchorOffset = Vec2(0, -15);
   bomb.maxLevel = 3;
   bomb.initialCost = 400;
-  bomb.costType = "gold";  // 改为英文
+  bomb.costType = "gold";
   bomb.buildTimeSeconds = 0;
   bomb.hitPoints = 1;
   bomb.damagePerSecond = 100;
@@ -299,7 +301,7 @@ void BuildingConfig::initConfigs() {
   bomb.productionRate = 0;
   _configs[401] = bomb;
 
-  // 402: 隐形弹簧
+  // 隐形弹簧
   BuildingConfigData springTrap;
   springTrap.type = 402;
   springTrap.name = "隐形弹簧";
@@ -310,7 +312,7 @@ void BuildingConfig::initConfigs() {
   springTrap.anchorOffset = Vec2(0, -15);
   springTrap.maxLevel = 3;
   springTrap.initialCost = 2000;
-  springTrap.costType = "gold";  // 改为英文
+  springTrap.costType = "gold";
   springTrap.buildTimeSeconds = 0;
   springTrap.hitPoints = 1;
   springTrap.damagePerSecond = 0;
@@ -319,7 +321,7 @@ void BuildingConfig::initConfigs() {
   springTrap.productionRate = 0;
   _configs[402] = springTrap;
 
-  // 404: 巨型炸弹
+  // 巨型炸弹
   BuildingConfigData giantBomb;
   giantBomb.type = 404;
   giantBomb.name = "巨型炸弹";
@@ -330,7 +332,7 @@ void BuildingConfig::initConfigs() {
   giantBomb.anchorOffset = Vec2(0, -25);
   giantBomb.maxLevel = 3;
   giantBomb.initialCost = 12500;
-  giantBomb.costType = "gold";  // 改为英文
+  giantBomb.costType = "gold";
   giantBomb.buildTimeSeconds = 0;
   giantBomb.hitPoints = 1;
   giantBomb.damagePerSecond = 400;
@@ -359,7 +361,7 @@ std::string BuildingConfig::getSpritePath(int buildingType, int level) const {
     return "";
   }
 
-  // 核心修复：0 级建筑显示 1 级图片
+  // 0级建筑显示1级图片
   int displayLevel = (level == 0) ? 1 : level;
 
   // 替换 {level} 占位符
@@ -374,26 +376,22 @@ std::string BuildingConfig::getSpritePath(int buildingType, int level) const {
   return path;
 }
 
-// 核心修复：硬编码升级成本
 int BuildingConfig::getUpgradeCost(int buildingType, int currentLevel) const {
   const BuildingConfigData* config = getConfig(buildingType);
   if (!config) {
     return 0;
   }
 
-  // ========== 大本营特殊处理 ==========
+  // 大本营特殊处理
   if (buildingType == 1) {
     switch (currentLevel) {
-      case 1: return 1000;   // 1→2 级：1000 金币
-      case 2: return 4000;   // 2→3 级：4000 金币
+      case 1: return 1000;   // 1→2级：1000金币
+      case 2: return 4000;   // 2→3级：4000金币
       default: return 0;
     }
   }
 
-  // ========== 其他建筑通用公式 ==========
-  // 基础成本 * 2 的等级次方
-  // 例如：initialCost=250, level=1 → 250*2=500
-  //       initialCost=250, level=2 → 250*4=1000
+  // 其他建筑通用公式：基础成本 * 2^等级
   int baseCost = config->initialCost;
   if (baseCost == 0) {
     CCLOG("BuildingConfig: Warning - initialCost is 0 for type %d", buildingType);
@@ -412,9 +410,8 @@ bool BuildingConfig::canUpgrade(int buildingType, int currentLevel) const {
   return currentLevel < config->maxLevel;
 }
 
-// ========== 根据等级获取存储容量 ==========
 int BuildingConfig::getStorageCapacityByLevel(int buildingType, int level) const {
-  // 储金罐（204）和圣水瓶（205）的容量表
+  // 储金罐和圣水瓶的容量表
   static const std::map<int, int> capacityTable = {
     {1, 5000},
     {2, 15000},

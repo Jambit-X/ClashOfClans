@@ -1,4 +1,7 @@
-﻿#include "MoveMapController.h"
+﻿// MoveMapController.cpp
+// 地图移动控制器实现，处理地图拖动、缩放和触摸手势识别
+
+#include "MoveMapController.h"
 #include "../proj.win32/Constants.h"
 #include <iostream>
 
@@ -35,9 +38,8 @@ MoveMapController::~MoveMapController() {
   cleanup();
 }
 
-#pragma region 初始化和清理
 void MoveMapController::setupInputListeners() {
-  // 初始化地图的缩放和位置
+  // 初始化地图缩放和位置
   initializeMapTransform();
   
   // 设置输入监听
@@ -90,9 +92,7 @@ void MoveMapController::initializeMapTransform() {
   CCLOG("  Initial scale: %.3f", _currentScale);
   CCLOG("  Initial position: (%.2f, %.2f)", initialX, initialY);
 }
-#pragma endregion
 
-#pragma region 状态管理
 void MoveMapController::changeState(InputState newState) {
   if (_currentState == newState) return;
 
@@ -106,9 +106,7 @@ void MoveMapController::changeState(InputState newState) {
     _onStateChanged(oldState, newState);
   }
 }
-#pragma endregion
 
-#pragma region 触摸事件处理
 void MoveMapController::setupTouchHandling() {
   _multiTouchListener = EventListenerTouchAllAtOnce::create();
 
@@ -123,7 +121,7 @@ void MoveMapController::setupTouchHandling() {
 void MoveMapController::onTouchesBegan(const std::vector<Touch*>& touches, Event* event) {
   CCLOG("MoveMapController::onTouchesBegan - newTouchCount=%zu, currentState=%d", touches.size(), (int)_currentState);
   
-  // 只在 MAP_DRAG 状态处理输入
+  // 只在MAP_DRAG状态处理输入
   if (_currentState != InputState::MAP_DRAG) {
     CCLOG("MoveMapController::onTouchesBegan - Rejected: not in MAP_DRAG state");
     return;
@@ -220,7 +218,7 @@ void MoveMapController::onTouchesEnded(const std::vector<Touch*>& touches, Event
   
   CCLOG("Active touches after removal: %zu", _activeTouches.size());
 
-  // 如果是捏合结束（触点少于2个），重置状态
+  // 捏合结束处理
   if (_isPinching && _activeTouches.size() < 2) {
     _isPinching = false;
     CCLOG("Pinch ended");
@@ -233,7 +231,7 @@ void MoveMapController::onTouchesEnded(const std::vector<Touch*>& touches, Event
     return;
   }
 
-  // 只有单指触摸且没有拖动才检测点击
+  // 检测点击手势
   if (_activeTouches.size() == 0 && !_isDragging && !_isPinching) {
     Vec2 endPos = touches[0]->getLocation();
     if (isTapGesture(_touchStartPos, endPos)) {
@@ -247,7 +245,6 @@ void MoveMapController::onTouchesEnded(const std::vector<Touch*>& touches, Event
   }
 }
 
-// 计算两个触点之间的距离
 float MoveMapController::getTouchDistance(const std::vector<Touch*>& touches) {
   if (touches.size() < 2) return 0;
   Vec2 p1 = touches[0]->getLocation();
@@ -255,7 +252,6 @@ float MoveMapController::getTouchDistance(const std::vector<Touch*>& touches) {
   return p1.distance(p2);
 }
 
-// 计算两个触点的中心点
 Vec2 MoveMapController::getTouchCenter(const std::vector<Touch*>& touches) {
   if (touches.size() < 2) {
     return touches.size() == 1 ? touches[0]->getLocation() : Vec2::ZERO;
@@ -284,18 +280,18 @@ void MoveMapController::handleMapDragging(Touch* touch) {
 void MoveMapController::handleTap(const Vec2& tapPosition) {
   CCLOG("Tap detected at (%.2f, %.2f)", tapPosition.x, tapPosition.y);
 
-  // 如果有点击检测回调，调用它
+  // 调用点击检测回调
   TapTarget target = TapTarget::NONE;
   if (_onTapDetection) {
     target = _onTapDetection(tapPosition);
   }
 
-  // 根据点击目标执行相应操作
+  // 根据点击目标执行操作
   switch (target) {
     case TapTarget::BUILDING:
       CCLOG("  -> Target: BUILDING");
       
-      // 触发建筑选中回调（不改变状态，保持 MAP_DRAG）
+      // 触发建筑选中回调
       if (_onBuildingSelected) {
         _onBuildingSelected(tapPosition);
       }
@@ -311,7 +307,6 @@ void MoveMapController::handleTap(const Vec2& tapPosition) {
 
     case TapTarget::NONE:
       CCLOG("  -> Target: NONE (map blank)");
-      // 地图空白，无响应
       break;
   }
 }
@@ -324,7 +319,7 @@ bool MoveMapController::isTapGesture(const Vec2& startPos, const Vec2& endPos) {
 Vec2 MoveMapController::clampMapPosition(const Vec2& position) {
   auto visibleSize = Director::getInstance()->getVisibleSize();
 
-  // 使用 getBoundingBox 获取实际显示大小
+  // 使用getBoundingBox获取实际显示大小
   Rect mapBounds = _villageLayer->getBoundingBox();
 
   float minX, maxX, minY, maxY;
@@ -351,9 +346,7 @@ Vec2 MoveMapController::clampMapPosition(const Vec2& position) {
     clampf(position.y, minY, maxY)
   );
 }
-#pragma endregion
 
-#pragma region 鼠标事件处理（缩放）
 void MoveMapController::setupMouseHandling() {
   _mouseListener = EventListenerMouse::create();
   _mouseListener->onMouseScroll = CC_CALLBACK_1(MoveMapController::onMouseScroll, this);
@@ -363,7 +356,7 @@ void MoveMapController::setupMouseHandling() {
 }
 
 void MoveMapController::onMouseScroll(Event* event) {
-  // 只在 MAP_DRAG 状态处理缩放
+  // 只在MAP_DRAG状态处理缩放
   if (_currentState != InputState::MAP_DRAG) {
     return;
   }
@@ -395,24 +388,23 @@ float MoveMapController::calculateNewScale(float scrollDelta) {
 }
 
 Vec2 MoveMapController::getAdjustedMousePosition(EventMouse* mouseEvent) {
-  // 直接使用 getLocation()，无需手动转换
   return mouseEvent->getLocation();
 }
 
 void MoveMapController::applyZoomAroundPoint(const Vec2& zoomPoint, float newScale) {
   float oldScale = _currentScale;
 
-  // 1. 将屏幕坐标转换为 Layer 内部坐标
+  // 将屏幕坐标转换为Layer内部坐标
   Vec2 pointInLayer = _villageLayer->convertToNodeSpace(zoomPoint);
 
-  // 2. 应用新的缩放
+  // 应用新缩放
   _villageLayer->setScale(newScale);
   _currentScale = newScale;
 
-  // 3. 将同一个 Layer 内部点转回屏幕坐标
+  // 将Layer内部点转回屏幕坐标
   Vec2 newPointOnScreen = _villageLayer->convertToWorldSpace(pointInLayer);
 
-  // 4. 计算位置偏移
+  // 计算位置偏移
   Vec2 offset = zoomPoint - newPointOnScreen;
   Vec2 newPos = _villageLayer->getPosition() + offset;
 
@@ -423,4 +415,3 @@ void MoveMapController::applyZoomAroundPoint(const Vec2& zoomPoint, float newSca
   CCLOG("Zoom: %.3f -> %.3f around (%.0f, %.0f)",
         oldScale, newScale, zoomPoint.x, zoomPoint.y);
 }
-#pragma endregion

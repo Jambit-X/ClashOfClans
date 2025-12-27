@@ -1,4 +1,6 @@
-﻿// Manager/ReplayManager.h
+﻿// ReplayManager.h
+// 回放管理器头文件，处理战斗回放的保存、加载和删除
+
 #ifndef __REPLAY_MANAGER_H__
 #define __REPLAY_MANAGER_H__
 
@@ -12,7 +14,7 @@ public:
     static ReplayManager* getInstance();
     static void destroyInstance();
 
-    // ========== 回放操作 ==========
+    // 回放操作
     void saveReplay(const BattleReplayData& data);          // 保存回放
     BattleReplayData loadReplay(int replayId);              // 加载完整回放数据
     std::vector<ReplayMetadata> getReplayList();            // 获取回放列表（元数据）
@@ -24,12 +26,12 @@ private:
 
     static ReplayManager* _instance;
 
-    // ========== 文件路径管理 ==========
+    // 文件路径管理
     std::string getReplayDirectory();                       // 获取回放目录
     std::string getReplayFilePath(int replayId);           // 获取回放文件路径
     std::string getMetadataFilePath();                      // 获取元数据文件路径
 
-    // ========== 元数据管理 ==========
+    // 元数据管理
     void loadMetadata();                                    // 加载元数据
     void saveMetadata();                                    // 保存元数据
     void addMetadata(const ReplayMetadata& meta);          // 添加元数据
@@ -42,4 +44,4 @@ private:
     const int MAX_REPLAYS = 10;                             // 最多保存10场
 };
 
-#endif // __REPLAY_MANAGER_H__
+#endif

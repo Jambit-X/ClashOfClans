@@ -1,19 +1,22 @@
-﻿#include "BattleMapLayer.h"
+﻿// BattleMapLayer.cpp
+// 战斗地图层实现，管理战斗场景的地图背景、建筑和输入控制
+
+#include "BattleMapLayer.h"
 #include "Manager/BuildingManager.h"
 #include "Manager/VillageDataManager.h"
 #include "Controller/MoveMapController.h"
-#include "Util/GridMapUtils.h"  // 【新增】用于坐标转换
+#include "Util/GridMapUtils.h"
 
 USING_NS_CC;
 
 BattleMapLayer::~BattleMapLayer() {
-    // 清理 MoveMapController（它会自动清理事件监听器）
+    // 清理MoveMapController
     if (_inputController) {
         delete _inputController;
         _inputController = nullptr;
     }
 
-    // 清理 BuildingManager
+    // 清理BuildingManager
     if (_buildingManager) {
         delete _buildingManager;
         _buildingManager = nullptr;
@@ -25,30 +28,30 @@ BattleMapLayer::~BattleMapLayer() {
 bool BattleMapLayer::init() {
     if (!Layer::init()) return false;
 
-    // 1. 创建地图背景
+    // 创建地图背景
     _mapSprite = createMapSprite();
     this->addChild(_mapSprite);
 
-    // 设置 Layer 大小与地图一致
+    // 设置Layer大小与地图一致
     if (_mapSprite) {
         this->setContentSize(_mapSprite->getContentSize());
         this->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
     }
 
-    // 2. 初始化建筑管理器（战斗场景：isBattleScene = true）
+    // 初始化建筑管理器（战斗场景模式）
     _buildingManager = new BuildingManager(this, true);
 
-    // 【新增】输出建筑布局
+    // 输出建筑布局
     logBuildingLayout("INITIAL LOAD");
 
-    // 3. 初始化地图移动控制器 (仅拖拽缩放)
+    // 初始化地图移动控制器（仅拖拽缩放）
     _inputController = new MoveMapController(this);
     _inputController->setupInputListeners();
 
-    // 【新增】启动定时更新
+    // 启动定时更新
     this->scheduleUpdate();
 
-    // 【新增】监听目标锁定事件
+    // 监听目标锁定事件
     auto listener = EventListenerCustom::create("EVENT_UNIT_TARGET_LOCKED", [this](EventCustom* event) {
         if (!_buildingManager) return;
         intptr_t rawId = reinterpret_cast<intptr_t>(event->getUserData());
@@ -67,37 +70,36 @@ bool BattleMapLayer::init() {
 void BattleMapLayer::reloadMap() {
     CCLOG("BattleMapLayer: Reloading map with new random data...");
 
-    // 1. 随机更换地图背景
+    // 随机更换地图背景
     if (_mapSprite) {
         _mapSprite->removeFromParent();
         _mapSprite = nullptr;
     }
     _mapSprite = createMapSprite();
     if (_mapSprite) {
-        this->addChild(_mapSprite, -1);  // 放在最底层
+        this->addChild(_mapSprite, -1);
     }
 
-    // 2. 生成新的随机地图
+    // 生成新的随机地图
     auto dataManager = VillageDataManager::getInstance();
     dataManager->generateRandomBattleMap(0);
 
-    // 3. 清理旧的 BuildingManager
+    // 清理旧的BuildingManager
     if (_buildingManager) {
         delete _buildingManager;
         _buildingManager = nullptr;
     }
 
-    // 4. 创建新的 BuildingManager
+    // 创建新的BuildingManager
     _buildingManager = new BuildingManager(this, true);
 
-    // 【新增】输出建筑布局
+    // 输出建筑布局
     logBuildingLayout("RELOAD MAP");
 
     CCLOG("BattleMapLayer: Map reloaded with %zu buildings",
           dataManager->getBattleMapData().buildings.size());
 }
 
-// 【新增】输出建筑布局的辅助方法
 void BattleMapLayer::logBuildingLayout(const std::string& context) {
     auto dataManager = VillageDataManager::getInstance();
     const auto& buildings = dataManager->getAllBuildings();
@@ -210,13 +212,13 @@ void BattleMapLayer::update(float dt) {
 void BattleMapLayer::reloadMapFromData() {
     CCLOG("BattleMapLayer: Reloading map from existing data (replay mode)...");
 
-    // 清理旧的 BuildingManager
+    // 清理旧的BuildingManager
     if (_buildingManager) {
         delete _buildingManager;
         _buildingManager = nullptr;
     }
 
-    // 创建新的 BuildingManager（它会从 VillageDataManager 读取当前数据）
+    // 创建新的BuildingManager（从VillageDataManager读取当前数据）
     _buildingManager = new BuildingManager(this, true);
 
     // 输出建筑布局

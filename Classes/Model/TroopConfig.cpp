@@ -1,4 +1,7 @@
-﻿#pragma execution_character_set("utf-8")
+﻿// TroopConfig.cpp
+// 兵种配置管理器实现，初始化所有兵种的数据
+
+#pragma execution_character_set("utf-8")
 #include "TroopConfig.h"
 
 TroopConfig* TroopConfig::_instance = nullptr;
@@ -17,7 +20,7 @@ void TroopConfig::initConfig() {
 
     TroopInfo troop;
     
-    // 1. 野蛮人 (近战，攻击距离 0.4 格)
+    // 野蛮人（近战，攻击距离0.4格）
     troop = TroopInfo();
     troop.id = 1001;
     troop.name = "野蛮人";
@@ -35,7 +38,7 @@ void TroopConfig::initConfig() {
     troop.splashRadius = 0.0f;
     _troops.push_back(troop);
 
-    // 2. 弓箭手 (远程，攻击距离 3.5 格)
+    // 弓箭手（远程，攻击距离3.5格）
     troop = TroopInfo();
     troop.id = 1002;
     troop.name = "弓箭手";
@@ -53,7 +56,7 @@ void TroopConfig::initConfig() {
     troop.splashRadius = 0.0f;
     _troops.push_back(troop);
 
-    // 3. 哥布林 (近战，攻击距离 0.4 格)
+    // 哥布林（近战，攻击距离0.4格）
     troop = TroopInfo();
     troop.id = 1003;
     troop.name = "哥布林";
@@ -71,7 +74,7 @@ void TroopConfig::initConfig() {
     troop.splashRadius = 0.0f;
     _troops.push_back(troop);
 
-    // 4. 巨人 (近战，攻击距离 1.0 格)
+    // 巨人（近战，攻击距离1.0格）
     troop = TroopInfo();
     troop.id = 1004;
     troop.name = "巨人";
@@ -89,7 +92,7 @@ void TroopConfig::initConfig() {
     troop.splashRadius = 0.0f;
     _troops.push_back(troop);
 
-    // 5. 炸弹人 (近战，攻击距离 0.5 格)
+    // 炸弹人（近战，攻击距离0.5格）
     troop = TroopInfo();
     troop.id = 1005;
     troop.name = "炸弹人";
@@ -107,7 +110,7 @@ void TroopConfig::initConfig() {
     troop.splashRadius = 2.5f;
     _troops.push_back(troop);
 
-    // 6. 气球兵 (远程，攻击距离 0.5 格 - 需要贴近目标投弹)
+    // 气球兵（远程，攻击距离0.5格，需要贴近目标投弹）
     troop = TroopInfo();
     troop.id = 1006;
     troop.name = "气球兵";
@@ -125,7 +128,7 @@ void TroopConfig::initConfig() {
     troop.splashRadius = 1.5f;
     _troops.push_back(troop);
 
-    // 建立索引
+    // 建立ID到索引的映射
     for (size_t i = 0; i < _troops.size(); ++i) {
         _idToIndex[_troops[i].id] = static_cast<int>(i);
     }
@@ -135,7 +138,7 @@ TroopInfo TroopConfig::getTroopById(int id) {
     if (_idToIndex.find(id) != _idToIndex.end()) {
         return _troops[_idToIndex[id]];
     }
-    return TroopInfo(); // 返回空
+    return TroopInfo();
 }
 
 const std::vector<TroopInfo>& TroopConfig::getAllTroops() const {

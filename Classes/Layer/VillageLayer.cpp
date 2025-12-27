@@ -1,4 +1,7 @@
-﻿#include "VillageLayer.h"
+﻿// VillageLayer.cpp
+// 村庄层实现，处理村庄场景的地图、建筑和交互逻辑
+
+#include "VillageLayer.h"
 #include "../Controller/MoveMapController.h"
 #include "../Controller/MoveBuildingController.h"
 #include "../Util/GridMapUtils.h"
@@ -19,28 +22,28 @@ bool VillageLayer::init() {
     return false;
   }
 
-  // 1. 创建地图精灵
+  // 创建地图精灵
   _mapSprite = createMapSprite();
   if (!_mapSprite) {
     return false;
   }
   this->addChild(_mapSprite);
 
-  // 2. 初始化基本属性
+  // 初始化基本属性
   initializeBasicProperties();
 
-  // 3. 初始化建筑管理器（村庄场景：isBattleScene = false）
+  // 初始化建筑管理器（村庄场景）
   _buildingManager = new BuildingManager(this, false);
 
-  //  4. 先初始化建筑移动控制器（优先级更高）
+  // 先初始化建筑移动控制器（优先级更高）
   _moveBuildingController = new MoveBuildingController(this, _buildingManager);
   _moveBuildingController->setupTouchListener();
   
-  //  设置短按建筑回调
+  // 设置短按建筑回调
   _moveBuildingController->setOnBuildingTappedCallback([this](int buildingId) {
       CCLOG("VillageLayer: Building tapped ID=%d, showing menu", buildingId);
     
-      // === 处理选中效果 ===
+      // 处理选中效果
       auto tappedBuilding = _buildingManager->getBuildingSprite(buildingId);
       if (tappedBuilding) {
           // 隐藏之前选中建筑的效果
@@ -52,7 +55,7 @@ bool VillageLayer::init() {
           _currentSelectedBuilding = tappedBuilding;
       }
 
-      // 获取 HUD 层并显示菜单
+      // 获取HUD层并显示菜单
       auto scene = this->getScene();
       if (scene) {
           auto hudLayer = dynamic_cast<HUDLayer*>(scene->getChildByTag(100));
@@ -62,14 +65,14 @@ bool VillageLayer::init() {
       }
   });
 
-  // 5. 后初始化地图移动控制器（优先级更低）
+  // 后初始化地图移动控制器（优先级更低）
   _inputController = new MoveMapController(this);
   _inputController->setupInputListeners();
 
-  // 6. 设置点击检测回调
+  // 设置点击检测回调
   setupInputCallbacks();
 
-  // 7. 启动建筑更新
+  // 启动建筑更新
   this->schedule([this](float dt) {
     _buildingManager->update(dt);
   }, 0.0f, "building_update");
@@ -84,7 +87,7 @@ bool VillageLayer::init() {
   CCLOG("  - MoveBuildingController added first (higher priority)");
   CCLOG("  - MoveMapController added second (lower priority)");
 
-  // 在 VillageLayer::init() 中添加事件监听:
+  // 监听建筑升级事件
   auto upgradeListener = EventListenerCustom::create("EVENT_BUILDING_UPGRADED", 
     [this](EventCustom* event) {
         int buildingId = *(int*)event->getUserData();
@@ -93,7 +96,6 @@ bool VillageLayer::init() {
         auto dataManager = VillageDataManager::getInstance();
         auto building = dataManager->getBuildingById(buildingId);
         if (building) {
-            // 找到对应的 BuildingSprite 并更新
             for (auto child : this->getChildren()) {
                 auto buildingSprite = dynamic_cast<BuildingSprite*>(child);
                 if (buildingSprite && buildingSprite->getBuildingId() == buildingId) {
@@ -105,37 +107,34 @@ bool VillageLayer::init() {
         }
     });
   _eventDispatcher->addEventListenerWithSceneGraphPriority(upgradeListener, this);
+
+  // 监听建筑加速完成事件
   auto speedupListener = EventListenerCustom::create("EVENT_BUILDING_SPEEDUP_COMPLETE",
                                                      [this](EventCustom* event) {
     int buildingId = *(int*)event->getUserData();
 
     CCLOG("VillageLayer: Building %d speedup complete, updating UI", buildingId);
 
-    // 获取更新后的建筑数据
     auto dataManager = VillageDataManager::getInstance();
     auto building = dataManager->getBuildingById(buildingId);
 
     if (building && _buildingManager) {
       auto sprite = _buildingManager->getBuildingSprite(buildingId);
       if (sprite) {
-        // 强制隐藏进度条和完成建造动画
         sprite->hideConstructionProgress();
         sprite->finishConstruction();
-
-        // 更新建筑等级和状态
         sprite->updateBuilding(*building);
       }
     }
   });
   _eventDispatcher->addEventListenerWithSceneGraphPriority(speedupListener, this);
 
-  // ========== 新增：初始化当前场景（在最后）==========
+  // 初始化当前场景主题
   auto dataManager = VillageDataManager::getInstance();
   int currentTheme = dataManager->getCurrentThemeId();
 
-  // 如果不是默认场景（经典），需要切换
+  // 如果不是默认场景，切换主题
   if (currentTheme != 1) {
-      // 延迟一帧切换，确保所有初始化完成
       this->runAction(cocos2d::Sequence::create(
           cocos2d::DelayTime::create(0.1f),
           cocos2d::CallFunc::create([this, currentTheme]() {
@@ -148,12 +147,13 @@ bool VillageLayer::init() {
 }
 
 void VillageLayer::cleanup() {
-  // ========== 清理粒子效果 ==========
+  // 清理粒子效果
   if (_currentParticleEffect) {
     _currentParticleEffect->stopSystem();
     _currentParticleEffect->removeFromParent();
     _currentParticleEffect = nullptr;
   }
+
   // 清理建筑移动控制器
   if (_moveBuildingController) {
     delete _moveBuildingController;
@@ -182,10 +182,10 @@ void VillageLayer::onBuildingPurchased(int buildingId) {
   auto building = dataManager->getBuildingById(buildingId);
 
   if (building) {
-    // 只创建建筑精灵，不启动 MoveBuildingController
+    // 创建建筑精灵
     auto sprite = _buildingManager->addBuilding(*building);
     
-    // 通知 HUDLayer 开始放置流程
+    // 通知HUDLayer开始放置流程
     auto scene = this->getScene();
     if (scene) {
       auto hudLayer = dynamic_cast<HUDLayer*>(scene->getChildByTag(100));
@@ -198,8 +198,6 @@ void VillageLayer::onBuildingPurchased(int buildingId) {
   }
 }
 
-
-//初始化方法
 void VillageLayer::initializeBasicProperties() {
   auto mapSize = _mapSprite->getContentSize();
   this->setContentSize(mapSize);
@@ -210,9 +208,7 @@ void VillageLayer::initializeBasicProperties() {
   CCLOG("VillageLayer basic properties initialized:");
   CCLOG("  Map size: %.0fx%.0f", mapSize.width, mapSize.height);
 }
-#pragma endregion
 
-// 辅助方法
 Sprite* VillageLayer::createMapSprite() {
   auto mapSprite = Sprite::create("Scene/Map_Crossover.png");
   if (!mapSprite) {
@@ -220,7 +216,7 @@ Sprite* VillageLayer::createMapSprite() {
     return nullptr;
   }
 
-  // 使用左下角锚点，位置设为(0,0)
+  // 使用左下角锚点
   mapSprite->setAnchorPoint(Vec2::ANCHOR_BOTTOM_LEFT);
   mapSprite->setPosition(Vec2::ZERO);
   return mapSprite;
@@ -231,56 +227,45 @@ BuildingSprite* VillageLayer::getBuildingAtScreenPos(const Vec2& screenPos) {
   return _buildingManager->getBuildingAtWorldPos(worldPos);
 }
 
-// ========== 获取当前选中的建筑ID ==========
 int VillageLayer::getSelectedBuildingId() const {
     if (_currentSelectedBuilding) {
         return _currentSelectedBuilding->getBuildingId();
     }
-    return -1;  // 没有选中建筑时返回 -1
+    return -1;
 }
-#pragma endregion
 
-// 设置输入回调
 void VillageLayer::setupInputCallbacks() {
     CCLOG("VillageLayer: Setting up input callbacks");
 
-    // ========== 回调 1: 点击检测（用于 MoveMapController 判断点击了什么）==========
+    // 回调1: 点击检测
     _inputController->setOnTapCallback([this](const Vec2& screenPos) -> TapTarget {
         auto building = getBuildingAtScreenPos(screenPos);
 
-        // --- 获取 HUD 层 (通过 Tag 100) ---
+        // 获取HUD层
         auto scene = this->getScene();
         HUDLayer* hudLayer = nullptr;
         if (scene) {
             hudLayer = dynamic_cast<HUDLayer*>(scene->getChildByTag(100));
         }
-        // ----------------------------------------
 
         if (building) {
             CCLOG("VillageLayer: Tap detected on building ID=%d", building->getBuildingId());
             return TapTarget::BUILDING;
         }
 
-        // --- 如果点击了空白处 -> 隐藏底部菜单和选中效果 ---
+        // 点击空白处，隐藏菜单和选中效果
         if (hudLayer) {
             hudLayer->hideBuildingActions();
         }
-        // 隐藏之前选中建筑的效果
         if (_currentSelectedBuilding) {
             _currentSelectedBuilding->hideSelectionEffect();
             _currentSelectedBuilding = nullptr;
         }
-        // ---------------------------------------------
-
-        // TODO: 检测是否点击商店按钮
-        // if (isShopButtonClicked(screenPos)) {
-        //      return TapTarget::SHOP;
-        // }
 
         return TapTarget::NONE;
-        });
+    });
 
-    // ========== 回调 2: 建筑选中（自动进入移动模式）==========
+    // 回调2: 建筑选中
     _inputController->setOnBuildingSelectedCallback([this](const Vec2& screenPos) {
       auto building = getBuildingAtScreenPos(screenPos);
 
@@ -294,12 +279,10 @@ void VillageLayer::setupInputCallbacks() {
         int buildingId = building->getBuildingId();
         CCLOG("VillageLayer: Building selected ID=%d", buildingId);
 
-        // === 处理选中效果 ===
-        // 隐藏之前选中建筑的效果
+        // 处理选中效果
         if (_currentSelectedBuilding && _currentSelectedBuilding != building) {
             _currentSelectedBuilding->hideSelectionEffect();
         }
-        // 显示当前建筑选中效果
         building->showSelectionEffect();
         _currentSelectedBuilding = building;
 
@@ -313,10 +296,7 @@ void VillageLayer::setupInputCallbacks() {
               hudLayer->showBuildingActions(buildingId);
             }
           } else if (buildingData->state == BuildingInstance::State::CONSTRUCTING) {
-            // 建造中的建筑：只显示基本信息（不显示升级/训练按钮）
-            // 可以选择不显示菜单，或显示简化版菜单
             CCLOG("VillageLayer: Constructing building tapped, can still be moved by long press");
-            // 不显示操作菜单，但可以长按移动
           } else if (buildingData->state == BuildingInstance::State::PLACING) {
             CCLOG("VillageLayer: PLACING building should not trigger select callback");
           }
@@ -329,7 +309,7 @@ void VillageLayer::setupInputCallbacks() {
 
 void VillageLayer::removeBuildingSprite(int buildingId) {
   if (_buildingManager) {
-    // 检查是否是当前选中的建筑，如果是就清除选中状态（避免光圈残留！）
+    // 检查是否是当前选中的建筑
     auto sprite = _buildingManager->getBuildingSprite(buildingId);
     if (sprite && _currentSelectedBuilding == sprite) {
       _currentSelectedBuilding->hideSelectionEffect();
@@ -367,13 +347,13 @@ void VillageLayer::updateBuildingPreviewPosition(int buildingId, const cocos2d::
     return;
   }
 
-  // 使用 GridMapUtils 转换坐标
+  // 转换为网格坐标
   cocos2d::Vec2 gridPosFloat = GridMapUtils::pixelToGrid(worldPos);
 
   auto config = BuildingConfig::getInstance()->getConfig(sprite->getBuildingType());
   if (!config) return;
 
-  // 计算建筑左下角网格坐标（触摸点作为建筑中心）
+  // 计算建筑左下角网格坐标
   float leftBottomGridX = gridPosFloat.x - config->gridWidth * 0.5f;
   float leftBottomGridY = gridPosFloat.y - config->gridHeight * 0.5f;
 
@@ -393,24 +373,24 @@ void VillageLayer::updateBuildingPreviewPosition(int buildingId, const cocos2d::
   // 更新网格坐标
   sprite->setGridPos(cocos2d::Vec2(gridX, gridY));
 
-  // 更新数据层坐标（用于碰撞检测）
+  // 更新数据层坐标
   auto dataManager = VillageDataManager::getInstance();
   dataManager->setBuildingPosition(buildingId, gridX, gridY);
 
-  //  修复：isAreaOccupied() 需要 5 个参数
+  // 检查是否可以放置
   bool canPlace = !dataManager->isAreaOccupied(
     gridX,
     gridY,
-    config->gridWidth,    //  添加宽度参数
-    config->gridHeight,   //  添加高度参数
-    buildingId            //  忽略自己
+    config->gridWidth,
+    config->gridHeight,
+    buildingId
   );
 
   // 显示视觉反馈
   sprite->setDraggingMode(true);
   sprite->setPlacementPreview(canPlace);
 
-  // 通知 HUDLayer 更新按钮状态
+  // 通知HUDLayer更新按钮状态
   auto scene = this->getScene();
   if (scene) {
     auto hudLayer = dynamic_cast<HUDLayer*>(scene->getChildByTag(100));
@@ -423,30 +403,29 @@ void VillageLayer::updateBuildingPreviewPosition(int buildingId, const cocos2d::
         gridX, gridY, canPlace ? "VALID" : "INVALID");
 }
 
-// ========== 地图切换实现 ==========
 void VillageLayer::switchMapBackground(int themeId) {
     CCLOG("VillageLayer: Switching to theme %d", themeId);
 
     auto dataManager = VillageDataManager::getInstance();
 
-    // 1. 确定地图文件路径
+    // 确定地图文件路径
     std::string mapPath;
     bool needParticle = false;
 
     switch (themeId) {
-        case 1:  // 经典
+        case 1:
             mapPath = "Scene/VillageScene.png";
             needParticle = false;
             break;
-        case 2:  // 冬天
+        case 2:
             mapPath = "Scene/Map_Classic_Winter.png";
             needParticle = true;
             break;
-        case 3:  // 皇室
+        case 3:
             mapPath = "Scene/Map_Royale.png";
             needParticle = false;
             break;
-        case 4:  // 交叉
+        case 4:
             mapPath = "Scene/Map_Crossover.png";
             needParticle = false;
             break;
@@ -457,7 +436,7 @@ void VillageLayer::switchMapBackground(int themeId) {
             break;
     }
 
-    // 2. 清理当前粒子效果（必须在替换地图精灵之前）
+    // 清理当前粒子效果
     if (_currentParticleEffect) {
         _currentParticleEffect->stopSystem();
         _currentParticleEffect->removeFromParent();
@@ -465,7 +444,7 @@ void VillageLayer::switchMapBackground(int themeId) {
         CCLOG("VillageLayer: Cleaned up previous particle effect");
     }
 
-    // 3. 替换地图精灵
+    // 替换地图精灵
     if (_mapSprite) {
         cocos2d::Vec2 oldPos = _mapSprite->getPosition();
         _mapSprite->removeFromParent();
@@ -481,7 +460,7 @@ void VillageLayer::switchMapBackground(int themeId) {
         }
     }
 
-    // 4. 如果需要新粒子效果，创建雪花
+    // 如果需要，创建雪花粒子效果
     if (needParticle) {
         CCLOG("VillageLayer: Creating snow particle effect...");
 

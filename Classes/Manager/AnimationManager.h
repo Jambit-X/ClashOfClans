@@ -1,4 +1,7 @@
-﻿#ifndef __ANIMATION_MANAGER_H__
+﻿// AnimationManager.h
+// 动画管理器头文件，负责管理战斗单位的动画配置和创建
+
+#ifndef __ANIMATION_MANAGER_H__
 #define __ANIMATION_MANAGER_H__
 
 #include "cocos2d.h"
@@ -25,7 +28,7 @@ enum class AnimationType {
     HURT
 };
 
-// 添加移动方向枚举
+// 移动方向枚举
 enum class MoveDirection {
   RIGHT,         // 向右（0度）
   RIGHT_UP,      // 右上（45度）
@@ -40,11 +43,11 @@ enum class MoveDirection {
 // 动画配置数据
 struct AnimationConfig {
   std::string framePrefix;
-  // 方式 1: 连续帧（原有方式）
+  // 连续帧模式
   int startFrame;        // 起始帧号
   int frameCount;        // 帧数量
 
-  // 方式 2: 非连续帧（新增）
+  // 非连续帧模式
   std::vector<int> frameIndices;  // 指定帧序号列表，例如 {1, 5, 9, 12}
   float frameDelay;
   bool loop;

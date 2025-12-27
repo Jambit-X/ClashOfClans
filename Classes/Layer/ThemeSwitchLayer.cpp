@@ -1,4 +1,7 @@
-﻿#pragma execution_character_set("utf-8")
+﻿// ThemeSwitchLayer.cpp
+// 主题切换层实现，处理场景主题的选择和购买
+
+#pragma execution_character_set("utf-8")
 #include "Layer/ThemeSwitchLayer.h"
 #include "Manager/VillageDataManager.h"
 #include "Layer/VillageLayer.h"
@@ -12,7 +15,7 @@ bool ThemeSwitchLayer::init() {
         return false;
     }
 
-    // 1. 半透明遮罩
+    // 半透明遮罩
     auto shieldLayer = LayerColor::create(Color4B(0, 0, 0, 180));
     this->addChild(shieldLayer);
 
@@ -22,19 +25,19 @@ bool ThemeSwitchLayer::init() {
     listener->onTouchBegan = [](Touch* t, Event* e) { return true; };
     _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
 
-    // 2. 加载场景数据
+    // 加载场景数据
     loadThemeData();
 
-    // 3. 初始化UI组件
+    // 初始化UI组件
     initBackground();
     initScrollView();
     initBottomButton();
 
-    // 4. 获取当前选中的场景
+    // 获取当前选中的场景
     auto dataManager = VillageDataManager::getInstance();
     _currentSelectedTheme = dataManager->getCurrentThemeId();
 
-    // 5. 更新底部按钮
+    // 更新底部按钮
     updateBottomButton();
 
     return true;
@@ -48,35 +51,32 @@ void ThemeSwitchLayer::initBackground() {
     _panelNode->setPosition(visibleSize.width / 2, visibleSize.height / 2);
     this->addChild(_panelNode);
 
-    // ========== 修改：使用图片背景 ==========
     float panelW = 800;
     float panelH = 500;
 
-    // 1. 尝试加载背景图片
+    // 尝试加载背景图片
     auto panelBg = Sprite::create("UI/Village/change_bg_card.png");
     if (panelBg) {
-        // 图片加载成功，设置锚点和缩放
         panelBg->setAnchorPoint(Vec2(0.5f, 0.5f));
-        panelBg->setPosition(Vec2(0, 0));  // 相对于 _panelNode 中心
+        panelBg->setPosition(Vec2(0, 0));
 
-        // 如果需要缩放以适应尺寸
+        // 缩放以适应尺寸
         Size imgSize = panelBg->getContentSize();
         float scaleX = panelW / imgSize.width;
         float scaleY = panelH / imgSize.height;
-        panelBg->setScale(std::max(scaleX, scaleY));  // 保持比例缩放
+        panelBg->setScale(std::max(scaleX, scaleY));
 
-        _panelNode->addChild(panelBg, -1);  // ZOrder=-1 确保在最底层
+        _panelNode->addChild(panelBg, -1);
 
         CCLOG("ThemeSwitchLayer: Background image loaded successfully");
     } else {
-        // 图片加载失败，使用颜色层作为后备方案
+        // 图片加载失败，使用颜色层
         CCLOG("ThemeSwitchLayer: WARNING - Failed to load background image, using color fallback");
         auto panelBg = LayerColor::create(Color4B(40, 30, 20, 255), panelW, panelH);
         panelBg->ignoreAnchorPointForPosition(false);
         panelBg->setAnchorPoint(Vec2(0.5f, 0.5f));
         _panelNode->addChild(panelBg, -1);
     }
-    // ==========================================
 
     // 关闭按钮
     auto closeBtn = Button::create("ImageElements/close_btn.png");
@@ -98,7 +98,7 @@ void ThemeSwitchLayer::initScrollView() {
     _scrollView->setDirection(ScrollView::Direction::HORIZONTAL);
     _scrollView->setContentSize(Size(scrollW, scrollH));
     _scrollView->setAnchorPoint(Vec2(0.5f, 0.5f));
-    _scrollView->setPosition(Vec2(0, 20));  // 在面板中心偏上
+    _scrollView->setPosition(Vec2(0, 20));
     _scrollView->setScrollBarEnabled(false);
     _scrollView->setBounceEnabled(true);
     _panelNode->addChild(_scrollView);
@@ -127,9 +127,9 @@ void ThemeSwitchLayer::createThemeCard(const MapTheme& theme, float startX) {
     card->setPosition(Vec2(startX + cardW / 2, 140));
     _scrollView->addChild(card);
 
-    _themeCards[theme.id] = card;  // 保存引用用于更新边框
+    _themeCards[theme.id] = card;
 
-    // 场景预览图（缩小版）
+    // 场景预览图
     auto preview = Sprite::create(theme.mapImage);
     if (preview) {
         float scale = std::min(180.0f / preview->getContentSize().width,
@@ -145,7 +145,7 @@ void ThemeSwitchLayer::createThemeCard(const MapTheme& theme, float startX) {
     nameLabel->enableOutline(Color4B::BLACK, 2);
     card->addChild(nameLabel);
 
-    // 选中边框（默认隐藏）
+    // 选中边框
     auto border = DrawNode::create();
     border->drawRect(Vec2(0, 0), Vec2(cardW, cardH), Color4F::YELLOW);
     border->setLineWidth(4);
@@ -170,22 +170,22 @@ void ThemeSwitchLayer::createThemeCard(const MapTheme& theme, float startX) {
 }
 
 void ThemeSwitchLayer::initBottomButton() {
-    // ✅ 关键修复：使用一个1x1的透明占位图创建按钮，或者使用 Scale9Sprite
+    // 使用透明占位图创建按钮
     _bottomButton = Button::create();
-    _bottomButton->setScale9Enabled(true);  // ✅ 启用九宫格，让 setContentSize 生效
-    _bottomButton->setCapInsets(Rect(0, 0, 0, 0));  // ✅ 设置九宫格边距
+    _bottomButton->setScale9Enabled(true);
+    _bottomButton->setCapInsets(Rect(0, 0, 0, 0));
 
     _bottomButton->setTitleFontSize(24);
     _bottomButton->setTitleColor(Color3B::WHITE);
     _bottomButton->setPosition(Vec2(0, -210));
     _bottomButton->setContentSize(Size(200, 60));
 
-    // ✅ 添加一个透明背景确保触摸区域存在
-    auto touchArea = LayerColor::create(Color4B(0, 0, 0, 1), 200, 60);  // 几乎透明
+    // 添加透明背景确保触摸区域存在
+    auto touchArea = LayerColor::create(Color4B(0, 0, 0, 1), 200, 60);
     touchArea->ignoreAnchorPointForPosition(false);
     touchArea->setAnchorPoint(Vec2::ZERO);
     touchArea->setPosition(Vec2::ZERO);
-    _bottomButton->addChild(touchArea, -100);  // 最底层
+    _bottomButton->addChild(touchArea, -100);
 
     _bottomButton->addClickEventListener([this](Ref*) {
         CCLOG("ThemeSwitchLayer: Bottom button clicked!");
@@ -207,6 +207,7 @@ void ThemeSwitchLayer::initBottomButton() {
     CCLOG("ThemeSwitchLayer: Bottom button created at position (%.1f, %.1f)",
           _bottomButton->getPosition().x, _bottomButton->getPosition().y);
 }
+
 void ThemeSwitchLayer::loadThemeData() {
     auto dataManager = VillageDataManager::getInstance();
 
@@ -218,7 +219,7 @@ void ThemeSwitchLayer::loadThemeData() {
     classic.mapImage = "Scene/VillageScene.png";
     classic.unlockTownHallLevel = 0;
     classic.gemCost = 0;
-    classic.isPurchased = true;  // 默认拥有
+    classic.isPurchased = true;
     classic.hasParticleEffect = false;
     _themes[1] = classic;
 
@@ -281,11 +282,11 @@ void ThemeSwitchLayer::updateBottomButton() {
     CCLOG("ThemeSwitchLayer: updateBottomButton called for theme %d (isPurchased=%s)",
           theme.id, theme.isPurchased ? "YES" : "NO");
 
-    // ✅ 只移除非固定子节点（保留 tag=-100 的触摸区域）
+    // 只移除非固定子节点
     auto children = _bottomButton->getChildren();
     Vector<Node*> toRemove;
     for (auto child : children) {
-        if (child->getTag() != -100) {  // 不移除触摸区域
+        if (child->getTag() != -100) {
             toRemove.pushBack(child);
         }
     }
@@ -295,14 +296,13 @@ void ThemeSwitchLayer::updateBottomButton() {
 
     _bottomButton->setTitleText("");
 
-    // 获取按钮尺寸
     Size btnSize = _bottomButton->getContentSize();
     Vec2 btnCenter = Vec2(btnSize.width / 2, btnSize.height / 2);
 
     if (!theme.isPurchased) {
-        // ========== 未购买/未解锁 ==========
+        // 未购买/未解锁
         if (theme.unlockTownHallLevel > dataManager->getTownHallLevel()) {
-            // 未解锁 - 灰色按钮 + 文字提示
+            // 未解锁
             _bottomButton->setTitleText("大本营" + std::to_string(theme.unlockTownHallLevel) + "级解锁");
             _bottomButton->setEnabled(false);
             _bottomButton->setBright(false);
@@ -315,7 +315,7 @@ void ThemeSwitchLayer::updateBottomButton() {
 
             CCLOG("ThemeSwitchLayer: Button state - LOCKED");
         } else {
-            // 可购买 - 使用 100 宝石购买按钮图片
+            // 可购买
             CCLOG("ThemeSwitchLayer: Loading purchase button image...");
 
             auto purchaseBtn = Sprite::create("UI/Village/spend_100_gem_btn.png");
@@ -324,18 +324,17 @@ void ThemeSwitchLayer::updateBottomButton() {
                 purchaseBtn->setAnchorPoint(Vec2(0.5f, 0.5f));
                 purchaseBtn->setPosition(btnSize.width / 2, btnSize.height / 3);
 
-                // ✅ 不缩放，使用原始大小（确保图片可见）
                 CCLOG("ThemeSwitchLayer: Purchase button loaded, size=(%.0f, %.0f)",
                       purchaseBtn->getContentSize().width,
                       purchaseBtn->getContentSize().height);
 
-                _bottomButton->addChild(purchaseBtn, 1);  // ✅ 使用正数 ZOrder
+                _bottomButton->addChild(purchaseBtn, 1);
 
-                // ✅ 调整按钮大小以匹配图片
+                // 调整按钮大小以匹配图片
                 Size imgSize = purchaseBtn->getContentSize();
                 _bottomButton->setContentSize(imgSize);
 
-                // ✅ 重新设置触摸区域大小
+                // 重新设置触摸区域大小
                 auto touchArea = _bottomButton->getChildByTag(-100);
                 if (touchArea) {
                     auto layerColor = dynamic_cast<LayerColor*>(touchArea);
@@ -348,7 +347,6 @@ void ThemeSwitchLayer::updateBottomButton() {
                 CCLOG("ThemeSwitchLayer: ERROR - Failed to load purchase button image!");
                 _bottomButton->setTitleText("购买 " + std::to_string(theme.gemCost) + " 宝石");
 
-                // 添加可见背景
                 auto btnBg = LayerColor::create(Color4B(200, 100, 0, 255), btnSize.width, btnSize.height);
                 btnBg->ignoreAnchorPointForPosition(false);
                 btnBg->setAnchorPoint(Vec2::ZERO);
@@ -368,16 +366,16 @@ void ThemeSwitchLayer::updateBottomButton() {
             }
         }
     } else {
-        // ========== 已解锁 - 显示勾勾"确认选择"按钮 ==========
+        // 已解锁
         CCLOG("ThemeSwitchLayer: Theme is purchased, showing check icon");
 
         auto checkIcon = Sprite::create("ImageElements/right.png");
         if (checkIcon) {
-            checkIcon->setScale(0.5f);  // ✅ 放大图标使其更明显
+            checkIcon->setScale(0.5f);
             checkIcon->setAnchorPoint(Vec2(0.5f, 0.5f));
             checkIcon->setPosition(btnSize.width / 2, btnSize.height / 4);
 
-            _bottomButton->addChild(checkIcon, 1);  // ✅ 使用正数 ZOrder
+            _bottomButton->addChild(checkIcon, 1);
 
             CCLOG("ThemeSwitchLayer: Check icon added, size=(%.0f, %.0f)",
                   checkIcon->getContentSize().width * checkIcon->getScale(),
@@ -386,7 +384,6 @@ void ThemeSwitchLayer::updateBottomButton() {
             CCLOG("ThemeSwitchLayer: ERROR - Failed to load check icon!");
             _bottomButton->setTitleText("确认选择");
 
-            // 添加可见背景
             auto btnBg = LayerColor::create(Color4B(0, 200, 0, 255), btnSize.width, btnSize.height);
             btnBg->ignoreAnchorPointForPosition(false);
             btnBg->setAnchorPoint(Vec2::ZERO);
@@ -432,7 +429,7 @@ void ThemeSwitchLayer::onConfirmClicked() {
 
     CCLOG("ThemeSwitchLayer: Switched to theme %d", _currentSelectedTheme);
 
-    // 通知 VillageLayer 切换地图
+    // 通知VillageLayer切换地图
     auto scene = Director::getInstance()->getRunningScene();
     auto villageScene = dynamic_cast<VillageScene*>(scene);
     if (villageScene) {

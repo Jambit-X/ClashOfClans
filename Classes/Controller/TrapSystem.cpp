@@ -1,3 +1,6 @@
+﻿// TrapSystem.cpp
+// 陷阱系统实现，管理陷阱的触发检测和爆炸逻辑
+
 #include "TrapSystem.h"
 #include "../Layer/BattleTroopLayer.h"
 #include "../Manager/VillageDataManager.h"
@@ -28,10 +31,6 @@ void TrapSystem::reset() {
     _trapTimers.clear();
 }
 
-// ==========================================
-// 检查兵种是否在陷阱范围内
-// ==========================================
-
 bool TrapSystem::isUnitInTrapRange(const BuildingInstance& trap, BattleUnitSprite* unit) {
     if (!unit || unit->isDead()) return false;
     
@@ -43,23 +42,18 @@ bool TrapSystem::isUnitInTrapRange(const BuildingInstance& trap, BattleUnitSprit
     int trapX = trap.gridX;
     int trapY = trap.gridY;
     
-    // 401: 炸弹 - 1x1 格子，只检查陷阱所在的格子
+    // 炸弹（401）：1x1格子
     if (trap.type == 401) {
         return (unitGridX == trapX && unitGridY == trapY);
     }
-    // 404: 巨型炸弹 - 2x2 格子，检查陷阱所在的4个格子
+    // 巨型炸弹（404）：2x2格子
     else if (trap.type == 404) {
-        // 巨型炸弹占据 (trapX, trapY) 到 (trapX+1, trapY+1) 的范围
         return (unitGridX >= trapX && unitGridX <= trapX + 1 &&
                 unitGridY >= trapY && unitGridY <= trapY + 1);
     }
     
     return false;
 }
-
-// ==========================================
-// 更新陷阱检测（每帧调用）
-// ==========================================
 
 void TrapSystem::updateTrapDetection(BattleTroopLayer* troopLayer) {
     if (!troopLayer) return;
@@ -81,7 +75,7 @@ void TrapSystem::updateTrapDetection(BattleTroopLayer* troopLayer) {
         
         int trapId = building.id;
         
-        // 检查陷阱是否已经被触发（正在倒计时）
+        // 检查陷阱是否已触发（正在倒计时）
         if (_triggeredTraps.find(trapId) != _triggeredTraps.end()) {
             // 更新计时器
             _trapTimers[trapId] -= deltaTime;
@@ -113,9 +107,9 @@ void TrapSystem::updateTrapDetection(BattleTroopLayer* troopLayer) {
                       static_cast<int>(unit->getGridPosition().y));
                 
                 _triggeredTraps.insert(trapId);
-                _trapTimers[trapId] = 0.5f;  // 0.5秒延迟
+                _trapTimers[trapId] = 0.5f;
                 
-                // 让陷阱显示出来
+                // 显示陷阱
                 auto mapLayer = troopLayer->getParent();
                 if (mapLayer) {
                     std::string spriteName = "Building_" + std::to_string(trapId);
@@ -126,15 +120,11 @@ void TrapSystem::updateTrapDetection(BattleTroopLayer* troopLayer) {
                     }
                 }
                 
-                break;  // 一个陷阱只能被触发一次
+                break;
             }
         }
     }
 }
-
-// ==========================================
-// 执行陷阱爆炸
-// ==========================================
 
 void TrapSystem::explodeTrap(BuildingInstance* trap, BattleTroopLayer* troopLayer) {
     if (!trap || !troopLayer) return;
@@ -142,7 +132,7 @@ void TrapSystem::explodeTrap(BuildingInstance* trap, BattleTroopLayer* troopLaye
     auto config = BuildingConfig::getInstance()->getConfig(trap->type);
     if (!config) return;
     
-    int damage = config->damagePerSecond;  // 对于陷阱，这个字段存储爆炸伤害
+    int damage = config->damagePerSecond;
     
     CCLOG("TrapSystem: Trap %d (type=%d) exploding with %d damage!",
           trap->id, trap->type, damage);
@@ -154,7 +144,7 @@ void TrapSystem::explodeTrap(BuildingInstance* trap, BattleTroopLayer* troopLaye
     for (auto unit : allUnits) {
         if (!unit || unit->isDead()) continue;
         
-        // 气球兵是飞行单位，不会受到地面陷阱伤害
+        // 气球兵不受地面陷阱伤害
         if (unit->getUnitTypeID() == UnitTypeID::BALLOON) continue;
         
         if (isUnitInTrapRange(*trap, unit)) {
@@ -182,7 +172,7 @@ void TrapSystem::explodeTrap(BuildingInstance* trap, BattleTroopLayer* troopLaye
     // 播放爆炸特效
     Vec2 trapPixelPos = GridMapUtils::gridToPixelCenter(trap->gridX, trap->gridY);
     
-    // 对于巨型炸弹，爆炸位置在2x2的中心
+    // 巨型炸弹爆炸位置在2x2中心
     if (trap->type == 404) {
         trapPixelPos = GridMapUtils::gridToPixelCenter(trap->gridX, trap->gridY + 1);
     }
@@ -197,11 +187,11 @@ void TrapSystem::explodeTrap(BuildingInstance* trap, BattleTroopLayer* troopLaye
     explosion->setAutoRemoveOnFinish(true);
     troopLayer->getParent()->addChild(explosion, 1000);
     
-    // 标记陷阱为已摧毁（消失）
+    // 标记陷阱为已摧毁
     trap->isDestroyed = true;
     trap->currentHP = 0;
     
-    // 发送陷阱摧毁事件（用于隐藏精灵）
+    // 发送陷阱摧毁事件
     Director::getInstance()->getEventDispatcher()->dispatchCustomEvent(
         "EVENT_BUILDING_DESTROYED",
         static_cast<void*>(trap)

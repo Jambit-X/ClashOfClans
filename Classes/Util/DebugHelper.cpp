@@ -1,4 +1,7 @@
-﻿#pragma execution_character_set("utf-8")
+﻿// DebugHelper.cpp
+// 调试辅助工具实现，提供资源修改、建筑操作和存档管理功能
+
+#pragma execution_character_set("utf-8")
 #include "DebugHelper.h"
 #include "../Manager/VillageDataManager.h"
 #include "../Layer/VillageLayer.h"
@@ -9,21 +12,21 @@
 
 USING_NS_CC;
 
-// ========== 资源操作 ==========
+// ========== 资源操作实现 ==========
 
 void DebugHelper::setGold(int amount) {
     auto dataManager = VillageDataManager::getInstance();
     
-    // 计算差值并调用已有方法
+    // 计算当前值与目标值的差值
     int current = dataManager->getGold();
     int diff = amount - current;
     
     if (diff > 0) {
-        // 临时移除上限检查，直接设置
-        // 注意：VillageData 的 gold 是 public 的，可通过 getter 间接访问
-        // 但为了不修改 VillageDataManager，我们用加减法绕过上限
+        // 需要增加金币：调用addGold()
+        // 注意：addGold()内部有上限检查，这里绕过上限直接加
         dataManager->addGold(diff);
     } else if (diff < 0) {
+        // 需要减少金币：调用spendGold()
         dataManager->spendGold(-diff);
     }
     
@@ -58,7 +61,7 @@ void DebugHelper::setGem(int amount) {
     CCLOG("DebugHelper: Set gem to %d", amount);
 }
 
-// ========== 建筑操作 ==========
+// ========== 建筑操作实现 ==========
 
 void DebugHelper::setBuildingLevel(int buildingId, int level) {
     auto dataManager = VillageDataManager::getInstance();
@@ -69,14 +72,14 @@ void DebugHelper::setBuildingLevel(int buildingId, int level) {
         return;
     }
     
-    // 直接修改等级（BuildingInstance 是可修改的）
+    // 直接修改建筑等级（BuildingInstance的字段都是public）
     building->level = level;
     building->state = BuildingInstance::State::BUILT;
     building->finishTime = 0;
     
     CCLOG("DebugHelper: Building %d level set to %d", buildingId, level);
     
-    // 更新精灵显示
+    // 更新精灵显示：获取VillageLayer并刷新该建筑的外观
     auto scene = Director::getInstance()->getRunningScene();
     if (scene) {
         auto villageLayer = dynamic_cast<VillageLayer*>(scene->getChildByTag(1));
@@ -85,10 +88,10 @@ void DebugHelper::setBuildingLevel(int buildingId, int level) {
         }
     }
     
-    // 保存
+    // 保存到存档文件
     dataManager->saveToFile("village.json");
     
-    // 触发资源更新（可能影响存储容量等）
+    // 触发资源更新事件（因为等级变化可能影响存储容量等属性）
     Director::getInstance()->getEventDispatcher()
         ->dispatchCustomEvent("EVENT_RESOURCE_CHANGED");
 }
@@ -102,27 +105,34 @@ void DebugHelper::deleteBuilding(int buildingId) {
         return;
     }
     
-    // 1. 获取 VillageLayer 和 HUDLayer
+    // 步骤1：获取VillageLayer和HUDLayer引用
     auto villageLayer = dynamic_cast<VillageLayer*>(scene->getChildByTag(1));
     auto hudLayer = dynamic_cast<HUDLayer*>(scene->getChildByTag(100));
     
-    // 2. 隐藏 HUD 操作菜单
+    // 步骤2：隐藏HUD操作菜单（避免菜单指向已删除的建筑）
     if (hudLayer) {
         hudLayer->hideBuildingActions();
     }
     
-    // 3. 删除精灵（内部会自动清除选中状态，避免光圈残留）
+    // 步骤3：删除精灵
+    // removeBuildingSprite()内部会：
+    // 1. 调用hideSelectionEffect()清除光圈
+    // 2. 从场景中移除精灵节点
+    // 3. 清空_buildingSprites映射表
     if (villageLayer) {
         villageLayer->removeBuildingSprite(buildingId);
     }
     
-    // 4. 从数据层删除（同时更新网格占用）
+    // 步骤4：从数据层删除建筑
+    // removeBuilding()内部会：
+    // 1. 从buildings列表中移除
+    // 2. 调用updateGridOccupancy()更新网格占用状态
     dataManager->removeBuilding(buildingId);
     
-    // 5. 保存存档
+    // 步骤5：保存存档
     dataManager->saveToFile("village.json");
     
-    // 6. 触发资源更新事件
+    // 步骤6：触发资源更新事件（删除资源建筑可能影响容量）
     Director::getInstance()->getEventDispatcher()
         ->dispatchCustomEvent("EVENT_RESOURCE_CHANGED");
     
@@ -137,21 +147,26 @@ void DebugHelper::completeAllConstructions() {
     const auto& buildings = dataManager->getAllBuildings();
     std::vector<int> constructingIds;
     
-    // 收集所有建造中的建筑ID
+    // 收集所有处于CONSTRUCTING状态的建筑ID
     for (const auto& building : buildings) {
         if (building.state == BuildingInstance::State::CONSTRUCTING) {
             constructingIds.push_back(building.id);
         }
     }
     
-    // 完成每个建筑
+    // 完成每个建造中的建筑
     for (int id : constructingIds) {
         auto building = dataManager->getBuildingById(id);
         if (!building) continue;
         
+        // 根据是新建还是升级，调用不同的完成方法
         if (building->isInitialConstruction) {
+            // 新建建筑：finishNewBuildingConstruction()
+            // 内部会：更新状态、扣除费用、更新精灵
             dataManager->finishNewBuildingConstruction(id);
         } else {
+            // 升级建筑：finishUpgradeBuilding()
+            // 内部会：更新状态、等级+1、扣除费用、更新精灵
             dataManager->finishUpgradeBuilding(id);
         }
     }
@@ -159,22 +174,23 @@ void DebugHelper::completeAllConstructions() {
     CCLOG("DebugHelper: Completed %lu constructions", constructingIds.size());
 }
 
-// ========== 存档操作 ==========
+// ========== 存档操作实现 ==========
 
 void DebugHelper::resetSaveData() {
     auto fileUtils = FileUtils::getInstance();
     std::string writablePath = fileUtils->getWritablePath();
     std::string savePath = writablePath + "village.json";
     
+    // 检查并删除存档文件
     if (fileUtils->isFileExist(savePath)) {
         fileUtils->removeFile(savePath);
         CCLOG("DebugHelper: Save file deleted: %s", savePath.c_str());
     }
     
-    // 销毁数据管理器单例，让它下次重新初始化
+    // 销毁数据管理器单例，强制下次重新初始化
     VillageDataManager::destroyInstance();
     
-    // 重新加载 VillageScene（自动使用默认数据初始化）
+    // 重新加载VillageScene（将使用默认数据初始化）
     auto scene = VillageScene::createScene();
     Director::getInstance()->replaceScene(TransitionFade::create(0.5f, scene, Color3B::BLACK));
     

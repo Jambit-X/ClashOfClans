@@ -1,4 +1,7 @@
-﻿#pragma once
+﻿// ResourceProductionSystem.h
+// 资源生产系统头文件，负责计算和累积资源
+
+#pragma once
 #include "cocos2d.h"
 #include <functional>
 

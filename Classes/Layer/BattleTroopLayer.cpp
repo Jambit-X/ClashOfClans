@@ -1,4 +1,7 @@
-﻿#include "BattleTroopLayer.h"
+﻿// BattleTroopLayer.cpp
+// 战斗兵种层实现，管理战斗单位的生成、移除和墓碑显示
+
+#include "BattleTroopLayer.h"
 #include "../Manager/AnimationManager.h"
 #include "../Util/GridMapUtils.h"
 
@@ -27,8 +30,6 @@ bool BattleTroopLayer::init() {
     return true;
 }
 
-// ========== 单位生成 ==========
-
 BattleUnitSprite* BattleTroopLayer::spawnUnit(const std::string& unitType, int gridX, int gridY) {
     // 边界检查
     if (gridX < 0 || gridX >= GRID_WIDTH || gridY < 0 || gridY >= GRID_HEIGHT) {
@@ -47,14 +48,13 @@ BattleUnitSprite* BattleTroopLayer::spawnUnit(const std::string& unitType, int g
     unit->teleportToGrid(gridX, gridY);
     unit->playIdleAnimation();
     
-    // 添加到层级
-    // 【修改】添加到父节点 (MapLayer) 以便与建筑进行统一 Z 序排序
+    // 添加到父节点以便与建筑统一Z序排序
     auto mapLayer = this->getParent();
     
-    // 计算初始 Z-Order
+    // 计算初始Z-Order
     int zOrder = GridMapUtils::calculateZOrder(gridX, gridY);
     
-    // 飞行单位（气球兵）额外加 1000 偏移，确保始终在地面单位之上
+    // 飞行单位（气球兵）额外加1000偏移，确保在地面单位之上
     if (unit->getUnitTypeID() == UnitTypeID::BALLOON) {
         zOrder += 1000;
     }
@@ -62,7 +62,7 @@ BattleUnitSprite* BattleTroopLayer::spawnUnit(const std::string& unitType, int g
     if (mapLayer) {
         mapLayer->addChild(unit, zOrder);
     } else {
-        // Fallback (防崩): 如果还没加到 MapLayer，就加到自己身上
+        // Fallback：如果还没加到MapLayer，就加到自己身上
         this->addChild(unit, zOrder); 
     }
     _units.push_back(unit);
@@ -93,15 +93,13 @@ void BattleTroopLayer::removeAllUnits() {
     CCLOG("BattleTroopLayer: Removed all units");
 }
 
-// ========== 单位移除 ==========
-
 void BattleTroopLayer::removeUnit(BattleUnitSprite* unit) {
     if (!unit) {
         CCLOG("BattleTroopLayer::removeUnit - ERROR: unit is nullptr!");
         return;
     }
     
-    // 【修复】在删除前保存兵种信息，避免访问野指针
+    // 在删除前保存兵种信息，避免访问野指针
     std::string unitType = unit->getUnitType();
     float posX = unit->getPositionX();
     float posY = unit->getPositionY();
@@ -144,16 +142,13 @@ void BattleTroopLayer::removeUnit(BattleUnitSprite* unit) {
     CCLOG("BattleTroopLayer::removeUnit - COMPLETE: Unit %s removed successfully", unitType.c_str());
 }
 
-
-// ========== 墓碑系统 ==========
-
 void BattleTroopLayer::spawnTombstone(const Vec2& position, UnitTypeID unitType) {
     CCLOG("===== TOMBSTONE DEBUG START =====");
     CCLOG("BattleTroopLayer::spawnTombstone - Creating tombstone at (%.1f, %.1f)", position.x, position.y);
 
     Sprite* tombstone = nullptr;
 
-    // 根据兵种类型加载对应的墓碑图片
+    // 根据兵种类型加载墓碑图片
     if (unitType == UnitTypeID::BALLOON) {
         // 气球兵使用独立墓碑图片
         tombstone = Sprite::create("Animation/troop/balloon/balloon_death.png");
@@ -208,7 +203,7 @@ void BattleTroopLayer::spawnTombstone(const Vec2& position, UnitTypeID unitType)
     }
     tombstone->setScale(scale);
 
-    // ✅ 强制设置为白色（防止继承兵种的红色）
+    // 强制设置为白色（防止继承兵种的红色）
     tombstone->setColor(Color3B::WHITE);
     tombstone->setOpacity(255);
 
@@ -227,11 +222,11 @@ void BattleTroopLayer::spawnTombstone(const Vec2& position, UnitTypeID unitType)
         this->addChild(tombstone, 100);
     }
 
-    // ✅ 墓碑自动消失：停留 3 秒后淡出
+    // 墓碑自动消失：停留3秒后淡出
     auto sequence = Sequence::create(
-        DelayTime::create(3.0f),         // 停留 3 秒
-        FadeOut::create(1.0f),            // 用 1 秒淡出
-        RemoveSelf::create(),             // 自动移除
+        DelayTime::create(3.0f),
+        FadeOut::create(1.0f),
+        RemoveSelf::create(),
         nullptr
     );
     tombstone->runAction(sequence);

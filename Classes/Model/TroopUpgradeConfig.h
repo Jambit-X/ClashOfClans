@@ -1,4 +1,7 @@
-﻿#pragma once
+﻿// TroopUpgradeConfig.h
+// 兵种升级配置管理器，提供各等级的属性和升级数据
+
+#pragma once
 #ifndef __TROOP_UPGRADE_CONFIG_H__
 #define __TROOP_UPGRADE_CONFIG_H__
 
@@ -7,7 +10,7 @@
 #include <map>
 #include <vector>
 
-// 单个等级的兵种数据
+// 兵种等级数据
 struct TroopLevelData {
     int level;              // 等级
     int hitpoints;          // 生命值
@@ -25,10 +28,7 @@ struct TroopUpgradeData {
     std::vector<TroopLevelData> levels;  // levels[0] = 1级数据
 };
 
-/**
- * @brief 兵种升级配置管理器（单例）
- * 提供兵种各等级的属性和升级费用查询
- */
+// 兵种升级配置管理器（单例）
 class TroopUpgradeConfig {
 public:
     static TroopUpgradeConfig* getInstance();
@@ -37,10 +37,10 @@ public:
     // 获取兵种指定等级的数据
     const TroopLevelData* getLevelData(int troopId, int level) const;
 
-    // 获取兵种升级费用（从 currentLevel 升到 currentLevel+1）
+    // 获取兵种升级费用（从currentLevel升到currentLevel+1）
     int getUpgradeCost(int troopId, int currentLevel) const;
 
-    // 获取兵种升级时间（从 currentLevel 升到 currentLevel+1）
+    // 获取兵种升级时间（从currentLevel升到currentLevel+1）
     int getUpgradeTime(int troopId, int currentLevel) const;
 
     // 获取升级所需的实验室等级
@@ -52,7 +52,7 @@ public:
     // 检查兵种是否可以升级（基于实验室等级）
     bool canUpgradeWithLabLevel(int troopId, int currentTroopLevel, int labLevel) const;
 
-    // 获取属性增量（用于UI显示 "原属性 + 增量"）
+    // 获取属性增量（用于UI显示）
     int getHpIncrease(int troopId, int currentLevel) const;
     int getDpsIncrease(int troopId, int currentLevel) const;
 

@@ -1,4 +1,7 @@
-﻿#pragma once
+﻿// HUDLayer.h
+// HUD层声明，显示主界面的UI元素和建筑操作菜单
+
+#pragma once
 #include "cocos2d.h"
 #include "ui/CocosGUI.h"
 #include "UI/PlacementConfirmUI.h"
@@ -24,7 +27,7 @@ public:
     void hidePlacementUI();
     void updatePlacementUIState(bool canPlace);
 
-    // ========== 连续建造模式 ==========
+    // 连续建造模式
     void enterContinuousBuildMode(int buildingType);
     void exitContinuousBuildMode(const std::string& reason);
     bool isInContinuousBuildMode() const { return _isContinuousBuildMode; }
@@ -50,7 +53,7 @@ private:
     // 加速按钮回调
     void onSpeedupClicked(int buildingId);
 
-    // ========== 新增：场景切换按钮回调 ==========
+    // 场景切换按钮回调
     void onThemeSwitchClicked();
 
     cocos2d::Label* _goldLabel;
@@ -68,7 +71,7 @@ private:
     cocos2d::ui::Button* _btnTrain;
     cocos2d::ui::Button* _btnSpeedup;
     cocos2d::ui::Button* _btnResearch;
-    cocos2d::ui::Button* _btnThemeSwitch;  // ✅ 新增：切换场景按钮
+    cocos2d::ui::Button* _btnThemeSwitch;  // 切换场景按钮
 
     int _currentSelectedBuildingId = -1;
 
@@ -77,8 +80,7 @@ private:
 
     cocos2d::EventListenerTouchOneByOne* _placementTouchListener;
 
-    // 复用的提示Label
-    cocos2d::Label* _tipsLabel;
+    cocos2d::Label* _tipsLabel;  // 复用的提示Label
 
     // 连续建造的辅助方法
     void createNextWall();

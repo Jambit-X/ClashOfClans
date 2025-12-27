@@ -1,4 +1,6 @@
-﻿// 【必须加在第一行】强制使用 UTF-8 编码
+﻿// RandomBattleMapGenerator.cpp
+// 随机战斗地图生成器实现，根据难度生成合理的敌方村庄布局
+
 #pragma execution_character_set("utf-8")
 
 #include "RandomBattleMapGenerator.h"
@@ -13,7 +15,7 @@ USING_NS_CC;
 // 静态成员初始化
 int RandomBattleMapGenerator::nextBuildingId = 10000;
 
-// C++11 需要静态 constexpr 成员的类外定义（ODR-used 时）
+// C++11静态constexpr成员的类外定义（ODR-used要求）
 constexpr int RandomBattleMapGenerator::TOWNHALL;
 constexpr int RandomBattleMapGenerator::CANNON;
 constexpr int RandomBattleMapGenerator::ARCHER_TOWER;
@@ -29,12 +31,16 @@ constexpr int RandomBattleMapGenerator::MAP_MAX;
 constexpr int RandomBattleMapGenerator::CENTER_X;
 constexpr int RandomBattleMapGenerator::CENTER_Y;
 
+// ===================================================================================
+// 难度配置
+// ===================================================================================
+
 RandomBattleMapGenerator::DifficultyConfig 
 RandomBattleMapGenerator::getDifficultyConfig(int difficulty) {
     DifficultyConfig config;
     
     switch (difficulty) {
-        case 1: // 简单
+        case 1: // 简单难度：低级建筑，少量防御
             config.townHallLevel = 1;
             config.minDefense = 1;
             config.maxDefense = 2;
@@ -48,7 +54,7 @@ RandomBattleMapGenerator::getDifficultyConfig(int difficulty) {
             config.elixirReward = 500;
             break;
             
-        case 2: // 中等
+        case 2: // 中等难度：2级大本营，适量防御和资源
             config.townHallLevel = 2;
             config.minDefense = 2;
             config.maxDefense = 4;
@@ -62,7 +68,7 @@ RandomBattleMapGenerator::getDifficultyConfig(int difficulty) {
             config.elixirReward = 1000;
             break;
             
-        case 3: // 困难
+        case 3: // 困难难度：3级大本营，大量防御和陷阱
         default:
             config.townHallLevel = 3;
             config.minDefense = 4;
@@ -81,13 +87,17 @@ RandomBattleMapGenerator::getDifficultyConfig(int difficulty) {
     return config;
 }
 
+// ===================================================================================
+// 辅助函数
+// ===================================================================================
+
 void RandomBattleMapGenerator::getBuildingSize(int type, int& outW, int& outH) {
     auto config = BuildingConfig::getInstance()->getConfig(type);
     if (config) {
         outW = config->gridWidth;
         outH = config->gridHeight;
     } else {
-        // 默认尺寸
+        // 默认尺寸（配置缺失时的备用值）
         outW = 3;
         outH = 3;
     }
@@ -95,17 +105,17 @@ void RandomBattleMapGenerator::getBuildingSize(int type, int& outW, int& outH) {
 
 bool RandomBattleMapGenerator::isPositionValid(int x, int y, int w, int h,
                                                 const std::vector<BuildingInstance>& existing) {
-    // 边界检查
+    // 检查是否超出地图边界
     if (x < MAP_MIN || y < MAP_MIN || x + w > MAP_MAX || y + h > MAP_MAX) {
         return false;
     }
     
-    // 碰撞检测
+    // 检查是否与已有建筑重叠
     for (const auto& building : existing) {
         int bw, bh;
         getBuildingSize(building.type, bw, bh);
         
-        // 检查矩形是否重叠
+        // AABB碰撞检测
         bool overlapX = (x < building.gridX + bw) && (x + w > building.gridX);
         bool overlapY = (y < building.gridY + bh) && (y + h > building.gridY);
         
@@ -122,7 +132,7 @@ bool RandomBattleMapGenerator::findValidPosition(int gridW, int gridH,
                                                   const std::vector<BuildingInstance>& existing,
                                                   int& outX, int& outY,
                                                   std::mt19937& rng) {
-    // 尝试100次随机位置
+    // 在指定区域内随机尝试100次
     std::uniform_int_distribution<int> distX(minX, maxX - gridW);
     std::uniform_int_distribution<int> distY(minY, maxY - gridH);
     
@@ -140,6 +150,10 @@ bool RandomBattleMapGenerator::findValidPosition(int gridW, int gridH,
     return false;
 }
 
+// ===================================================================================
+// 建筑放置：大本营
+// ===================================================================================
+
 void RandomBattleMapGenerator::placeTownHall(BattleMapData& map, int level) {
     BuildingInstance th;
     th.id = nextBuildingId++;
@@ -150,21 +164,28 @@ void RandomBattleMapGenerator::placeTownHall(BattleMapData& map, int level) {
     th.state = BuildingInstance::State::BUILT;
     th.finishTime = 0;
     th.isInitialConstruction = false;
-    th.currentHP = 1500;  // 默认满血
+    th.currentHP = 1500;
     th.isDestroyed = false;
     
     map.buildings.push_back(th);
 }
 
+// ===================================================================================
+// 建筑放置：防御建筑
+// ===================================================================================
+
 void RandomBattleMapGenerator::placeDefenseBuildings(BattleMapData& map, int count, int townHallLevel, int innerRadius) {
+    // 使用当前时间作为随机种子
     auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
     std::mt19937 rng(static_cast<unsigned int>(seed));
     
     auto requirements = BuildingRequirements::getInstance();
     auto buildingConfig = BuildingConfig::getInstance();
     
+    // 收集可用的防御建筑类型及其数量上限
     std::vector<std::pair<int, int>> availableDefenses;
     
+    // 检查加农炮是否可用
     if (requirements->getMinTHLevel(CANNON) <= townHallLevel && buildingConfig->getConfig(CANNON)) {
         int maxCount = requirements->getMaxCount(CANNON, townHallLevel);
         if (maxCount > 0) {
@@ -172,6 +193,7 @@ void RandomBattleMapGenerator::placeDefenseBuildings(BattleMapData& map, int cou
         }
     }
     
+    // 检查箭塔是否可用
     if (requirements->getMinTHLevel(ARCHER_TOWER) <= townHallLevel && buildingConfig->getConfig(ARCHER_TOWER)) {
         int maxCount = requirements->getMaxCount(ARCHER_TOWER, townHallLevel);
         if (maxCount > 0) {
@@ -184,16 +206,19 @@ void RandomBattleMapGenerator::placeDefenseBuildings(BattleMapData& map, int cou
         return;
     }
     
+    // 跟踪每种建筑的已放置数量
     std::map<int, int> placedCount;
     for (const auto& def : availableDefenses) {
         placedCount[def.first] = 0;
     }
     
+    // 定义内圈区域（城墙内部）
     int innerMinX = CENTER_X - innerRadius + 1;
     int innerMaxX = CENTER_X + innerRadius - 1;
     int innerMinY = CENTER_Y - innerRadius + 1;
     int innerMaxY = CENTER_Y + innerRadius - 1;
     
+    // 定义外圈区域（城墙外围）
     int outerMinX = CENTER_X - 10;
     int outerMaxX = CENTER_X + 10;
     int outerMinY = CENTER_Y - 10;
@@ -203,14 +228,17 @@ void RandomBattleMapGenerator::placeDefenseBuildings(BattleMapData& map, int cou
     int attempts = 0;
     const int maxAttempts = count * 5;
     
+    // 尝试放置防御建筑
     while (placed < count && attempts < maxAttempts) {
         attempts++;
         
+        // 随机选择一种防御建筑类型
         std::uniform_int_distribution<int> typeDist(0, static_cast<int>(availableDefenses.size()) - 1);
         int idx = typeDist(rng);
         int type = availableDefenses[idx].first;
         int maxCount = availableDefenses[idx].second;
         
+        // 检查该类型是否已达上限
         if (placedCount[type] >= maxCount) {
             continue;
         }
@@ -221,6 +249,7 @@ void RandomBattleMapGenerator::placeDefenseBuildings(BattleMapData& map, int cou
         int x, y;
         bool found = false;
         
+        // 80%概率优先尝试放在城墙内部
         std::bernoulli_distribution innerProb(0.8);
         bool tryInner = innerProb(rng);
         
@@ -230,6 +259,7 @@ void RandomBattleMapGenerator::placeDefenseBuildings(BattleMapData& map, int cou
              }
         }
         
+        // 如果内圈失败，尝试外圈
         if (!found) {
             if (findValidPosition(w, h, outerMinX, outerMaxX, outerMinY, outerMaxY, map.buildings, x, y, rng)) {
                 found = true;
@@ -240,6 +270,7 @@ void RandomBattleMapGenerator::placeDefenseBuildings(BattleMapData& map, int cou
             BuildingInstance building;
             building.id = nextBuildingId++;
             building.type = type;
+            // 随机等级（1到大本营等级之间）
             std::uniform_int_distribution<int> levelDist(1, townHallLevel);
             building.level = levelDist(rng);
             building.gridX = x;
@@ -259,7 +290,12 @@ void RandomBattleMapGenerator::placeDefenseBuildings(BattleMapData& map, int cou
     }
 }
 
+// ===================================================================================
+// 建筑放置：资源建筑
+// ===================================================================================
+
 void RandomBattleMapGenerator::placeResourceBuildings(BattleMapData& map, int count, int townHallLevel) {
+    // 使用不同的种子避免与防御建筑重复
     auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
     std::mt19937 rng(static_cast<unsigned int>(seed + 1));
     
@@ -269,8 +305,10 @@ void RandomBattleMapGenerator::placeResourceBuildings(BattleMapData& map, int co
     std::map<int, int> maxCounts;
     std::map<int, int> placedCounts;
     
+    // 资源建筑类型列表
     std::vector<int> resourceTypes = { GOLD_MINE, ELIXIR_COLLECTOR, GOLD_STORAGE, ELIXIR_STORAGE };
     
+    // 检查每种资源建筑是否可用
     for (int type : resourceTypes) {
         if (requirements->getMinTHLevel(type) <= townHallLevel && buildingConfig->getConfig(type)) {
             maxCounts[type] = requirements->getMaxCount(type, townHallLevel);
@@ -278,11 +316,13 @@ void RandomBattleMapGenerator::placeResourceBuildings(BattleMapData& map, int co
         }
     }
     
+    // 资源建筑放置在整个地图区域
     int minX = MAP_MIN;
     int maxX = MAP_MAX - 3;
     int minY = MAP_MIN;
     int maxY = MAP_MAX - 3;
     
+    // 优先放置必需的存储建筑（金库和圣水瓶）
     std::vector<int> requiredTypes = { GOLD_STORAGE, ELIXIR_STORAGE };
     for (int type : requiredTypes) {
         if (maxCounts.find(type) == maxCounts.end() || maxCounts[type] <= 0) {
@@ -314,6 +354,7 @@ void RandomBattleMapGenerator::placeResourceBuildings(BattleMapData& map, int co
         }
     }
     
+    // 获取当前仍可放置的资源建筑类型
     auto getAvailableTypes = [&]() {
         std::vector<int> available;
         for (const auto& pair : maxCounts) {
@@ -324,10 +365,12 @@ void RandomBattleMapGenerator::placeResourceBuildings(BattleMapData& map, int co
         return available;
     };
     
+    // 已放置2个必需建筑
     int placed = 2;
     int attempts = 0;
     const int maxAttempts = count * 3;
     
+    // 随机放置剩余的资源建筑
     while (placed < count && attempts < maxAttempts) {
         attempts++;
         
@@ -336,6 +379,7 @@ void RandomBattleMapGenerator::placeResourceBuildings(BattleMapData& map, int co
             break;
         }
         
+        // 随机选择一种资源建筑类型
         std::uniform_int_distribution<int> typeDist(0, static_cast<int>(availableTypes.size()) - 1);
         int type = availableTypes[typeDist(rng)];
         
@@ -366,29 +410,31 @@ void RandomBattleMapGenerator::placeResourceBuildings(BattleMapData& map, int co
     }
 }
 
+// ===================================================================================
+// 建筑放置：城墙
+// ===================================================================================
+
 int RandomBattleMapGenerator::placeWalls(BattleMapData& map, int count, int townHallLevel) {
     auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
     std::mt19937 rng(static_cast<unsigned int>(seed + 2));
     
     auto requirements = BuildingRequirements::getInstance();
     
-    // 检查城墙是否解锁
+    // 检查城墙是否已解锁
     if (requirements->getMinTHLevel(WALL) > townHallLevel) {
         CCLOG("RandomBattleMapGenerator: Walls not unlocked for TH level %d", townHallLevel);
         return 0;
     }
     
-    // 获取城墙数量上限（真实数据）
+    // 获取城墙数量上限
     int maxWalls = requirements->getMaxCount(WALL, townHallLevel);
     
-    // 实际可用数量：不能超过count（难度限制）也不能超过游戏上限
+    // 实际可用数量：取难度限制和游戏上限的较小值
     int availableWalls = (std::min)(count, maxWalls);
     
-    // 计算围墙半径逻辑
-    // 最小半径：3 (7x7的框，中心5x5，刚好放下大本营4x4和一点空隙)
-    // 最大半径：根据周长估算，Perimeter ≈ 8 * R
-    // R_max = floor((N - 4) / 8) -> 甚至可以简单估算 N / 8
-    
+    // 计算围墙半径
+    // 最小半径：3（7x7框架，中心5x5可放下4x4大本营）
+    // 最大半径：根据周长估算 Perimeter ≈ 8*R，因此 R_max ≈ availableWalls/8
     int minRadius = 3;
     int maxRadius = availableWalls / 8;
     
@@ -398,28 +444,26 @@ int RandomBattleMapGenerator::placeWalls(BattleMapData& map, int count, int town
     
     if (maxRadius < minRadius) maxRadius = minRadius;
     
-    // 随机选择一个半径 (核心逻辑：不一定选最大的)
-    // 使用 geometric distribution 或简单 uniform，这里用 uniform 增加多样性
+    // 随机选择一个半径，增加布局多样性
     std::uniform_int_distribution<int> radiusDist(minRadius, maxRadius);
     int actualRadius = radiusDist(rng);
     
-    // 计算这个半径需要的城墙数量
-    // 矩形周长：(2*R + 1) * 4 - 4 = 8*R
+    // 计算该半径需要的城墙数量（矩形周长：8*R）
     int wallsNeeded = 8 * actualRadius;
     
-    // 如果实际墙不够（理论上上面计算过maxRadius应该够，但防止意外），回退
+    // 如果城墙不够，回退到较小半径
     if (wallsNeeded > availableWalls) {
         actualRadius = availableWalls / 8;
-        if (actualRadius < minRadius) actualRadius = minRadius; // 强制最小
+        if (actualRadius < minRadius) actualRadius = minRadius;
     }
     
     CCLOG("RandomBattleMapGenerator: Wall Planning - Available: %d, Radius: %d (Range %d-%d)", 
           availableWalls, actualRadius, minRadius, maxRadius);
 
-    // 建筑等级
+    // 随机城墙等级
     std::uniform_int_distribution<int> levelDist(1, townHallLevel);
     
-    // 构建围墙 (中心点 CENTER_X, CENTER_Y)
+    // 计算围墙的边界坐标
     int left = CENTER_X - actualRadius;
     int right = CENTER_X + actualRadius;
     int bottom = CENTER_Y - actualRadius;
@@ -427,9 +471,9 @@ int RandomBattleMapGenerator::placeWalls(BattleMapData& map, int count, int town
     
     int placed = 0;
     
-    // Lambda: 放置单块墙
+    // 放置单块城墙的Lambda函数
     auto placeWallBlock = [&](int x, int y) {
-        if (placed >= availableWalls) return; // 虽然按计算应该够，但做个保护
+        if (placed >= availableWalls) return;
         if (isPositionValid(x, y, 1, 1, map.buildings)) {
             BuildingInstance wall;
             wall.id = nextBuildingId++;
@@ -448,30 +492,27 @@ int RandomBattleMapGenerator::placeWalls(BattleMapData& map, int count, int town
         }
     };
     
-    // 生成闭合矩形
-    // 上边 (Left -> Right)
+    // 生成闭合矩形围墙
+    // 顺序：上边 → 右边 → 下边 → 左边
     for (int x = left; x <= right; ++x) placeWallBlock(x, top);
-    // 右边 (Top-1 -> Bottom+1)
     for (int y = top - 1; y > bottom; --y) placeWallBlock(right, y);
-    // 下边 (Right -> Left)
     for (int x = right; x >= left; --x) placeWallBlock(x, bottom);
-    // 左边 (Bottom+1 -> Top-1)
     for (int y = bottom + 1; y < top; ++y) placeWallBlock(left, y);
     
     CCLOG("RandomBattleMapGenerator: Placed %d walls forming radius %d ring", placed, actualRadius);
     
-    // 如果还有剩余很多的墙，且足够围第二圈（间隔1格，半径+2）
-    // 或者我们直接把剩余的墙作为“外围干扰”随机放
+    // 如果有大量剩余城墙，可以考虑放置外围城墙（当前未实现）
     int remaining = availableWalls - placed;
-    if (remaining > 10) { // 随便定的阈值
-        int outerRadius = actualRadius + 2;
-        // 尝试在外围放一些
-        // ... 这里简单处理，为了增加随机性，不在外围围死，而是随机放几断
-        // 简单起见，这里就不处理了，或者只放几个
+    if (remaining > 10) {
+        // 预留扩展：可在外围随机放置额外城墙增加难度
     }
     
     return actualRadius;
 }
+
+// ===================================================================================
+// 建筑放置：陷阱
+// ===================================================================================
 
 void RandomBattleMapGenerator::placeTraps(BattleMapData& map, int count, int townHallLevel) {
     auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
@@ -480,15 +521,16 @@ void RandomBattleMapGenerator::placeTraps(BattleMapData& map, int count, int tow
     auto requirements = BuildingRequirements::getInstance();
     auto buildingConfig = BuildingConfig::getInstance();
     
-    // 根据大本营等级获取可用的陷阱类型及其最大数量（只包含有图片资源的）
-    std::vector<std::pair<int, int>> availableTraps; // <type, maxCount>
+    // 收集可用的陷阱类型及其数量上限
+    std::vector<std::pair<int, int>> availableTraps;
     
-    // 炸弹 401
+    // 检查炸弹是否可用
     if (requirements->getMinTHLevel(BOMB) <= townHallLevel && buildingConfig->getConfig(BOMB)) {
         int maxCount = requirements->getMaxCount(BOMB, townHallLevel);
         if (maxCount > 0) availableTraps.push_back({BOMB, maxCount});
     }
-    // 巨型炸弹 404
+    
+    // 检查巨型炸弹是否可用
     if (requirements->getMinTHLevel(GIANT_BOMB) <= townHallLevel && buildingConfig->getConfig(GIANT_BOMB)) {
         int maxCount = requirements->getMaxCount(GIANT_BOMB, townHallLevel);
         if (maxCount > 0) availableTraps.push_back({GIANT_BOMB, maxCount});
@@ -499,13 +541,13 @@ void RandomBattleMapGenerator::placeTraps(BattleMapData& map, int count, int tow
         return;
     }
     
-    // 跟踪每种陷阱已放置数量
+    // 跟踪每种陷阱的已放置数量
     std::map<int, int> placedCount;
     for (const auto& trap : availableTraps) {
         placedCount[trap.first] = 0;
     }
     
-    // 陷阱放在城墙附近
+    // 陷阱放置在城墙附近区域
     int minX = CENTER_X - 6;
     int maxX = CENTER_X + 6;
     int minY = CENTER_Y - 6;
@@ -524,7 +566,7 @@ void RandomBattleMapGenerator::placeTraps(BattleMapData& map, int count, int tow
         int type = availableTraps[idx].first;
         int maxCount = availableTraps[idx].second;
         
-        // 检查数量限制
+        // 检查该类型是否已达数量上限
         if (placedCount[type] >= maxCount) {
             continue;
         }
@@ -556,11 +598,15 @@ void RandomBattleMapGenerator::placeTraps(BattleMapData& map, int count, int tow
     CCLOG("RandomBattleMapGenerator: Placed %d traps", placed);
 }
 
+// ===================================================================================
+// 主生成函数
+// ===================================================================================
+
 BattleMapData RandomBattleMapGenerator::generate(int difficulty) {
-    // 重置建筑ID
+    // 重置建筑ID计数器
     nextBuildingId = 10000;
     
-    // 如果difficulty为0，随机选择1-3
+    // 如果难度无效，随机选择1-3
     auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
     std::mt19937 rng(static_cast<unsigned int>(seed));
     
@@ -578,33 +624,32 @@ BattleMapData RandomBattleMapGenerator::generate(int difficulty) {
     map.goldReward = config.goldReward;
     map.elixirReward = config.elixirReward;
     
-    // 1. 放置大本营（必须）
+    // 生成步骤（顺序很重要）
+    
+    // 步骤1：放置大本营（中心位置）
     placeTownHall(map, config.townHallLevel);
     
-    // 2. 放置城墙（优先放置，确保形成闭环，并获取围墙半径）
-    // 使用配置中的 min/max walls 或者直接使用 真实上限 (这里placeWalls内部会处理)
-    // 为了增加随机性，我们传入一个 基于难度的 "建议" 数量
+    // 步骤2：生成城墙（优先放置，返回围墙半径供防御建筑使用）
     std::uniform_int_distribution<int> wallDist(config.minWalls, config.maxWalls);
     int wallLimit = wallDist(rng);
-    // 注意：我们将 placeWalls 改为了返回 围墙半径
     int wallRadius = placeWalls(map, wallLimit, config.townHallLevel);
     
-    // 3. 放置防御建筑（优先尝试放在 wallRadius 内部）
+    // 步骤3：放置防御建筑（优先放在城墙内部）
     std::uniform_int_distribution<int> defDist(config.minDefense, config.maxDefense);
     int defenseCount = defDist(rng);
     placeDefenseBuildings(map, defenseCount, config.townHallLevel, wallRadius);
     
-    // 4. 放置资源建筑（包含必须的储金罐和圣水瓶）
+    // 步骤4：放置资源建筑（包含必需的金库和圣水瓶）
     std::uniform_int_distribution<int> resDist(config.minResource, config.maxResource);
     int resourceCount = resDist(rng);
-    placeResourceBuildings(map, resourceCount + 2, config.townHallLevel);  // +2 因为必须的
+    placeResourceBuildings(map, resourceCount + 2, config.townHallLevel);
     
-    // 5. 放置陷阱
+    // 步骤5：放置陷阱
     std::uniform_int_distribution<int> trapDist(config.minTraps, config.maxTraps);
     int trapCount = trapDist(rng);
     placeTraps(map, trapCount, config.townHallLevel);
     
-    // 6. 计算可掠夺资源
+    // 步骤6：计算可掠夺资源
     calculateLootableResources(map);
     
     CCLOG("RandomBattleMapGenerator: Generated map with %zu buildings, lootable gold=%d, lootable elixir=%d", 
@@ -612,6 +657,10 @@ BattleMapData RandomBattleMapGenerator::generate(int difficulty) {
     
     return map;
 }
+
+// ===================================================================================
+// 资源计算
+// ===================================================================================
 
 void RandomBattleMapGenerator::calculateLootableResources(BattleMapData& map) {
     auto seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
@@ -624,7 +673,7 @@ void RandomBattleMapGenerator::calculateLootableResources(BattleMapData& map) {
     
     auto buildingConfig = BuildingConfig::getInstance();
     
-    // 统计储存建筑数量和总容量
+    // 统计所有存储建筑的数量和总容量
     for (const auto& building : map.buildings) {
         if (building.type == GOLD_STORAGE) {
             goldStorageCount++;
@@ -638,11 +687,11 @@ void RandomBattleMapGenerator::calculateLootableResources(BattleMapData& map) {
         }
     }
     
-    // 记录储存建筑数量
+    // 记录存储建筑数量（用于战斗结算）
     map.goldStorageCount = goldStorageCount;
     map.elixirStorageCount = elixirStorageCount;
     
-    // 随机生成可掠夺资源（0 到 总容量之间）
+    // 随机生成可掠夺资源（总容量的25%-100%之间）
     if (totalGoldCapacity > 0) {
         std::uniform_int_distribution<int> goldDist(totalGoldCapacity / 4, totalGoldCapacity);
         map.lootableGold = goldDist(rng);

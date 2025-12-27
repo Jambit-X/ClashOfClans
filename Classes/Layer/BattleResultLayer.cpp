@@ -1,4 +1,7 @@
-﻿#pragma execution_character_set("utf-8")
+﻿// BattleResultLayer.cpp
+// 战斗结算层实现，显示战斗结果、战利品和兵种消耗
+
+#pragma execution_character_set("utf-8")
 #include "BattleResultLayer.h"
 #include "../Scene/BattleScene.h"
 #include "../Model/TroopConfig.h"
@@ -48,17 +51,17 @@ bool BattleResultLayer::initWithData(
 
     auto visibleSize = Director::getInstance()->getVisibleSize();
 
-    // ✅ 新增：播放结算音乐（根据星数）
+    // 播放结算音乐（根据星数）
     playResultMusic();
 
-    // 标题 - 黄色大字体
+    // 标题
     auto titleLabel = Label::createWithTTF("战斗结束", FONT_PATH, 52);
     titleLabel->setPosition(visibleSize.width / 2, visibleSize.height / 2 + 180);
     titleLabel->setColor(Color3B::YELLOW);
     titleLabel->enableOutline(Color4B::BLACK, 3);
     this->addChild(titleLabel);
 
-    // 【改造】战利品信息 - 使用图标+数值格式
+    // 战利品信息 - 图标+数值格式
     float centerX = visibleSize.width / 2;
     float lootY = visibleSize.height / 2 + 110;
     
@@ -81,7 +84,7 @@ bool BattleResultLayer::initWithData(
     auto goldLabel = Label::createWithTTF(StringUtils::format("%d", _lootedGold), "fonts/Marker Felt.ttf", 28);
     goldLabel->setAnchorPoint(Vec2(0, 0.5f));
     goldLabel->setPosition(centerX - 5, lootY);
-    goldLabel->setColor(Color3B(255, 215, 0));  // 金色
+    goldLabel->setColor(Color3B(255, 215, 0));
     goldLabel->enableOutline(Color4B::BLACK, 2);
     this->addChild(goldLabel);
     
@@ -97,14 +100,14 @@ bool BattleResultLayer::initWithData(
     auto elixirLabel = Label::createWithTTF(StringUtils::format("%d", _lootedElixir), "fonts/Marker Felt.ttf", 28);
     elixirLabel->setAnchorPoint(Vec2(0, 0.5f));
     elixirLabel->setPosition(centerX + 145, lootY);
-    elixirLabel->setColor(Color3B(255, 0, 255));  // 紫红色
+    elixirLabel->setColor(Color3B(255, 0, 255));
     elixirLabel->enableOutline(Color4B::BLACK, 2);
     this->addChild(elixirLabel);
 
-    // 【新增】创建消耗兵种卡片
+    // 创建消耗兵种卡片
     createTroopCards();
 
-    // [回营] 按钮
+    // [回营]按钮
     auto btnReturn = Button::create("UI/battle/battle-prepare/back.png");
     btnReturn->setScale(0.4f);
     btnReturn->setPosition(Vec2(visibleSize.width / 2, visibleSize.height / 2 - 160));
@@ -123,7 +126,6 @@ bool BattleResultLayer::initWithData(
     return true;
 }
 
-// ✅ 新增：播放结算音乐
 void BattleResultLayer::playResultMusic() {
     auto audioManager = AudioManager::getInstance();
     
@@ -161,7 +163,6 @@ void BattleResultLayer::playResultMusic() {
     CCLOG("========================================");
 }
 
-// ✅ 新增：退出时停止音乐
 void BattleResultLayer::onExit() {
     CCLOG("BattleResultLayer: Exiting, stopping result music");
     
@@ -196,15 +197,15 @@ void BattleResultLayer::createTroopCards() {
         return;
     }
     
-    // "消耗：" 标签 - 更大更醒目
+    // "消耗："标签
     auto consumeLabel = Label::createWithTTF("消耗：", FONT_PATH, 36);
     consumeLabel->setAnchorPoint(Vec2(0.5f, 0.5f));
     consumeLabel->setPosition(visibleSize.width / 2, visibleSize.height / 2 + 40);
-    consumeLabel->setColor(Color3B(255, 150, 50)); // 橙色
+    consumeLabel->setColor(Color3B(255, 150, 50));
     consumeLabel->enableOutline(Color4B::BLACK, 3);
     this->addChild(consumeLabel);
     
-    // 创建卡片容器 - 在消耗标签下方，距离拉开
+    // 创建卡片容器
     auto cardContainer = Node::create();
     cardContainer->setPosition(visibleSize.width / 2, visibleSize.height / 2 - 50);
     this->addChild(cardContainer);
@@ -234,7 +235,7 @@ void BattleResultLayer::createTroopCards() {
             iconSprite->setPosition(startX, 0);
             cardContainer->addChild(iconSprite);
             
-            // 数量标签 - 卡片上方，距离拉开，字体更大
+            // 数量标签 - 卡片上方
             auto countLabel = Label::createWithTTF(
                 StringUtils::format("x%d", usedCount), FONT_PATH, 32);
             countLabel->setPosition(
@@ -255,7 +256,7 @@ void BattleResultLayer::createTroopCards() {
                 StringUtils::format("Lv.%d", level), FONT_PATH, 24);
             levelLabel->setAnchorPoint(Vec2(0, 0));
             levelLabel->setPosition(5, 5);
-            levelLabel->setColor(Color3B(255, 215, 0)); // 金色
+            levelLabel->setColor(Color3B(255, 215, 0));
             levelLabel->enableOutline(Color4B::BLACK, 3);
             iconSprite->addChild(levelLabel);
             

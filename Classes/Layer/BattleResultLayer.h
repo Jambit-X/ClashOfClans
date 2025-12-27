@@ -1,4 +1,7 @@
-﻿#pragma once
+﻿// BattleResultLayer.h
+// 战斗结算层声明，显示战斗结果和资源掠夺信息
+
+#pragma once
 #ifndef __BATTLE_RESULT_LAYER_H__
 #define __BATTLE_RESULT_LAYER_H__
 
@@ -7,7 +10,7 @@
 
 class BattleResultLayer : public cocos2d::LayerColor {
 public:
-    // 带消耗数据和掠夺资源的创建方法
+    // 创建结算层（带消耗数据和掠夺资源）
     static BattleResultLayer* createWithData(
         const std::map<int, int>& usedTroops,
         const std::map<int, int>& troopLevels,
@@ -20,7 +23,7 @@ public:
                       int lootedGold,
                       int lootedElixir);
     
-    // ✅ 新增：退出时清理音乐
+    // 退出时清理音乐
     virtual void onExit() override;
     
     CREATE_FUNC(BattleResultLayer);
@@ -31,12 +34,9 @@ private:
     int _lootedGold = 0;
     int _lootedElixir = 0;
     
-    // ✅ 新增：音乐ID
-    int _resultMusicID = -1;
+    int _resultMusicID = -1;  // 音乐ID
     
     void createTroopCards();
-    
-    // ✅ 新增：播放结算音乐
     void playResultMusic();
 };
 

@@ -1,4 +1,7 @@
-﻿#pragma execution_character_set("utf-8")
+﻿// TroopUpgradeConfig.cpp
+// 兵种升级配置管理器实现，初始化各兵种的等级数据
+
+#pragma execution_character_set("utf-8")
 #include "TroopUpgradeConfig.h"
 
 TroopUpgradeConfig* TroopUpgradeConfig::_instance = nullptr;
@@ -28,8 +31,7 @@ TroopUpgradeConfig::~TroopUpgradeConfig() {
 void TroopUpgradeConfig::initConfigs() {
     _upgradeData.clear();
 
-    // ==================== 野蛮人 (1001) ====================
-    // 基础: HP=45, DPS=8, 费用1万起
+    // 野蛮人（基础: HP=45, DPS=8）
     {
         TroopUpgradeData data;
         data.troopId = 1001;
@@ -43,8 +45,7 @@ void TroopUpgradeConfig::initConfigs() {
         _upgradeData[1001] = data;
     }
 
-    // ==================== 弓箭手 (1002) ====================
-    // 基础: HP=20, DPS=7, 费用1.5万起
+    // 弓箭手（基础: HP=20, DPS=7）
     {
         TroopUpgradeData data;
         data.troopId = 1002;
@@ -58,8 +59,7 @@ void TroopUpgradeConfig::initConfigs() {
         _upgradeData[1002] = data;
     }
 
-    // ==================== 哥布林 (1003) ====================
-    // 基础: HP=25, DPS=11, 费用2万起
+    // 哥布林（基础: HP=25, DPS=11）
     {
         TroopUpgradeData data;
         data.troopId = 1003;
@@ -73,8 +73,7 @@ void TroopUpgradeConfig::initConfigs() {
         _upgradeData[1003] = data;
     }
 
-    // ==================== 巨人 (1004) ====================
-    // 基础: HP=300, DPS=11, 费用2.5万起
+    // 巨人（基础: HP=300, DPS=11）
     {
         TroopUpgradeData data;
         data.troopId = 1004;
@@ -88,8 +87,7 @@ void TroopUpgradeConfig::initConfigs() {
         _upgradeData[1004] = data;
     }
 
-    // ==================== 炸弹人 (1005) ====================
-    // 基础: HP=20, DPS=12, 费用3万起
+    // 炸弹人（基础: HP=20, DPS=12）
     {
         TroopUpgradeData data;
         data.troopId = 1005;
@@ -103,8 +101,7 @@ void TroopUpgradeConfig::initConfigs() {
         _upgradeData[1005] = data;
     }
 
-    // ==================== 气球兵 (1006) ====================
-    // 基础: HP=150, DPS=25, 费用3.5万起
+    // 气球兵（基础: HP=150, DPS=25）
     {
         TroopUpgradeData data;
         data.troopId = 1006;
@@ -152,12 +149,11 @@ int TroopUpgradeConfig::getUpgradeTime(int troopId, int currentLevel) const {
 }
 
 int TroopUpgradeConfig::getRequiredLabLevel(int troopId, int targetLevel) const {
-    // 配置中每一级存储的是"从该级升到下一级"所需的实验室等级
-    // 所以要升到targetLevel，需要查询(targetLevel-1)级的数据
+    // 要升到targetLevel，需要查询(targetLevel-1)级的数据
     int currentLevel = targetLevel - 1;
     const TroopLevelData* data = getLevelData(troopId, currentLevel);
     if (!data) {
-        return 999;  // 不可能达到
+        return 999;
     }
     return data->requiredLabLevel;
 }

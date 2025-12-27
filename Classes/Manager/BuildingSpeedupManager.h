@@ -1,4 +1,6 @@
-﻿// Classes/Manager/BuildingSpeedupManager.h
+﻿// BuildingSpeedupManager.h
+// 建筑加速管理器头文件，处理建筑加速逻辑
+
 #ifndef BUILDING_SPEEDUP_MANAGER_H
 #define BUILDING_SPEEDUP_MANAGER_H
 
@@ -10,7 +12,7 @@ public:
   static BuildingSpeedupManager* getInstance();
   static void destroyInstance();
 
-  // 检查是否可以加速（有宝石且建筑正在建造）
+  // 检查是否可以加速
   bool canSpeedup(int buildingId) const;
 
   // 执行加速（消耗1颗宝石，立即完成）

@@ -1,4 +1,6 @@
-﻿// Layer/ReplayListLayer.h
+﻿// ReplayListLayer.h
+// 回放列表层声明，显示所有战斗回放记录
+
 #ifndef __REPLAY_LIST_LAYER_H__
 #define __REPLAY_LIST_LAYER_H__
 
@@ -17,7 +19,7 @@ private:
     cocos2d::ui::ScrollView* _scrollView;
     cocos2d::Node* _contentNode;
 
-    // UI 创建方法
+    // UI创建方法
     void loadReplayList();
     void createReplayCard(const ReplayMetadata& replay, float yPosition);
 

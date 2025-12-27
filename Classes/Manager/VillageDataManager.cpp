@@ -1,4 +1,7 @@
-﻿#include "VillageDataManager.h"
+﻿// VillageDataManager.cpp
+// 村庄数据管理器，负责游戏核心数据的存储、读取和状态管理
+
+#include "VillageDataManager.h"
 #include "../Util/GridMapUtils.h"
 #include "../Model/BuildingConfig.h"
 #include "../Model/BuildingRequirements.h"
@@ -15,23 +18,26 @@ VillageDataManager* VillageDataManager::_instance = nullptr;
 VillageDataManager::VillageDataManager()
   : _nextBuildingId(1), _inBattleMode(false) {
 
+  // 初始化村庄地图网格占用状态
   _gridOccupancy.resize(GridMapUtils::GRID_WIDTH);
   for (auto& row : _gridOccupancy) {
     row.resize(GridMapUtils::GRID_HEIGHT, 0);
   }
   
-  // 初始化战斗地图网格占用
+  // 初始化战斗地图网格占用状态
   _battleGridOccupancy.resize(GridMapUtils::GRID_WIDTH);
   for (auto& row : _battleGridOccupancy) {
     row.resize(GridMapUtils::GRID_HEIGHT, 0);
   }
 
+  // 初始资源数量
   _data.gold = 100000;
   _data.elixir = 100000;
   _data.gem = 1000;
 
-  _currentThemeId = 1;  // 默认经典场景
-  _purchasedThemes.insert(1);  // 经典场景默认拥有
+  // 默认场景配置
+  _currentThemeId = 1;
+  _purchasedThemes.insert(1);
 
   CCLOG("VillageDataManager: Initialized");
 }
@@ -55,8 +61,6 @@ void VillageDataManager::destroyInstance() {
   }
 }
 
-// ========== 资源接口（只保留基础增减）==========
-
 int VillageDataManager::getGold() const {
   return _data.gold;
 }
@@ -72,10 +76,10 @@ void VillageDataManager::addGold(int amount) {
   int newAmount = _data.gold + amount;
 
   if (newAmount > maxCapacity) {
-    _data.gold = maxCapacity;  // 限制在上限
+    _data.gold = maxCapacity;
     CCLOG("VillageDataManager: Gold capacity reached! Max: %d", maxCapacity);
 
-    // 触发溢出事件，通知UI显示提示
+    // 触发金币溢出事件
     EventCustom event("EVENT_GOLD_OVERFLOW");
     Director::getInstance()->getEventDispatcher()->dispatchEvent(&event);
   } else {
@@ -92,10 +96,10 @@ void VillageDataManager::addElixir(int amount) {
   int newAmount = _data.elixir + amount;
 
   if (newAmount > maxCapacity) {
-    _data.elixir = maxCapacity;  // 限制在上限
+    _data.elixir = maxCapacity;
     CCLOG("VillageDataManager: Elixir capacity reached! Max: %d", maxCapacity);
 
-    // 触发溢出事件，通知UI显示提示
+    // 触发药水溢出事件
     EventCustom event("EVENT_ELIXIR_OVERFLOW");
     Director::getInstance()->getEventDispatcher()->dispatchEvent(&event);
   } else {
@@ -123,7 +127,6 @@ bool VillageDataManager::spendElixir(int amount) {
   return false;
 }
 
-// 宝石接口实现
 int VillageDataManager::getGem() const {
   return _data.gem;
 }
@@ -153,22 +156,18 @@ void VillageDataManager::notifyResourceChanged() {
   Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("EVENT_RESOURCE_CHANGED");
 }
 
-
-// ========== 军队与兵营接口实现 ==========
-
 int VillageDataManager::getTownHallLevel() const {
     for (const auto& building : _data.buildings) {
-        if (building.type == 1) { // 假设大本营 ID 为 1
+        if (building.type == 1) {
             return building.level;
         }
     }
-    return 1; // 默认1级
+    return 1;
 }
 
 int VillageDataManager::getArmyCampCount() const {
     int count = 0;
     for (const auto& building : _data.buildings) {
-        // 排除放置中的兵营，只计算已存在的
         if (building.type == 101 && building.state != BuildingInstance::State::PLACING) {
             count++;
         }
@@ -179,10 +178,8 @@ int VillageDataManager::getArmyCampCount() const {
 int VillageDataManager::calculateTotalHousingSpace() const {
     int totalSpace = 0;
     for (const auto& building : _data.buildings) {
-        // 兵营 ID = 101, 且不是放置中状态
         if (building.type == 101 && building.state != BuildingInstance::State::PLACING) {
-            // 规则：1级=20, 2级=30, 3级=40
-            // 公式：10 + 等级 * 10
+            // 每个兵营提供 10 + level * 10 的人口空间
             int space = 10 + (building.level * 10);
             totalSpace += space;
         }
@@ -215,7 +212,7 @@ int VillageDataManager::getTroopCount(int troopId) const {
 void VillageDataManager::addTroop(int troopId, int count) {
     if (count <= 0) return;
     _data.troops[troopId] += count;
-    saveToFile("village.json"); // 立即保存
+    saveToFile("village.json");
 }
 
 bool VillageDataManager::removeTroop(int troopId, int count) {
@@ -231,14 +228,11 @@ bool VillageDataManager::removeTroop(int troopId, int count) {
         _data.troops.erase(it);
     }
 
-    saveToFile("village.json"); // 立即保存
+    saveToFile("village.json");
     return true;
 }
 
-// ========== 建筑接口 ==========
-
 const std::vector<BuildingInstance>& VillageDataManager::getAllBuildings() const {
-  // 根据战斗模式返回不同数据源
   if (_inBattleMode) {
     return _battleMapData.buildings;
   }
@@ -246,7 +240,6 @@ const std::vector<BuildingInstance>& VillageDataManager::getAllBuildings() const
 }
 
 BuildingInstance* VillageDataManager::getBuildingById(int id) {
-  // 根据战斗模式在不同数据源中查找
   if (_inBattleMode) {
     for (auto& building : _battleMapData.buildings) {
       if (building.id == id) {
@@ -263,11 +256,9 @@ BuildingInstance* VillageDataManager::getBuildingById(int id) {
   return nullptr;
 }
 
-// O(1) 网格查询实现
 BuildingInstance* VillageDataManager::getBuildingAtGrid(int gridX, int gridY) {
   if (gridX < 0 || gridY < 0 || gridX >= GridMapUtils::GRID_WIDTH || gridY >= GridMapUtils::GRID_HEIGHT) return nullptr;
   
-  // 根据战斗模式使用不同的网格占用表
   const auto& occupancy = _inBattleMode ? _battleGridOccupancy : _gridOccupancy;
   int occupyingId = occupancy[gridX][gridY];
   if (occupyingId == 0) return nullptr;
@@ -286,22 +277,21 @@ int VillageDataManager::addBuilding(int type, int level, int gridX, int gridY,
   building.gridY = gridY;
   building.state = state;
   building.finishTime = finishTime;
-  building.isInitialConstruction = isInitialConstruction;  // 设置标志
+  building.isInitialConstruction = isInitialConstruction;
 
   _data.buildings.push_back(building);
 
-  // 初始化 currentHP
+  // 初始化建筑生命值
   auto cfg = BuildingConfig::getInstance()->getConfig(building.type);
   if (cfg) {
-    // 设置为配置里定义的生命值，若未定义则使用 100 作为兜底
     _data.buildings.back().currentHP = cfg->hitPoints > 0 ? cfg->hitPoints : 100;
   } else {
     _data.buildings.back().currentHP = 100;
   }
   
-  // 【关键修复】初始化 isDestroyed 为 false（新建筑不应该是红色）
   _data.buildings.back().isDestroyed = false;
 
+  // 更新网格占用状态
   if (state != BuildingInstance::State::PLACING) {
     updateGridOccupancy();
   }
@@ -334,7 +324,7 @@ void VillageDataManager::setBuildingPosition(int id, int gridX, int gridY) {
 
     CCLOG("VillageDataManager: Building ID=%d moved to grid(%d, %d)", id, gridX, gridY);
     
-    saveToFile("village.json");  // 立即保存位置变更
+    saveToFile("village.json");
   }
 }
 
@@ -364,22 +354,20 @@ bool VillageDataManager::startUpgradeBuilding(int id) {
     return false;
   }
 
-  // 检查最大等级
   if (building->level >= 3) {
     CCLOG("VillageDataManager: Building %d already at max level (3)", id);
     return false;
   }
 
-  // 获取升级成本
   int cost = config->getUpgradeCost(building->type, building->level);
 
-  // 改为英文判断
+  // 根据资源类型扣除费用
   bool success = false;
-  if (configData->costType == "gold") {  // 英文
+  if (configData->costType == "gold") {
     success = spendGold(cost);
-  } else if (configData->costType == "elixir") {  // 英文
+  } else if (configData->costType == "elixir") {
     success = spendElixir(cost);
-  } else if (configData->costType == "gem") {  // 新增宝石类型
+  } else if (configData->costType == "gem") {
     success = spendGem(cost);
   }
 
@@ -388,19 +376,19 @@ bool VillageDataManager::startUpgradeBuilding(int id) {
     return false;
   }
 
-  // 开始升级
+  // 设置建造完成时间
   long long currentTime = time(nullptr);
   long long finishTime = currentTime + configData->buildTimeSeconds;
   building->state = BuildingInstance::State::CONSTRUCTING;
   building->finishTime = finishTime;
-  building->isInitialConstruction = false;  // 升级不是首次建造
+  building->isInitialConstruction = false;
 
   CCLOG("VillageDataManager: Started upgrade for building %d (level %d → %d), finish at %lld",
         id, building->level, building->level + 1, finishTime);
 
   saveToFile("village.json");
 
-  // ========== 触发建造开始事件 ==========
+  // 触发建造开始事件
   EventCustom event("EVENT_CONSTRUCTION_STARTED");
   int* data = new int(id);
   event.setUserData(data);
@@ -410,7 +398,6 @@ bool VillageDataManager::startUpgradeBuilding(int id) {
   return true;
 }
 
-// 新建筑建造完成
 void VillageDataManager::finishNewBuildingConstruction(int id) {
   auto* building = getBuildingById(id);
   if (!building) {
@@ -418,7 +405,6 @@ void VillageDataManager::finishNewBuildingConstruction(int id) {
     return;
   }
 
-  // 核心修复：新建筑从 0 级升到 1 级
   building->level++;
   building->state = BuildingInstance::State::BUILT;
   building->finishTime = 0;
@@ -428,7 +414,7 @@ void VillageDataManager::finishNewBuildingConstruction(int id) {
 
   saveToFile("village.json");
 
-  // 如果是存储建筑建造完成，触发资源显示更新
+  // 仓库建筑完成需刷新资源显示
   if (building->type == 204 || building->type == 205) {
     CCLOG("VillageDataManager: Storage building constructed, refreshing resource display");
     notifyResourceChanged();
@@ -446,18 +432,19 @@ void VillageDataManager::finishUpgradeBuilding(int id) {
   }
 
   int oldLevel = building->level;
-  building->level++;  // 升级：等级 +1
+  building->level++;
   building->state = BuildingInstance::State::BUILT;
   building->finishTime = 0;
 
   CCLOG("VillageDataManager: Building %d upgraded from level %d to %d", id, oldLevel, building->level);
 
-  // 如果是大本营升级，触发特殊事件
-  if (building->type == 1) {  // 大本营 ID = 1
+  // 大本营升级触发特殊事件
+  if (building->type == 1) {
     CCLOG("VillageDataManager: Town Hall upgraded to level %d!", building->level);
     Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("EVENT_TOWNHALL_UPGRADED");
   }
-  // 如果是存储建筑升级，触发资源显示更新
+
+  // 仓库升级需刷新资源显示
   if (building->type == 204 || building->type == 205) {
     CCLOG("VillageDataManager: Storage building upgraded, refreshing resource display");
     notifyResourceChanged();
@@ -469,7 +456,6 @@ void VillageDataManager::finishUpgradeBuilding(int id) {
     "EVENT_BUILDING_UPGRADED", &id);
 }
 
-// ========== 建筑放置完成后的处理 ==========
 bool VillageDataManager::startConstructionAfterPlacement(int buildingId) {
   auto building = getBuildingById(buildingId);
   if (!building) {
@@ -482,7 +468,7 @@ bool VillageDataManager::startConstructionAfterPlacement(int buildingId) {
     return false;
   }
 
-  // ========== 特殊处理：建筑工人小屋瞬间完成 ==========
+  // 建筑工人小屋无需建造时间，立即完成
   if (building->type == 201) {
     CCLOG("VillageDataManager: Builder hut completing instantly after placement");
 
@@ -490,7 +476,6 @@ bool VillageDataManager::startConstructionAfterPlacement(int buildingId) {
     building->finishTime = 0;
     saveToFile("village.json");
 
-    // 触发完成事件
     EventCustom event("EVENT_BUILDING_UPGRADED");
     int* data = new int(buildingId);
     event.setUserData(data);
@@ -499,9 +484,8 @@ bool VillageDataManager::startConstructionAfterPlacement(int buildingId) {
 
     return true;
   }
-  // ====================================================
 
-  // 其他建筑正常建造流程
+  // 其他建筑需按配置时间建造
   auto config = BuildingConfig::getInstance()->getConfig(building->type);
   if (!config) {
     CCLOG("VillageDataManager: Config not found for building type %d", building->type);
@@ -513,7 +497,6 @@ bool VillageDataManager::startConstructionAfterPlacement(int buildingId) {
 
   saveToFile("village.json");
 
-  // ========== 触发建造开始事件 ==========
   EventCustom event("EVENT_CONSTRUCTION_STARTED");
   int* data = new int(buildingId);
   event.setUserData(data);
@@ -525,15 +508,15 @@ bool VillageDataManager::startConstructionAfterPlacement(int buildingId) {
   return true;
 }
 
-// ========== 网格占用查询 ==========
-
 bool VillageDataManager::isAreaOccupied(int startX, int startY, int width, int height, int ignoreBuildingId) const {
+  // 检查区域是否越界
   if (startX < 0 || startY < 0 ||
       startX + width > GridMapUtils::GRID_WIDTH ||
       startY + height > GridMapUtils::GRID_HEIGHT) {
     return true;
   }
 
+  // 检查区域内是否有其他建筑占用
   for (int x = startX; x < startX + width; ++x) {
     for (int y = startY; y < startY + height; ++y) {
       int occupyingId = _gridOccupancy[x][y];
@@ -548,12 +531,14 @@ bool VillageDataManager::isAreaOccupied(int startX, int startY, int width, int h
 }
 
 void VillageDataManager::updateGridOccupancy() {
+  // 清空网格占用表
   for (auto& row : _gridOccupancy) {
     std::fill(row.begin(), row.end(), 0);
   }
 
+  // 重新标记所有建筑占用的网格
   for (const auto& building : _data.buildings) {
-    // 跳过放置中或已摧毁的建筑（它们不应占用网格）
+    // 正在放置或已摧毁的建筑不占用网格
     if (building.state == BuildingInstance::State::PLACING) {
       continue;
     }
@@ -586,18 +571,17 @@ void VillageDataManager::removeBuilding(int buildingId) {
   if (it != _data.buildings.end()) {
     CCLOG("VillageDataManager: Removing building ID=%d", buildingId);
     _data.buildings.erase(it);
-    updateGridOccupancy();  // 更新网格占用
+    updateGridOccupancy();
   } else {
     CCLOG("VillageDataManager: Building ID=%d not found", buildingId);
   }
 }
 
-// 新增方法：检查并完成所有到期的建造
 void VillageDataManager::checkAndFinishConstructions() {
   long long currentTime = time(nullptr);
-  std::vector<int> finishedBuildings;  // 收集需要完成的建筑 ID
+  std::vector<int> finishedBuildings;
 
-  // 第一遍：找出所有完成的建筑
+  // 收集所有已完成的建筑
   for (const auto& building : _data.buildings) {
     if (building.state == BuildingInstance::State::CONSTRUCTING &&
         building.finishTime > 0 &&
@@ -606,7 +590,7 @@ void VillageDataManager::checkAndFinishConstructions() {
     }
   }
 
-  // 第二遍：完成建造（避免迭代中修改容器）
+  // 完成建造或升级
   for (int buildingId : finishedBuildings) {
     auto* building = getBuildingById(buildingId);
     if (!building) continue;
@@ -621,30 +605,27 @@ void VillageDataManager::checkAndFinishConstructions() {
   }
 }
 
-
-
-// 在 saveToFile() 函数中添加场景数据的保存：
 void VillageDataManager::saveToFile(const std::string& filename) {
     rapidjson::Document doc;
     doc.SetObject();
     auto& allocator = doc.GetAllocator();
 
+    // 保存基础资源
     doc.AddMember("gold", _data.gold, allocator);
     doc.AddMember("elixir", _data.elixir, allocator);
     doc.AddMember("gem", _data.gem, allocator);
 
-    // ========== 新增：保存当前场景 ==========
+    // 保存当前场景
     doc.AddMember("currentTheme", _currentThemeId, allocator);
 
-    // 保存已购买场景列表
+    // 保存已购买的场景列表
     rapidjson::Value purchasedArr(rapidjson::kArrayType);
     for (int id : _purchasedThemes) {
         purchasedArr.PushBack(id, allocator);
     }
     doc.AddMember("purchasedThemes", purchasedArr, allocator);
-    // ==========================================
 
-    // --- 保存军队数据 ---
+    // 保存军队数据
     rapidjson::Value troopsArray(rapidjson::kArrayType);
     for (const auto& pair : _data.troops) {
         rapidjson::Value troopObj(rapidjson::kObjectType);
@@ -671,7 +652,7 @@ void VillageDataManager::saveToFile(const std::string& filename) {
     }
     doc.AddMember("buildings", buildingsArray, allocator);
 
-    // --- 保存兵种研究等级 ---
+    // 保存兵种研究等级
     rapidjson::Value troopLevelsArray(rapidjson::kArrayType);
     for (const auto& pair : _data.troopLevels) {
         rapidjson::Value levelObj(rapidjson::kObjectType);
@@ -681,11 +662,11 @@ void VillageDataManager::saveToFile(const std::string& filename) {
     }
     doc.AddMember("troopLevels", troopLevelsArray, allocator);
 
-    // --- 保存研究状态 ---
+    // 保存研究状态
     doc.AddMember("researchingTroopId", _data.researchingTroopId, allocator);
     doc.AddMember("researchFinishTime", _data.researchFinishTime, allocator);
 
-    // 写入文件
+    // 序列化为JSON字符串并写入文件
     rapidjson::StringBuffer buffer;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
     doc.Accept(writer);
@@ -708,20 +689,18 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
   std::string writablePath = fileUtils->getWritablePath();
   std::string fullPath = writablePath + filename;
 
+  // 如果存档不存在，初始化默认游戏
   if (!fileUtils->isFileExist(fullPath)) {
     CCLOG("VillageDataManager: Save file not found, initializing default game");
 
-    // ==========  初始化默认建筑 ==========
     _data.buildings.clear();
 
-    // 1. 大本营（放在地图中心）
-    // 44x44 网格，中心点为 (22, 22)
-    // 大本营是 4x4 建筑，左下角应该放在 (20, 20)
+    // 创建初始大本营
     BuildingInstance townHall;
     townHall.id = _nextBuildingId++;
     townHall.type = 1;
-    townHall.gridX = 20;  // 中心 (22, 22) - 宽度的一半 (2)
-    townHall.gridY = 20;  // 中心 (22, 22) - 高度的一半 (2)
+    townHall.gridX = 20;
+    townHall.gridY = 20;
     townHall.level = 1;
     townHall.state = BuildingInstance::State::BUILT;
     townHall.finishTime = 0;
@@ -731,13 +710,12 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
     CCLOG("VillageDataManager: Town Hall created at grid (%d, %d), center at (22, 22)",
           townHall.gridX, townHall.gridY);
 
-    // 2. 建筑工人小屋（放在大本营左侧）
-    // 工人小屋是 2x2 建筑
+    // 创建初始建筑工人小屋
     BuildingInstance builderHut;
     builderHut.id = _nextBuildingId++;
     builderHut.type = 201;
-    builderHut.gridX = 16;  // 大本营左侧 (20 - 2 - 2 = 16)
-    builderHut.gridY = 20;  // 与大本营同一水平线
+    builderHut.gridX = 16;
+    builderHut.gridY = 20;
     builderHut.level = 1;
     builderHut.state = BuildingInstance::State::BUILT;
     builderHut.finishTime = 0;
@@ -747,19 +725,15 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
     CCLOG("VillageDataManager: Builder Hut created at grid (%d, %d)",
           builderHut.gridX, builderHut.gridY);
 
-    // 更新网格占用
     updateGridOccupancy();
-
-    // 保存初始配置
     saveToFile(filename);
 
     CCLOG("VillageDataManager: Default game initialized with 2 buildings");
     CCLOG("VillageDataManager: Initial game state saved to %s", fullPath.c_str());
-    // =============================================
     return;
   }
 
-  // ========== 加载已有存档 ==========
+  // 读取存档文件
   std::string content = fileUtils->getStringFromFile(fullPath);
   if (content.empty()) {
     CCLOG("VillageDataManager: Failed to read save file");
@@ -773,7 +747,8 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
     CCLOG("VillageDataManager: JSON parse error");
     return;
   }
-  // 读取资源
+
+  // 加载资源数据
   if (doc.HasMember("gold") && doc["gold"].IsInt()) {
     _data.gold = doc["gold"].GetInt();
   }
@@ -784,12 +759,12 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
     _data.gem = doc["gem"].GetInt();  
   }
 
-  // ========== 新增：加载当前场景 ==========
+  // 加载场景配置
   if (doc.HasMember("currentTheme") && doc["currentTheme"].IsInt()) {
       _currentThemeId = doc["currentTheme"].GetInt();
   }
 
-  // 加载已购买场景
+  // 加载已购买的场景
   _purchasedThemes.clear();
   if (doc.HasMember("purchasedThemes") && doc["purchasedThemes"].IsArray()) {
       const auto& arr = doc["purchasedThemes"];
@@ -798,7 +773,7 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
       }
   }
 
-  // --- 读取军队数据 ---
+  // 加载军队数据
   _data.troops.clear();
   if (doc.HasMember("troops") && doc["troops"].IsArray()) {
       const auto& troopsArray = doc["troops"];
@@ -809,7 +784,8 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
           _data.troops[id] = count;
       }
   }
-  //  读取建筑数据
+
+  // 加载建筑数据
   _data.buildings.clear();
   if (doc.HasMember("buildings") && doc["buildings"].IsArray()) {
     const auto& buildingsArray = doc["buildings"];
@@ -825,14 +801,14 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
       building.state = (BuildingInstance::State)buildingObj["state"].GetInt();
       building.finishTime = buildingObj["finishTime"].GetInt64();
       
-      // 加载新字段（兼容旧存档）
+      // 加载建造标识
       if (buildingObj.HasMember("isInitialConstruction")) {
         building.isInitialConstruction = buildingObj["isInitialConstruction"].GetBool();
       } else {
         building.isInitialConstruction = false;
       }
 
-      // 初始化 currentHP：优先使用存档中的字段（如果存在），否则取配置的 hitPoints
+      // 加载或初始化生命值
       if (buildingObj.HasMember("currentHP") && buildingObj["currentHP"].IsInt()) {
         building.currentHP = buildingObj["currentHP"].GetInt();
       } else {
@@ -840,18 +816,18 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
         building.currentHP = (cfg && cfg->hitPoints > 0) ? cfg->hitPoints : 100;
       }
 
-      // 战斗临时状态：不从存档读入 isDestroyed，默认 false
       building.isDestroyed = false;
 
       _data.buildings.push_back(building);
 
+      // 更新建筑ID计数器
       if (building.id >= _nextBuildingId) {
         _nextBuildingId = building.id + 1;
       }
     }
   }
 
-  // --- 读取兵种研究等级（兼容旧存档）---
+  // 读取兵种研究等级
   _data.troopLevels.clear();
   if (doc.HasMember("troopLevels") && doc["troopLevels"].IsArray()) {
     const auto& levelsArray = doc["troopLevels"];
@@ -864,7 +840,7 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
     CCLOG("VillageDataManager: Loaded %lu troop levels", _data.troopLevels.size());
   }
 
-  // --- 读取研究状态（兼容旧存档）---
+  // 读取研究状态
   if (doc.HasMember("researchingTroopId") && doc["researchingTroopId"].IsInt()) {
     _data.researchingTroopId = doc["researchingTroopId"].GetInt();
   } else {
@@ -877,7 +853,6 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
     _data.researchFinishTime = 0;
   }
 
-  // 4. 更新后续状态
   updateGridOccupancy();
   notifyResourceChanged();
 
@@ -885,26 +860,23 @@ void VillageDataManager::loadFromFile(const std::string& filename) {
       _data.buildings.size(), _data.troops.size());
 }
 
-// ========== 工人系统实现 ==========
-
 int VillageDataManager::getTotalWorkers() const {
   int workerCount = 0;
 
-  // 统计所有已建成的建筑工人小屋（ID=201, State=BUILT）
+  // 统计已建成的工人小屋数量
   for (const auto& building : _data.buildings) {
     if (building.type == 201 && building.state == BuildingInstance::State::BUILT) {
       workerCount++;
     }
   }
 
-  // 直接返回工人小屋数量（不额外加1）
   return workerCount;
 }
 
 int VillageDataManager::getBusyWorkerCount() const {
   int busyCount = 0;
 
-  // 统计所有正在建造/升级的建筑
+  // 统计正在建造中的建筑数量
   for (const auto& building : _data.buildings) {
     if (building.state == BuildingInstance::State::CONSTRUCTING) {
       busyCount++;
@@ -923,19 +895,16 @@ int VillageDataManager::getIdleWorkerCount() const {
   int busy = getBusyWorkerCount();
   int idle = total - busy;
 
-  // 防止负数
   return (idle < 0) ? 0 : idle;
 }
 
-// ========== 资源存储容量实现 ==========
-
 int VillageDataManager::getGoldStorageCapacity() const {
-  const int BASE_CAPACITY = 100000;  // 基础容量
+  const int BASE_CAPACITY = 100000;
   int totalCapacity = BASE_CAPACITY;
 
   auto config = BuildingConfig::getInstance();
 
-  // 统计所有已建成的储金罐（ID=204）
+  // 累加所有金币仓库的容量
   for (const auto& building : _data.buildings) {
     if (building.type == 204 && building.state == BuildingInstance::State::BUILT) {
       int capacity = config->getStorageCapacityByLevel(204, building.level);
@@ -950,12 +919,12 @@ int VillageDataManager::getGoldStorageCapacity() const {
 }
 
 int VillageDataManager::getElixirStorageCapacity() const {
-  const int BASE_CAPACITY = 100000;  // 基础容量
+  const int BASE_CAPACITY = 100000;
   int totalCapacity = BASE_CAPACITY;
 
   auto config = BuildingConfig::getInstance();
 
-  // 统计所有已建成的圣水瓶（ID=205）
+  // 累加所有药水仓库的容量
   for (const auto& building : _data.buildings) {
     if (building.type == 205 && building.state == BuildingInstance::State::BUILT) {
       int capacity = config->getStorageCapacityByLevel(205, building.level);
@@ -969,14 +938,12 @@ int VillageDataManager::getElixirStorageCapacity() const {
   return totalCapacity;
 }
 
-// ========== 实验室与兵种升级实现 ==========
-
 #include "../Model/TroopUpgradeConfig.h"
 
 int VillageDataManager::getLaboratoryLevel() const {
   int maxLevel = 0;
   
-  // 遍历所有建筑，找到最高等级的已建成实验室（ID=103）
+  // 查找最高等级的实验室
   for (const auto& building : _data.buildings) {
     if (building.type == 103 && building.state == BuildingInstance::State::BUILT) {
       if (building.level > maxLevel) {
@@ -993,17 +960,17 @@ int VillageDataManager::getTroopLevel(int troopId) const {
   if (it != _data.troopLevels.end()) {
     return it->second;
   }
-  return 1;  // 默认1级
+  return 1;
 }
 
 bool VillageDataManager::canUpgradeTroop(int troopId) const {
-  // 1. 检查是否有正在进行的研究
+  // 检查是否有进行中的研究
   if (isResearching()) {
     CCLOG("canUpgradeTroop: FAILED - Already researching (troopId=%d)", troopId);
     return false;
   }
   
-  // 2. 检查实验室是否存在且已建成
+  // 检查实验室等级
   int labLevel = getLaboratoryLevel();
   if (labLevel == 0) {
     CCLOG("canUpgradeTroop: FAILED - No laboratory built (troopId=%d)", troopId);
@@ -1011,23 +978,23 @@ bool VillageDataManager::canUpgradeTroop(int troopId) const {
   }
   CCLOG("canUpgradeTroop: Lab level = %d", labLevel);
   
-  // 3. 检查实验室是否正在升级
+  // 检查实验室是否正在升级
   for (const auto& building : _data.buildings) {
     if (building.type == 103 && building.state == BuildingInstance::State::CONSTRUCTING) {
       CCLOG("canUpgradeTroop: FAILED - Lab is upgrading (troopId=%d)", troopId);
-      return false;  // 实验室正在升级
+      return false;
     }
   }
   
-  // 4. 检查兵种是否已解锁（通过训练营等级）
+  // 检查兵种配置
   auto troopConfig = TroopConfig::getInstance();
   TroopInfo info = troopConfig->getTroopById(troopId);
   if (info.id == 0) {
     CCLOG("canUpgradeTroop: FAILED - Troop not found (troopId=%d)", troopId);
-    return false;  // 兵种不存在
+    return false;
   }
   
-  // 获取最高训练营等级
+  // 检查兵营等级是否满足要求
   int maxBarracksLevel = 0;
   for (const auto& building : _data.buildings) {
     if (building.type == 102 && building.state == BuildingInstance::State::BUILT) {
@@ -1040,20 +1007,20 @@ bool VillageDataManager::canUpgradeTroop(int troopId) const {
   
   if (maxBarracksLevel < info.unlockBarracksLvl) {
     CCLOG("canUpgradeTroop: FAILED - Barracks level too low (troopId=%d)", troopId);
-    return false;  // 训练营等级不够，兵种未解锁
+    return false;
   }
   
-  // 5. 检查兵种是否已满级
+  // 检查兵种等级限制
   auto upgradeConfig = TroopUpgradeConfig::getInstance();
   int currentLevel = getTroopLevel(troopId);
   int maxLevel = upgradeConfig->getMaxLevel(troopId);
   CCLOG("canUpgradeTroop: Troop level = %d, max = %d", currentLevel, maxLevel);
   if (currentLevel >= maxLevel) {
     CCLOG("canUpgradeTroop: FAILED - Already max level (troopId=%d)", troopId);
-    return false;  // 已满级
+    return false;
   }
   
-  // 6. 检查实验室等级是否足够
+  // 检查实验室等级是否满足升级要求
   bool canUpgrade = upgradeConfig->canUpgradeWithLabLevel(troopId, currentLevel, labLevel);
   CCLOG("canUpgradeTroop: canUpgradeWithLabLevel = %s", canUpgrade ? "YES" : "NO");
   if (!canUpgrade) {
@@ -1078,7 +1045,7 @@ bool VillageDataManager::startTroopUpgrade(int troopId) {
   int cost = upgradeConfig->getUpgradeCost(troopId, currentLevel);
   int time = upgradeConfig->getUpgradeTime(troopId, currentLevel);
   
-  // 扣除圣水
+  // 扣除药水
   if (!spendElixir(cost)) {
     CCLOG("VillageDataManager: Not enough elixir for troop upgrade");
     return false;
@@ -1093,7 +1060,6 @@ bool VillageDataManager::startTroopUpgrade(int troopId) {
   
   saveToFile("village.json");
   
-  // 触发研究开始事件
   Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("EVENT_RESEARCH_STARTED");
   
   return true;
@@ -1120,7 +1086,6 @@ void VillageDataManager::finishTroopUpgrade() {
   
   saveToFile("village.json");
   
-  // 触发研究完成事件
   Director::getInstance()->getEventDispatcher()->dispatchCustomEvent("EVENT_RESEARCH_COMPLETE");
 }
 
@@ -1145,7 +1110,6 @@ long long VillageDataManager::getResearchFinishTime() const {
 }
 
 bool VillageDataManager::canUpgradeLaboratory() const {
-  // 不能有正在进行的研究
   return !isResearching();
 }
 
@@ -1159,13 +1123,10 @@ void VillageDataManager::finishResearchImmediately() {
     return;
   }
   
-  // 直接完成研究，不检查时间
   finishTroopUpgrade();
   
   CCLOG("VillageDataManager: Research finished instantly with gems");
 }
-
-// ========== 战斗地图实现 ==========
 
 #include "../Util/RandomBattleMapGenerator.h"
 
@@ -1188,19 +1149,16 @@ bool VillageDataManager::hasBattleMapData() const {
   return !_battleMapData.buildings.empty();
 }
 
-// ========== 战斗模式切换实现 ==========
-
 void VillageDataManager::setInBattleMode(bool inBattle) {
   if (_inBattleMode == inBattle) return;
   
   _inBattleMode = inBattle;
   
   if (inBattle) {
-    // 进入战斗模式时，更新战斗地图的网格占用
     updateBattleGridOccupancy();
     CCLOG("VillageDataManager: Entered BATTLE MODE (buildings=%zu)", _battleMapData.buildings.size());
   } else {
-    // 退出战斗模式时，清理战斗网格占用
+    // 清空战斗网格占用状态
     for (auto& row : _battleGridOccupancy) {
       std::fill(row.begin(), row.end(), 0);
     }
@@ -1213,14 +1171,13 @@ bool VillageDataManager::isInBattleMode() const {
 }
 
 void VillageDataManager::updateBattleGridOccupancy() {
-  // 清空战斗网格占用
+  // 清空战斗网格占用表
   for (auto& row : _battleGridOccupancy) {
     std::fill(row.begin(), row.end(), 0);
   }
   
-  // 根据战斗地图的建筑填充网格占用
+  // 标记战斗地图中所有建筑占用的网格
   for (const auto& building : _battleMapData.buildings) {
-    // 跳过已摧毁的建筑
     if (building.isDestroyed) {
       continue;
     }
@@ -1240,7 +1197,6 @@ void VillageDataManager::updateBattleGridOccupancy() {
   
   CCLOG("VillageDataManager: Battle grid occupancy updated");
 }
-
 
 void VillageDataManager::clearBattleMap() {
     if (_inBattleMode) {
@@ -1262,7 +1218,6 @@ void VillageDataManager::addBattleBuildingFromReplay(const BuildingInstance& bui
     }
 }
 
-// 实现场景管理方法：
 int VillageDataManager::getCurrentThemeId() const {
     return _currentThemeId;
 }
