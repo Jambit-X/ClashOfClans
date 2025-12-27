@@ -228,6 +228,11 @@ void BattleScene::switchState(BattleState newState) {
             CCLOG(">>> Entering FIGHTING state");
             _stateTimer = 180.0f;
             
+            // 保存当前地图状态到回放数据
+            if (!_recorder.isReplayMode()) {
+                _recorder.saveCurrentMap();
+            }
+            
             // 停止准备音乐，播放战斗音乐（循环）
             CCLOG(">>> Stopping combat planning music (ID: %d)", _combatPlanningMusicID);
             if (_combatPlanningMusicID != -1) {

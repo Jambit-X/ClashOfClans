@@ -23,6 +23,9 @@ public:
     // 开始录制
     void startRecording();
     
+    // 保存当前地图状态（在用户确定目标后调用）
+    void saveCurrentMap();
+    
     // 停止录制并保存结果
     void stopRecording(int lootedGold, int lootedElixir,
                        const std::map<int, int>& usedTroops,

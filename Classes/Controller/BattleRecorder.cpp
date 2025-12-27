@@ -35,16 +35,24 @@ void BattleRecorder::startRecording() {
     _replayData = BattleReplayData();
     _replayData.troopEvents.clear();
 
-    // 保存初始地图状态
-    auto dataManager = VillageDataManager::getInstance();
-    _replayData.initialBuildings = dataManager->getAllBuildings();
-    _replayData.battleMapSeed = 0;
+    // 地图状态在进入战斗时保存，确保记录用户最终选择的地图
 
     // 保存对手名称
     _replayData.defenderName = "AI Village";
     _replayData.timestamp = time(nullptr);
 
-    CCLOG("BattleRecorder: Recording started at time %.2f", _battleStartTime);
+    CCLOG("BattleRecorder: Recording started at time %.2f (map will be saved when battle starts)", _battleStartTime);
+}
+
+void BattleRecorder::saveCurrentMap() {
+    if (!_isRecording) return;
+
+    // 保存当前地图状态
+    auto dataManager = VillageDataManager::getInstance();
+    _replayData.initialBuildings = dataManager->getAllBuildings();
+    _replayData.battleMapSeed = 0;
+
+    CCLOG("BattleRecorder: Map state saved with %zu buildings", _replayData.initialBuildings.size());
 }
 
 void BattleRecorder::recordTroopDeployment(int troopId, int gridX, int gridY) {
