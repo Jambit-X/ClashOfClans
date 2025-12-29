@@ -5,10 +5,18 @@
 ![C++](https://img.shields.io/badge/C++-17-00599C?logo=cplusplus)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Android-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
+[![Release](https://img.shields.io/github/v/release/JambitX/ClashOfClans?include_prereleases)](https://github.com/JambitX/ClashOfClans/releases)
 
 **一个基于 Cocos2d-x 引擎的《部落冲突》复刻项目**
 
-[功能特性](#-功能特性) • [快速开始](#-快速开始) • [项目结构](#-项目结构) • [开发文档](#-开发文档)
+[功能特性](#-核心功能与规划-features--planning) • [快速下载](#-快速下载) • [项目演示](#-项目演示-demo) • [技术栈](#️-技术栈-tech-stack)
+
+### 📥 快速下载
+
+| 平台 | 下载链接 | 说明 |
+|:---:|:---:|:---|
+| 🪟 Windows | [ClashOfClans-Windows-v1.0.zip](https://github.com/JambitX/ClashOfClans/releases/download/v1.0.0/ClashOfClans-Windows-v1.0.zip) | 解压后运行 `ClashOfClans.exe` |
+| 📱 Android | [ClashOfClans-Android-v1.0.apk](https://github.com/JambitX/ClashOfClans/releases/download/v1.0.0/ClashOfClans-Android-v1.0.apk) | 需开启"未知来源应用"权限 |
 
 </div>
 
@@ -116,7 +124,7 @@
 ## 🎯 核心功能与规划 (Features & Planning)
 
 #### 村庄系统
-- [x] 大本营等级系统（1-5 级）
+- [x] 大本营等级系统（1-3 级）
 - [x] 三类资源管理（金币、圣水、人口）
 - [x] 建筑放置与拖动（等距网格系统）
 - [x] 建筑升级系统（支持多级升级）
