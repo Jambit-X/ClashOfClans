@@ -5,7 +5,7 @@
 ![C++](https://img.shields.io/badge/C++-17-00599C?logo=cplusplus)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Android-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
-[![Release](https://img.shields.io/github/v/release/Jambit-Y/ClashOfClans?include_prereleases)](https://github.com/Jambit-X/ClashOfClans/releases)
+[![Release](https://img.shields.io/github/v/release/Jambit-X/ClashOfClans?include_prereleases)](https://github.com/Jambit-X/ClashOfClans/releases)
 
 **一个基于 Cocos2d-x 引擎的《部落冲突》复刻项目**
 
