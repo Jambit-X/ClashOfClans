@@ -5,7 +5,7 @@
 ![C++](https://img.shields.io/badge/C++-17-00599C?logo=cplusplus)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Android-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
-[![Release](https://img.shields.io/github/v/release/Jambit-Y/ClashOfClans?include_prereleases)](https://github.com/Jambit-Y/ClashOfClans/releases)
+[![Release](https://img.shields.io/github/v/release/Jambit-Y/ClashOfClans?include_prereleases)](https://github.com/Jambit-X/ClashOfClans/releases)
 
 **一个基于 Cocos2d-x 引擎的《部落冲突》复刻项目**
 
@@ -15,8 +15,8 @@
 
 | 平台 | 下载链接 | 说明 |
 |:---:|:---:|:---|
-| 🪟 Windows | [ClashOfClans-Windows-v1.0.zip](https://github.com/Jambit-Y/ClashOfClans/releases/download/v1.0.0/ClashOfClans-Windows-v1.0.zip) | 解压后运行 `ClashOfClans.exe` |
-| 📱 Android | [ClashOfClans-Android-v1.0.apk](https://github.com/Jambit-Y/ClashOfClans/releases/download/v1.0.0/ClashOfClans-Android-v1.0.apk) | 需开启"未知来源应用"权限 |
+| 🪟 Windows | [ClashOfClans-Windows-v1.0.zip](https://github.com/Jambit-X/ClashOfClans/releases/download/v1.0.0/ClashOfClans-Windows-v1.0.zip) | 解压后运行 `ClashOfClans.exe` |
+| 📱 Android | [ClashOfClans-Android-v1.0.apk](https://github.com/Jambit-X/ClashOfClans/releases/download/v1.0.0/ClashOfClans-Android-v1.0.apk) | 需开启"未知来源应用"权限 |
 
 </div>
 
